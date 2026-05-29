@@ -1,0 +1,82 @@
+"use client";
+
+import Link from "next/link";
+import { signOut } from "next-auth/react";
+import { LogOut, Star } from "lucide-react";
+import { useClubFavorites } from "@/hooks/use-club-favorites";
+import { TeamCrest } from "@/components/matches/TeamCrest";
+
+type SidebarSessionProps = {
+  isLoggedIn?: boolean;
+};
+
+export function SidebarFavorites({ isLoggedIn }: SidebarSessionProps) {
+  const { items, loading } = useClubFavorites();
+
+  if (!isLoggedIn) {
+    return (
+      <div className="space-y-2">
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+          <Star className="h-3 w-3" />
+          Favoritos
+        </p>
+        <p className="text-xs text-muted-foreground px-2 py-1">
+          <Link href="/login" className="text-selected hover:underline">
+            Entre
+          </Link>{" "}
+          para salvar clubes favoritos.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+        <Star className="h-3 w-3 text-selected" />
+        Favoritos
+      </p>
+      {loading ? (
+        <p className="text-xs text-muted-foreground px-2 py-1">Carregando...</p>
+      ) : items.length === 0 ? (
+        <p className="text-xs text-muted-foreground px-2 py-1">Nenhum clube favoritado.</p>
+      ) : (
+        items.map((club) => (
+          <Link
+            key={club.id}
+            href="/favoritos"
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <TeamCrest url={club.crestUrl} name={club.name} size="sm" />
+            <span className="flex-1 truncate">{club.name}</span>
+            <Star className="h-3 w-3 text-selected fill-selected shrink-0" />
+          </Link>
+        ))
+      )}
+    </div>
+  );
+}
+
+export function SidebarFooterLinks({ isLoggedIn }: SidebarSessionProps) {
+  return (
+    <div className="space-y-1 pt-2 border-t border-line">
+      {isLoggedIn ? (
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </button>
+      ) : (
+        <Link
+          href="/login"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          Entrar
+        </Link>
+      )}
+    </div>
+  );
+}

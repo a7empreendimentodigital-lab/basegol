@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 142 79% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 142 79% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 4% 66% / 0.09;
+    --input: 0 0% 12%;
+    --ring: 240 4% 66% / 0.12;
+    --radius: 0.75rem;
+    --line: #a1a1aa17;
+    --selected: #0e7a3b;
+    --title: #16c05b;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-pitch text-foreground antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply border bg-graphite/85 backdrop-blur-xl;
+    border-color: var(--line);
+  }
+
+  .glass-card {
+    @apply glass rounded-xl shadow-glass;
+  }
+
+  .neon-border {
+    @apply border;
+    border-color: var(--line);
+    box-shadow: none;
+  }
+
+  .neon-hover {
+    @apply transition-colors duration-200;
+  }
+
+  .neon-hover:hover {
+    border-color: var(--line);
+    box-shadow: none;
+  }
+
+  .text-gradient-neon {
+    @apply text-neon;
+  }
+
+  .nav-active {
+    @apply bg-foreground text-background;
+    box-shadow: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area — CSS only (evita mismatch de hidratação com style inline) */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+@media print {
+  body,
+  main {
+    background: white !important;
+    color: black !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .sumula-print-area {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .sumula-page {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .break-before-page {
+    break-before: page;
+    page-break-before: always;
+  }
+}

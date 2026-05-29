@@ -1,0 +1,93 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  Trophy,
+  Layers,
+  Blocks,
+  Shield,
+  Users,
+  Calendar,
+  ActivitySquare,
+  Newspaper,
+  Image,
+  Palette,
+  ImagePlus,
+  Type,
+  HandCoins,
+  Menu,
+  KeyRound,
+  FileText,
+  BarChart3,
+  ScrollText,
+  Bell,
+  FileUp,
+} from "lucide-react";
+
+export type AdminNavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+};
+
+export type AdminNavGroup = {
+  title: string;
+  items: AdminNavItem[];
+};
+
+export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
+  {
+    title: "Principal",
+    items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    title: "Competição",
+    items: [
+      { href: "/admin/campeonatos", label: "Campeonatos", icon: Trophy },
+      { href: "/admin/categorias", label: "Categorias", icon: Layers },
+      { href: "/admin/grupos", label: "Grupos", icon: Blocks },
+      { href: "/admin/jogos", label: "Jogos", icon: Calendar },
+      { href: "/admin/importacao-tabela", label: "Importar tabela PDF", icon: FileUp },
+      { href: "/admin/placar-ao-vivo", label: "Placar ao vivo", icon: ActivitySquare },
+    ],
+  },
+  {
+    title: "Cadastros",
+    items: [
+      { href: "/admin/clubes", label: "Clubes", icon: Shield },
+      { href: "/admin/atletas", label: "Atletas", icon: Users },
+      { href: "/admin/comissao", label: "Comissão", icon: Users },
+    ],
+  },
+  {
+    title: "Conteúdo",
+    items: [
+      { href: "/admin/noticias", label: "Notícias", icon: Newspaper },
+      { href: "/admin/banners", label: "Banners", icon: Image },
+      { href: "/admin/midia", label: "Mídia", icon: ImagePlus },
+      { href: "/admin/patrocinadores", label: "Patrocinadores", icon: HandCoins },
+      { href: "/admin/menu", label: "Menu público", icon: Menu },
+      { href: "/admin/textos", label: "Textos", icon: Type },
+    ],
+  },
+  {
+    title: "Sistema",
+    items: [
+      { href: "/admin/personalizacao", label: "Marca e identidade", icon: Palette },
+      { href: "/admin/tema", label: "Tema", icon: Palette },
+      { href: "/admin/usuarios", label: "Usuários", icon: Users },
+      { href: "/admin/permissoes", label: "Permissões", icon: KeyRound },
+      { href: "/admin/documentos", label: "Documentos", icon: FileText },
+      { href: "/admin/relatorios", label: "Relatórios", icon: BarChart3 },
+      { href: "/admin/audit-log", label: "Audit log", icon: ScrollText },
+      { href: "/admin/notificacoes", label: "Notificações", icon: Bell },
+    ],
+  },
+];
+
+export function isAdminNavActive(pathname: string, href: string) {
+  if (href === "/admin") return pathname === "/admin";
+  if (href === "/admin/placar-ao-vivo") {
+    return pathname === href || pathname.startsWith("/admin/partida/");
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
