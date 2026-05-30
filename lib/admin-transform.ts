@@ -12,8 +12,9 @@ export function prepareAdminPayload(entity: string, data: Record<string, unknown
     out.slug = slugify(out.name);
   }
   if (entity === "clubs" && typeof out.name === "string") {
-    out.name = formatClubDisplayName(out.name);
-    out.normalizedName = normalizeClubName(out.name);
+    const clubName = formatClubDisplayName(out.name);
+    out.name = clubName;
+    out.normalizedName = normalizeClubName(clubName);
     if (typeof out.city === "string" && out.city) {
       out.city = formatClubDisplayName(out.city);
     }

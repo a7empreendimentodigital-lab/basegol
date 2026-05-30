@@ -17,11 +17,6 @@ const TAB_DEFS = [
   { segment: "sumula", label: "Súmula" },
 ] as const;
 
-/** Garante `string | null` para props do TeamCrest (nunca `undefined`). */
-function toCrestUrl(value: string | null | undefined): string | null {
-  return value ?? null;
-}
-
 type LiveSnapshot = {
   status: string;
   homeScore: number;
@@ -54,8 +49,6 @@ export function MatchOperationNav({
 }: Props) {
   const pathname = usePathname() ?? "";
   const [live, setLive] = useState(initial);
-  const homeCrestUrl = toCrestUrl(homeCrest);
-  const awayCrestUrl = toCrestUrl(awayCrest);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/matches/${matchId}`);
@@ -115,7 +108,7 @@ export function MatchOperationNav({
 
           <div className="flex items-center justify-center gap-4 sm:gap-8">
             <div className="flex flex-1 flex-col items-center gap-2 min-w-0 text-center">
-              <TeamCrest url={homeCrestUrl} name={homeName} size="lg" />
+              <TeamCrest url={homeCrest ?? null} name={homeName} size="lg" />
               <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 leading-snug">
                 {homeName}
               </p>
@@ -130,7 +123,7 @@ export function MatchOperationNav({
             </div>
 
             <div className="flex flex-1 flex-col items-center gap-2 min-w-0 text-center">
-              <TeamCrest url={awayCrestUrl} name={awayName} size="lg" />
+              <TeamCrest url={awayCrest ?? null} name={awayName} size="lg" />
               <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 leading-snug">
                 {awayName}
               </p>

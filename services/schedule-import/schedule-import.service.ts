@@ -9,7 +9,6 @@ import {
   normalizeClubName,
   normalizeEntityName,
 } from "@/lib/normalize-name";
-import type { ClubNameResolver } from "@/services/schedule-import/fp-paulista-parser";
 import { slugify } from "@/lib/utils";
 import { extractTextFromPdf } from "@/services/schedule-import/pdf-text";
 import {
