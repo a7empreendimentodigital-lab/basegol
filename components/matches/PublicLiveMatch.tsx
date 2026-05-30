@@ -10,7 +10,14 @@ type MatchPayload = {
   status: string;
   homeScore: number;
   awayScore: number;
+  homePenaltyScore?: number;
+  awayPenaltyScore?: number;
+  matchPeriod?: string | null;
   minute: number | null;
+  elapsedSeconds?: number;
+  clockRunning?: boolean;
+  inPenaltyShootout?: boolean;
+  penaltyKicks?: { home: boolean[]; away: boolean[] };
   scheduledAt: string;
   venue: string | null;
   round: number;
@@ -54,7 +61,14 @@ function toMatchView(m: MatchPayload): MatchWithTeams {
     status: m.status,
     homeScore: m.homeScore,
     awayScore: m.awayScore,
+    homePenaltyScore: m.homePenaltyScore,
+    awayPenaltyScore: m.awayPenaltyScore,
+    matchPeriod: m.matchPeriod,
     minute: m.minute,
+    elapsedSeconds: m.elapsedSeconds,
+    clockRunning: m.clockRunning,
+    inPenaltyShootout: m.inPenaltyShootout,
+    penaltyKicks: m.penaltyKicks,
     scheduledAt: new Date(m.scheduledAt),
     venue: m.venue,
     round: m.round,

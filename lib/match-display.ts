@@ -14,10 +14,45 @@ export function formatMatchDateShort(scheduledAt: Date | string): string {
   return formatDate(scheduledAt, { day: "2-digit", month: "short" });
 }
 
-export function formatLiveClock(status: string, minute: number | null): string {
+type LiveClockMatch = {
+  status: string;
+  matchPeriod?: string | null;
+  minute?: number | null;
+  elapsedSeconds?: number;
+  clockRunning?: boolean;
+  clockStartedAt?: Date | string | null;
+  periodLengthMin?: number;
+  periodCount?: number;
+};
+
+export function formatLiveClock(
+  status: string,
+  minute: number | null,
+  match?: LiveClockMatch | null
+): string {
+  if (match?.matchPeriod === "PENALTY_SHOOTOUT") return "Disputa de Pênaltis";
+  if (match?.matchPeriod === "HALFTIME" || status === "HALFTIME") return "Intervalo";
+  if (match?.matchPeriod === "FIRST_HALF") {
+    const sec = match.elapsedSeconds ?? (minute != null ? minute * 60 : 0);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `1º Tempo · ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  if (match?.matchPeriod === "SECOND_HALF") {
+    const sec = match.elapsedSeconds ?? (minute != null ? minute * 60 : 0);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `2º Tempo · ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  if (match?.matchPeriod === "THIRD_HALF") {
+    const sec = match.elapsedSeconds ?? (minute != null ? minute * 60 : 0);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `3º Tempo · ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
   if (status === "HALFTIME") return "Intervalo";
   if (minute == null) return "Ao vivo";
-  const period = minute <= 45 ? "1º Tempo" : "2º Tempo";
+  const period = minute <= 17 ? "1º Tempo" : minute <= 34 ? "2º Tempo" : "3º Tempo";
   const clock = `${String(minute).padStart(2, "0")}:00`;
   return `${period} - ${clock}`;
 }

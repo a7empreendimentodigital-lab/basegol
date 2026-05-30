@@ -102,9 +102,8 @@ export function MatchListRow({ match, showFullDate = false }: MatchListRowProps)
   const homeName = match.homeTeam.club.shortName ?? match.homeTeam.club.name;
   const awayName = match.awayTeam.club.shortName ?? match.awayTeam.club.name;
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
-  const clockLabel = isLive ? formatLiveClock(match.status, match.minute) : null;
-  const showClockSubline =
-    clockLabel != null && clockLabel !== "Ao vivo" && match.minute != null;
+  const clockLabel = isLive ? formatLiveClock(match.status, match.minute, match) : null;
+  const showClockSubline = clockLabel != null && clockLabel !== "Ao vivo";
 
   const statusColumn = (
     <MatchStatusColumn

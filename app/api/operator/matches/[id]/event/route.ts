@@ -1,11 +1,24 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
+import { pauseClockData, resumeClockData } from "@/lib/match-live";
 import { prisma } from "@/lib/prisma";
 import { operatorActionSchema } from "@/utils/zod-schemas/operator.schemas";
 import { canOperateMatch } from "@/services/operator.service";
+import {
+  enrichMatchForApi,
+  reconcileAndPersistScores,
+} from "@/services/match-live.service";
 import { fail, ok } from "@/utils/api-response";
 import { writeAuditLog } from "@/lib/audit";
 import { AUDIT_ACTIONS } from "@/utils/audit-actions";
 import type { MatchEventType } from "@prisma/client";
+
+const matchReturnInclude = {
+  statistics: true,
+  events: { orderBy: { minute: "asc" as const }, include: { athlete: true } },
+  homeTeam: { include: { club: true } },
+  awayTeam: { include: { club: true } },
+  group: { include: { category: { include: { championship: true } } } },
+} as const;
 
 async function descriptionWithAthlete(
   athleteId: string | undefined,
@@ -55,9 +68,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       side === "home" ? match.homeTeamId : side === "away" ? match.awayTeamId : undefined;
 
     if (payload.action === "START_MATCH") {
+      const now = new Date();
       await prisma.match.update({
         where: { id: matchId },
-        data: { status: "LIVE", minute },
+        data: {
+          status: "LIVE",
+          matchPeriod: "FIRST_HALF",
+          elapsedSeconds: 0,
+          clockRunning: true,
+          clockStartedAt: now,
+          minute: 0,
+        },
       });
       await prisma.matchEvent.create({
         data: {
@@ -69,51 +90,85 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         },
       });
     } else if (payload.action === "HALFTIME") {
-      await prisma.match.update({ where: { id: matchId }, data: { status: "HALFTIME", minute } });
+      const paused = pauseClockData(match);
+      await prisma.match.update({
+        where: { id: matchId },
+        data: { status: "HALFTIME", matchPeriod: "HALFTIME", ...paused },
+      });
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "HALFTIME",
-          minute,
+          minute: paused.minute,
           extraMinute,
           description: payload.description ?? "Intervalo",
         },
       });
     } else if (payload.action === "SECOND_HALF") {
-      await prisma.match.update({ where: { id: matchId }, data: { status: "LIVE", minute } });
+      const paused = pauseClockData(match);
+      await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          status: "LIVE",
+          matchPeriod: "SECOND_HALF",
+          elapsedSeconds: paused.elapsedSeconds,
+          ...resumeClockData({ ...match, elapsedSeconds: paused.elapsedSeconds }),
+        },
+      });
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "KICKOFF",
-          minute,
+          minute: paused.minute,
           extraMinute,
           description: payload.description ?? "Segundo tempo",
         },
       });
     } else if (payload.action === "THIRD_HALF") {
-      await prisma.match.update({ where: { id: matchId }, data: { status: "LIVE", minute } });
+      const paused = pauseClockData(match);
+      await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          status: "LIVE",
+          matchPeriod: "THIRD_HALF",
+          elapsedSeconds: paused.elapsedSeconds,
+          ...resumeClockData({ ...match, elapsedSeconds: paused.elapsedSeconds }),
+        },
+      });
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "KICKOFF",
-          minute,
+          minute: paused.minute,
           extraMinute,
           description: payload.description ?? "Terceiro tempo",
         },
       });
     } else if (payload.action === "PENALTY_SHOOTOUT") {
-      await prisma.match.update({ where: { id: matchId }, data: { status: "LIVE", minute } });
+      const paused = pauseClockData(match);
+      await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          status: "LIVE",
+          matchPeriod: "PENALTY_SHOOTOUT",
+          ...paused,
+        },
+      });
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "KICKOFF",
-          minute,
+          minute: paused.minute,
           extraMinute,
           description: payload.description ?? "Disputa de pênaltis",
         },
       });
     } else if (payload.action === "END_MATCH") {
-      await prisma.match.update({ where: { id: matchId }, data: { status: "FINISHED", minute } });
+      const paused = pauseClockData(match);
+      await prisma.match.update({
+        where: { id: matchId },
+        data: { status: "FINISHED", matchPeriod: "FINISHED", ...paused },
+      });
       await prisma.matchEvent.create({
         data: {
           matchId,
@@ -128,10 +183,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       payload.action === "GOAL_AWAY" ||
       payload.action === "GOAL"
     ) {
-      const isHome =
-        payload.action === "GOAL_HOME" || payload.side === "home";
-      const isAway =
-        payload.action === "GOAL_AWAY" || payload.side === "away";
       const resolvedTeamId =
         payload.teamId ??
         (payload.action === "GOAL_HOME"
@@ -142,11 +193,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       await prisma.match.update({
         where: { id: matchId },
-        data: {
-          minute,
-          homeScore: isHome ? match.homeScore + 1 : match.homeScore,
-          awayScore: isAway ? match.awayScore + 1 : match.awayScore,
-        },
+        data: { minute },
       });
       await prisma.matchEvent.create({
         data: {
@@ -161,15 +208,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       });
     } else if (payload.action === "PENALTY_GOAL") {
       const resolvedTeamId = payload.teamId ?? teamIdFromSide(payload.side);
-      const isHome = resolvedTeamId === match.homeTeamId;
-      const isAway = resolvedTeamId === match.awayTeamId;
       await prisma.match.update({
         where: { id: matchId },
-        data: {
-          minute,
-          homeScore: isHome ? match.homeScore + 1 : match.homeScore,
-          awayScore: isAway ? match.awayScore + 1 : match.awayScore,
-        },
+        data: { minute },
       });
       await prisma.matchEvent.create({
         data: {
@@ -238,14 +279,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       });
     }
 
+    const events = await prisma.matchEvent.findMany({
+      where: { matchId },
+      orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
+    });
+    await reconcileAndPersistScores(matchId, match.homeTeamId, match.awayTeamId, events);
+
     const updated = await prisma.match.findUnique({
       where: { id: matchId },
-      include: {
-        statistics: true,
-        events: { orderBy: { minute: "asc" }, include: { athlete: true } },
-        homeTeam: { include: { club: true } },
-        awayTeam: { include: { club: true } },
-      },
+      include: matchReturnInclude,
     });
 
     await writeAuditLog({
@@ -256,7 +298,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       metadata: { action: payload.action, minute },
     });
 
-    return ok(updated);
+    return ok(updated ? enrichMatchForApi(updated) : null);
   } catch {
     return fail("Falha operacional", 400);
   }

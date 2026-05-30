@@ -1,4 +1,4 @@
-import { getMatchById } from "@/services/match.service";
+import { getMatchDetailForApi } from "@/services/match.service";
 import { fail, ok } from "@/utils/api-response";
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const match = await getMatchById(id);
+    const match = await getMatchDetailForApi(id);
     if (!match) {
       return fail("Partida não encontrada", 404);
     }

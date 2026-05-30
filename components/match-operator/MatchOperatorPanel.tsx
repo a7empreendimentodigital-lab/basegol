@@ -17,14 +17,23 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
+import { formatPublicLiveClock } from "@/lib/match-live";
 import { cn } from "@/lib/utils";
 
 export type MatchData = {
   id: string;
   status: string;
+  matchPeriod?: string | null;
   minute: number | null;
+  elapsedSeconds?: number;
+  clockRunning?: boolean;
+  periodLengthMin?: number;
+  periodCount?: number;
   homeScore: number;
   awayScore: number;
+  homePenaltyScore?: number;
+  awayPenaltyScore?: number;
+  inPenaltyShootout?: boolean;
   homeTeamId?: string;
   awayTeamId?: string;
   homeTeam?: { id?: string; club: { name: string } };
@@ -112,9 +121,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
 
   useEffect(() => {
     void refresh();
-    const t = setInterval(() => void refresh(), 5000);
+    const ms = match?.clockRunning ? 1000 : 5000;
+    const t = setInterval(() => void refresh(), ms);
     return () => clearInterval(t);
-  }, [refresh]);
+  }, [refresh, match?.clockRunning]);
 
   useEffect(() => {
     void loadAthletes(eventSide);
@@ -153,14 +163,41 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const stats = match?.statistics;
   const homeName = match?.homeTeam?.club.name ?? "Mandante";
   const awayName = match?.awayTeam?.club.name ?? "Visitante";
+  const liveClockLabel =
+    match && (match.status === "LIVE" || match.status === "HALFTIME")
+      ? formatPublicLiveClock(
+          {
+            status: match.status,
+            matchPeriod: match.matchPeriod ?? "SCHEDULED",
+            minute: match.minute,
+            elapsedSeconds: match.elapsedSeconds ?? 0,
+            clockRunning: match.clockRunning ?? false,
+            clockStartedAt: null,
+            periodLengthMin: match.periodLengthMin ?? 17,
+            periodCount: match.periodCount ?? 3,
+          },
+          match.events ?? []
+        )
+      : null;
 
   return (
     <div className="space-y-4">
       {(mode === "all" || mode === "placar") && (
         <SectionCard
           title="Controle da partida"
-          description="Defina o minuto antes de registrar eventos. O placar no topo atualiza automaticamente."
+          description="O cronômetro roda automaticamente (3×17 min). Intervalo pausa; 2º e 3º tempo retomam de onde parou."
         >
+          {liveClockLabel ? (
+            <p className="mb-4 text-center font-mono text-lg font-semibold text-neon tabular-nums">
+              {liveClockLabel}
+            </p>
+          ) : null}
+          {match?.inPenaltyShootout ? (
+            <p className="mb-4 text-center text-sm text-muted-foreground">
+              Tempo regulamentar: {match.homeScore} × {match.awayScore} · Pênaltis:{" "}
+              {match.homePenaltyScore ?? 0} × {match.awayPenaltyScore ?? 0}
+            </p>
+          ) : null}
           <div className="flex flex-wrap items-end justify-center gap-6 mb-6">
             <div className="text-center">
               <Label className="text-muted-foreground">Minuto</Label>

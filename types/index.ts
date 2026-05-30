@@ -1,9 +1,20 @@
+export type PenaltyKicks = boolean[];
+
 export type MatchWithTeams = {
   id: string;
   status: string;
   homeScore: number;
   awayScore: number;
+  homePenaltyScore?: number;
+  awayPenaltyScore?: number;
+  matchPeriod?: string | null;
   minute: number | null;
+  elapsedSeconds?: number;
+  clockRunning?: boolean;
+  periodLengthMin?: number;
+  periodCount?: number;
+  inPenaltyShootout?: boolean;
+  penaltyKicks?: { home: PenaltyKicks; away: PenaltyKicks };
   scheduledAt: Date;
   venue: string | null;
   round: number;

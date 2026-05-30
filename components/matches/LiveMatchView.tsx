@@ -20,6 +20,7 @@ import { StatisticBar } from "@/components/matches/StatisticBar";
 import { StandingTable } from "@/components/matches/StandingTable";
 import { normalizeImageSrc } from "@/lib/image-url";
 import { TeamCrest } from "@/components/matches/TeamCrest";
+import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
 import { formatLiveClock, formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
 import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
 import { formatTime } from "@/lib/utils";
@@ -101,7 +102,13 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
   const awayName = match.awayTeam.club.shortName ?? match.awayTeam.club.name;
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
   const hasStats = stats != null;
-  const clockLabel = isLive ? formatLiveClock(match.status, match.minute) : null;
+  const showPenalties =
+    match.inPenaltyShootout ||
+    match.matchPeriod === "PENALTY_SHOOTOUT" ||
+    (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0;
+  const clockLabel = isLive
+    ? formatLiveClock(match.status, match.minute, match)
+    : null;
 
   return (
     <div className="w-full space-y-6">
@@ -140,11 +147,13 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
             </p>
           </div>
 
-          <p className="shrink-0 font-display text-4xl tracking-wider text-foreground tabular-nums sm:text-5xl">
-            {match.homeScore}
-            <span className="mx-1 text-muted-foreground">-</span>
-            {match.awayScore}
-          </p>
+          <div className="shrink-0 rounded-xl border border-line/80 bg-pitch/40 px-4 py-2 sm:px-5">
+            <p className="font-display text-4xl tracking-wider text-foreground tabular-nums sm:text-5xl">
+              {match.homeScore}
+              <span className="mx-1 text-muted-foreground">:</span>
+              {match.awayScore}
+            </p>
+          </div>
 
           <div className="flex min-w-0 max-w-[9rem] flex-1 flex-col items-center gap-2.5">
             <TeamCrest url={match.awayTeam.club.crestUrl} name={awayName} size="xl" />
@@ -153,6 +162,15 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
             </p>
           </div>
         </div>
+
+        {showPenalties ? (
+          <PenaltyShootoutPanel
+            homeScore={match.homePenaltyScore ?? 0}
+            awayScore={match.awayPenaltyScore ?? 0}
+            homeKicks={match.penaltyKicks?.home}
+            awayKicks={match.penaltyKicks?.away}
+          />
+        ) : null}
 
         <div className="space-y-1.5 border-t border-line/60 pt-4">
           <MatchMetaRow icon={Calendar}>{formatMatchDateTime(match.scheduledAt)}</MatchMetaRow>

@@ -497,6 +497,16 @@ enum MatchStatus {
   CANCELLED
 }
 
+enum MatchPeriod {
+  SCHEDULED
+  FIRST_HALF
+  HALFTIME
+  SECOND_HALF
+  THIRD_HALF
+  PENALTY_SHOOTOUT
+  FINISHED
+}
+
 model Match {
   id                 String            @id @default(cuid())
   championshipId     String?
@@ -516,10 +526,18 @@ model Match {
   importFingerprint  String?           @unique
   sumulaMeta         Json?
   status             MatchStatus       @default(SCHEDULED)
+  matchPeriod        MatchPeriod       @default(SCHEDULED)
   homeScore          Int               @default(0)
   awayScore          Int               @default(0)
+  homePenaltyScore   Int               @default(0)
+  awayPenaltyScore   Int               @default(0)
   minute             Int?
   extraTime          Int?
+  elapsedSeconds     Int               @default(0)
+  clockRunning       Boolean           @default(false)
+  clockStartedAt     DateTime?
+  periodLengthMin    Int               @default(17)
+  periodCount        Int               @default(3)
   championship       Championship?     @relation(fields: [championshipId], references: [id], onDelete: SetNull)
   group              Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
   homeTeam           Team              @relation("HomeTeam", fields: [homeTeamId], references: [id])

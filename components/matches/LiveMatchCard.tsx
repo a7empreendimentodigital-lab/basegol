@@ -24,7 +24,7 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
           </p>
         </div>
         <p className="shrink-0 whitespace-nowrap text-right text-[11px] font-medium text-red-400">
-          {formatLiveClock(match.status, match.minute)}
+          {formatLiveClock(match.status, match.minute, match)}
         </p>
       </div>
 
