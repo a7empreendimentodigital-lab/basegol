@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 function MatchMeta({ match }: { match: MatchWithTeams }) {
   return (
-    <div className="min-w-0 space-y-1.5 text-xs leading-snug sm:text-right">
+    <div className="min-w-0 space-y-1.5 text-xs leading-snug">
       {match.championshipName ? (
         <p className="flex items-center gap-1.5 text-muted-foreground sm:justify-end">
           <Trophy className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
@@ -120,33 +120,34 @@ export function MatchListRow({ match, showFullDate = false }: MatchListRowProps)
     <Link
       href={`/jogos/${match.id}`}
       className={cn(
-        "block w-full px-3 py-4 sm:px-5 sm:py-5 lg:px-8 transition-colors hover:bg-graphite/50",
+        "block w-full px-3 py-5 transition-colors hover:bg-graphite/50 sm:px-5 sm:py-5 lg:px-8",
         isLive && "bg-red-500/[0.03] hover:bg-red-500/[0.05]"
       )}
     >
-      <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[5rem_minmax(0,1fr)_minmax(9rem,12rem)] sm:items-center sm:gap-x-6 lg:gap-x-8">
+      <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[5rem_minmax(0,1fr)_minmax(9rem,12rem)] sm:items-center sm:gap-x-6 sm:gap-y-3 lg:gap-x-8">
         <div className="sm:hidden">{statusColumn}</div>
         <div className="hidden shrink-0 sm:block">{statusColumn}</div>
 
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-4">
-          <div className="flex min-w-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+        {/* Mobile: brasão + nome simétricos; desktop: layout em linha */}
+        <div className="grid min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-x-4">
+          <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:text-right">
+            <TeamCrest url={match.homeTeam.club.crestUrl} name={homeName} size="md" />
             <span
-              className="max-w-full text-right text-sm font-semibold leading-snug text-foreground line-clamp-2 break-words sm:text-base"
+              className="max-w-full text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:text-base"
               title={homeName}
             >
               {homeName}
             </span>
-            <TeamCrest url={match.homeTeam.club.crestUrl} name={homeName} size="md" />
           </div>
 
-          <div className="shrink-0 px-1 text-center sm:px-2">
+          <div className="flex shrink-0 items-center justify-center px-0.5 sm:px-2">
             <MatchScore match={match} isLive={isLive} />
           </div>
 
-          <div className="flex min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
             <TeamCrest url={match.awayTeam.club.crestUrl} name={awayName} size="md" />
             <span
-              className="max-w-full text-left text-sm font-semibold leading-snug text-foreground line-clamp-2 break-words sm:text-base"
+              className="max-w-full text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:text-base"
               title={awayName}
             >
               {awayName}
@@ -154,7 +155,7 @@ export function MatchListRow({ match, showFullDate = false }: MatchListRowProps)
           </div>
         </div>
 
-        <div className="min-w-0 border-t border-line/30 pt-2.5 sm:border-0 sm:pt-0">
+        <div className="min-w-0 border-t border-line/40 pt-3 sm:border-0 sm:pt-0">
           <MatchMeta match={match} />
         </div>
       </div>
@@ -197,9 +198,14 @@ export function MatchList({
   }
 
   return (
-    <div className="w-full divide-y divide-line/30 overflow-hidden rounded-2xl border border-line bg-graphite-light/90">
+    <div className="flex w-full flex-col gap-2 overflow-hidden rounded-2xl border border-line bg-graphite-light/90 p-2 sm:gap-0 sm:p-0 sm:divide-y sm:divide-line/50">
       {matches.map((m) => (
-        <MatchListRow key={m.id} match={m} showFullDate={showFullDate} />
+        <div
+          key={m.id}
+          className="overflow-hidden rounded-xl border border-line/30 bg-pitch/20 sm:rounded-none sm:border-0 sm:bg-transparent"
+        >
+          <MatchListRow match={m} showFullDate={showFullDate} />
+        </div>
       ))}
     </div>
   );

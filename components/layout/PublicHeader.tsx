@@ -174,7 +174,7 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
       <header className="sticky top-0 z-[60] shrink-0 border-b border-line bg-pitch/95 backdrop-blur-xl">
         {/* Mobile: linha compacta + busca */}
         <div className="space-y-2 px-3 py-2 sm:px-4 md:hidden">
-          <div className="grid h-11 grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2">
+          <div className="grid h-12 grid-cols-[2.5rem_1fr_2.75rem] items-center gap-2">
             <button
               type="button"
               onClick={(e) => {
@@ -191,8 +191,12 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
             >
               <Menu className="h-5 w-5" aria-hidden />
             </button>
-            <div className="flex min-w-0 justify-center">
-              <MobileBrandLogo src={mobileLogoUrl} imageClassName="h-9 w-9" />
+            <div className="flex min-w-0 items-center justify-center px-1">
+              <MobileBrandLogo
+                src={mobileLogoUrl}
+                className="w-full max-w-[168px]"
+                imageClassName="h-11 max-h-11 w-full max-w-[168px]"
+              />
             </div>
             <div className="flex justify-end">
               <MobileUserSlot

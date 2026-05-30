@@ -88,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             userName={session?.user?.name ?? null}
             userImage={session?.user?.image ?? null}
             isLoggedIn={!!session?.user}
-            mobileLogoUrl={brand?.mobileLogoUrl ?? null}
+            mobileLogoUrl={brand?.logoUrl ?? brand?.mobileLogoUrl ?? null}
           >
             {children}
           </AppShellWrapper>

@@ -26,9 +26,12 @@ export function MobileBrandLogo({
         <Image
           src={logoSrc}
           alt={systemName}
-          width={56}
+          width={200}
           height={56}
-          className={cn("h-9 w-9 object-contain sm:h-10 sm:w-10", imageClassName)}
+          className={cn(
+            "h-11 w-auto max-h-11 max-w-[min(100%,168px)] object-contain object-center",
+            imageClassName
+          )}
           unoptimized={shouldUnoptimizeImageSrc(logoSrc)}
           priority
         />
