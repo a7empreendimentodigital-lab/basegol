@@ -98,7 +98,7 @@ types/            # TypeScript globais
 | `POST /api/auth/reset-password` | Confirmar reset |
 | `POST /api/auth/impersonate` | Entrar como usuário (SUPER_ADMIN) |
 | `POST /api/auth/stop-impersonation` | Encerrar impersonação |
-| `POST /api/upload` | Upload local de imagem/documento |
+| `POST /api/upload` | Upload de imagem/documento (Vercel Blob em produção) |
 
 ## PWA
 
@@ -115,7 +115,7 @@ O app é instalável no celular. Em produção, o service worker (`public/sw.js`
 
 ## Deploy
 
-Compatível com **Vercel**, **Railway** ou VPS com Node. Configure `DATABASE_URL` e `NEXTAUTH_*` nas variáveis de ambiente.
+Compatível com **Vercel**, **Railway** ou VPS com Node. Configure `DATABASE_URL`, `NEXTAUTH_*` e `BLOB_READ_WRITE_TOKEN` (Vercel → Storage → Blob) para upload de imagens em produção.
 
 ## Licença
 
