@@ -9,6 +9,7 @@ import { getActiveThemeConfig, getBrandConfig } from "@/lib/site-config";
 import { getActiveBannersByPlacement } from "@/services/banner.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { PWA_ICONS } from "@/lib/pwa-icons";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,8 +36,13 @@ export const metadata: Metadata = {
     title: "BASEGOL",
   },
   icons: {
-    icon: "/icons/icon-192.svg",
-    apple: "/icons/icon-192.svg",
+    icon: [
+      { url: PWA_ICONS.favicon16, sizes: "16x16", type: "image/png" },
+      { url: PWA_ICONS.favicon32, sizes: "32x32", type: "image/png" },
+      { url: PWA_ICONS.icon192, sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: PWA_ICONS.appleTouch, sizes: "180x180", type: "image/png" }],
+    shortcut: PWA_ICONS.favicon32,
   },
 };
 
