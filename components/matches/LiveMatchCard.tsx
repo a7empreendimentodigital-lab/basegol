@@ -7,7 +7,7 @@ import { TeamCrest } from "@/components/matches/TeamCrest";
 export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
   const homeName = match.homeTeam.club.shortName ?? match.homeTeam.club.name;
   const awayName = match.awayTeam.club.shortName ?? match.awayTeam.club.name;
-  const progress = matchProgressPercent(match.status, match.minute);
+  const progress = matchProgressPercent(match.status, match.minute, match);
   const competition =
     match.championshipName?.toUpperCase() ?? match.categoryName?.toUpperCase() ?? "CAMPEONATO";
 

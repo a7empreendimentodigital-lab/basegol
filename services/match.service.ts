@@ -1,8 +1,14 @@
-import type { Prisma } from "@prisma/client";
+import type { MatchEventType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  resolveElapsedSeconds,
+  resolveMatchPeriodForDisplay,
+  type MatchEventLike,
+} from "@/lib/match-live";
 import {
   enrichMatchForApi,
   reconcileAndPersistScores,
+  repairMatchPeriodIfNeeded,
   syncMatchClockToNow,
 } from "@/services/match-live.service";
 import type { MatchWithTeams } from "@/types";
@@ -19,10 +25,24 @@ const matchInclude = {
   },
 } as const;
 
-function mapMatch(m: Awaited<ReturnType<typeof fetchMatchRaw>>): MatchWithTeams | null {
+const PERIOD_EVENT_TYPES: MatchEventType[] = ["KICKOFF", "HALFTIME", "FULLTIME"];
+
+const periodEventsInclude = {
+  where: { type: { in: PERIOD_EVENT_TYPES } },
+  orderBy: [{ createdAt: "asc" as const }],
+  select: { type: true, description: true, minute: true },
+};
+
+function mapMatch(
+  m: Awaited<ReturnType<typeof fetchMatchRaw>> & {
+    events?: MatchEventLike[];
+  }
+): MatchWithTeams | null {
   if (!m) return null;
+  const period = resolveMatchPeriodForDisplay(m, m.events ?? []);
+  const elapsed = resolveElapsedSeconds(m);
   const inPenalties =
-    m.matchPeriod === "PENALTY_SHOOTOUT" ||
+    period === "PENALTY_SHOOTOUT" ||
     (m.homePenaltyScore > 0 || m.awayPenaltyScore > 0);
   return {
     id: m.id,
@@ -31,9 +51,11 @@ function mapMatch(m: Awaited<ReturnType<typeof fetchMatchRaw>>): MatchWithTeams 
     awayScore: m.awayScore,
     homePenaltyScore: m.homePenaltyScore,
     awayPenaltyScore: m.awayPenaltyScore,
-    matchPeriod: m.matchPeriod,
-    minute: m.minute,
-    elapsedSeconds: m.elapsedSeconds,
+    matchPeriod: period,
+    minute: m.clockRunning
+      ? Math.max(1, Math.ceil(elapsed / 60) || (m.minute ?? 1))
+      : m.minute,
+    elapsedSeconds: elapsed,
     clockRunning: m.clockRunning,
     periodLengthMin: m.periodLengthMin,
     periodCount: m.periodCount,
@@ -77,13 +99,39 @@ async function fetchMatchRaw(id: string) {
 
 export async function getLiveMatches(): Promise<MatchWithTeams[]> {
   try {
-    const matches = await prisma.match.findMany({
+    const live = await prisma.match.findMany({
       where: { status: { in: ["LIVE", "HALFTIME"] } },
-      include: matchInclude,
+      select: { id: true },
       orderBy: { scheduledAt: "asc" },
       take: 10,
     });
-    return matches.map((m) => mapMatch(m)!);
+    await Promise.all(live.map((m) => syncMatchClockToNow(m.id)));
+
+    const matches = await prisma.match.findMany({
+      where: { status: { in: ["LIVE", "HALFTIME"] } },
+      include: {
+        ...matchInclude,
+        events: periodEventsInclude,
+      },
+      orderBy: { scheduledAt: "asc" },
+      take: 10,
+    });
+
+    for (const m of matches) {
+      await repairMatchPeriodIfNeeded(m);
+    }
+
+    const refreshed = await prisma.match.findMany({
+      where: { status: { in: ["LIVE", "HALFTIME"] } },
+      include: {
+        ...matchInclude,
+        events: periodEventsInclude,
+      },
+      orderBy: { scheduledAt: "asc" },
+      take: 10,
+    });
+
+    return refreshed.map((m) => mapMatch(m)!);
   } catch {
     return [];
   }

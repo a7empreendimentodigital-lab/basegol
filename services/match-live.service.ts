@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import {
-  inferPeriodFromEvents,
   pauseClockData,
   rebuildScoresFromEvents,
   resolveElapsedSeconds,
+  resolveMatchPeriodForDisplay,
   type MatchEventLike,
 } from "@/lib/match-live";
+import type { MatchPeriod } from "@prisma/client";
 
 type MatchWithRelations = {
   id: string;
@@ -62,12 +63,29 @@ export async function reconcileAndPersistScores(
   return scores;
 }
 
+/** Corrige `matchPeriod` no banco quando eventos indicam período mais avançado. */
+export async function repairMatchPeriodIfNeeded(
+  match: MatchWithRelations & { events?: MatchEventLike[] }
+) {
+  const events = match.events ?? [];
+  const resolved = resolveMatchPeriodForDisplay(match, events);
+  const stored = match.matchPeriod;
+  if (
+    resolved &&
+    resolved !== stored &&
+    resolved !== "SCHEDULED" &&
+    stored !== "FINISHED"
+  ) {
+    await prisma.match.update({
+      where: { id: match.id },
+      data: { matchPeriod: resolved as MatchPeriod },
+    });
+  }
+}
+
 export function enrichMatchForApi<T extends MatchWithRelations>(match: T) {
   const events = (match.events ?? []) as MatchEventLike[];
-  const period =
-    match.matchPeriod && match.matchPeriod !== "SCHEDULED"
-      ? match.matchPeriod
-      : inferPeriodFromEvents(events) ?? match.matchPeriod;
+  const period = resolveMatchPeriodForDisplay(match, events);
 
   const elapsed = resolveElapsedSeconds(match);
   const scores = rebuildScoresFromEvents(events, match.homeTeamId, match.awayTeamId);

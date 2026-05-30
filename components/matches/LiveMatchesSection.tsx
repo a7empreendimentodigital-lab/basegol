@@ -1,6 +1,6 @@
 import { Radio } from "lucide-react";
 import type { MatchWithTeams } from "@/types";
-import { LiveMatchCard } from "@/components/matches/LiveMatchCard";
+import { LiveMatchesPoller } from "@/components/matches/LiveMatchesPoller";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 
 export function LiveMatchesSection({ matches }: { matches: MatchWithTeams[] }) {
@@ -19,11 +19,7 @@ export function LiveMatchesSection({ matches }: { matches: MatchWithTeams[] }) {
         <HomeSectionLink href="/jogos?status=LIVE">Ver todos</HomeSectionLink>
       </div>
 
-      <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 scrollbar-hide">
-        {matches.map((m) => (
-          <LiveMatchCard key={m.id} match={m} />
-        ))}
-      </div>
+      <LiveMatchesPoller initialMatches={matches} />
     </section>
   );
 }

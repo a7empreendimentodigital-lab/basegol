@@ -20,7 +20,7 @@ export type MatchScoreFields = {
 
 export type MatchEventLike = {
   type: string;
-  minute: number;
+  minute?: number;
   teamId?: string | null;
   description?: string | null;
   createdAt?: Date | string;
@@ -97,12 +97,61 @@ export function inferPeriodFromEvents(events: MatchEventLike[]): MatchPeriod | n
     if (e.type === "KICKOFF") {
       if (d.includes("pênalt") || d.includes("penalt")) period = "PENALTY_SHOOTOUT";
       else if (d.includes("terceiro")) period = "THIRD_HALF";
-      else if (d.includes("segundo")) period = "SECOND_HALF";
-      else if (d.includes("início") || d.includes("inicio")) period = "FIRST_HALF";
+      else if (d.includes("segundo") || d.includes("2º") || d.includes("2o"))
+        period = "SECOND_HALF";
+      else if (d.includes("início") || d.includes("inicio") || d.includes("primeiro"))
+        period = "FIRST_HALF";
+      else if (!period) period = "FIRST_HALF";
     }
     if (e.type === "FULLTIME") period = "FINISHED";
   }
   return period;
+}
+
+const PERIOD_RANK: Record<string, number> = {
+  SCHEDULED: 0,
+  FIRST_HALF: 1,
+  HALFTIME: 2,
+  SECOND_HALF: 3,
+  THIRD_HALF: 4,
+  PENALTY_SHOOTOUT: 5,
+  FINISHED: 6,
+};
+
+/** Período efetivo para exibição (DB + eventos quando o banco ficou desatualizado). */
+export function resolveMatchPeriodForDisplay(
+  match: MatchClockFields & { status: string },
+  events: MatchEventLike[] = []
+): MatchPeriod | string {
+  const inferred = inferPeriodFromEvents(events);
+  const stored = match.matchPeriod as string | undefined;
+
+  if (match.status === "HALFTIME") return "HALFTIME";
+  if (stored === "HALFTIME") return "HALFTIME";
+
+  if (inferred && stored && stored !== "SCHEDULED") {
+    const iRank = PERIOD_RANK[inferred] ?? 0;
+    const sRank = PERIOD_RANK[stored] ?? 0;
+    if (iRank > sRank) return inferred;
+    return stored;
+  }
+
+  if (stored && stored !== "SCHEDULED") return stored;
+  if (inferred) return inferred;
+  if (match.status === "FINISHED") return "FINISHED";
+  return stored ?? "FIRST_HALF";
+}
+
+/** Segundos decorridos só no período atual (ex.: 2º tempo começa em 00:00). */
+export function getPeriodElapsedSeconds(
+  match: MatchClockFields,
+  period: string
+): number {
+  const total = resolveElapsedSeconds(match);
+  const periodSec = (match.periodLengthMin ?? 17) * 60;
+  if (period === "SECOND_HALF") return Math.max(0, total - periodSec);
+  if (period === "THIRD_HALF") return Math.max(0, total - periodSec * 2);
+  return total;
 }
 
 export function rebuildScoresFromEvents(
