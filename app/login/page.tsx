@@ -105,9 +105,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-[7fr_3fr]">
+    <div className="min-h-screen min-h-[100dvh] grid lg:grid-cols-[7fr_3fr]">
       <div
-        className={`relative min-h-[38vh] sm:min-h-[42vh] lg:min-h-screen ${
+        className={`relative min-h-[28vh] sm:min-h-[36vh] lg:min-h-screen ${
           loginBg ? "" : "bg-pitch border-b border-line lg:border-b-0 lg:border-r"
         }`}
       >
@@ -126,7 +126,7 @@ export default function LoginPage() {
         ) : null}
       </div>
 
-      <div className="flex flex-col justify-center bg-pitch px-6 py-10 sm:px-10 lg:px-12 xl:px-14">
+      <div className="flex flex-col justify-center bg-pitch px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-10 sm:py-10 lg:px-12 xl:px-14">
         <div className="w-full max-w-sm mx-auto">
           <div className="mb-8 flex justify-center px-2">
             <Link

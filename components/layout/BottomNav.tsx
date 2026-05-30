@@ -26,12 +26,12 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-colors min-w-0",
+                "flex min-h-11 min-w-[56px] flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors",
                 active ? "text-selected" : "text-muted-foreground"
               )}
             >
-              <Icon className="h-5 w-5 shrink-0" />
-              <span className="truncate max-w-[56px]">{label}</span>
+              <Icon className="h-5 w-5 shrink-0" aria-hidden />
+              <span className="max-w-[64px] truncate">{label}</span>
             </Link>
           );
         })}

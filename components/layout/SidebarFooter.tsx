@@ -57,22 +57,29 @@ export function SidebarFavorites({ isLoggedIn }: SidebarSessionProps) {
   );
 }
 
-export function SidebarFooterLinks({ isLoggedIn }: SidebarSessionProps) {
+export function SidebarFooterLinks({
+  isLoggedIn,
+  onNavigate,
+}: SidebarSessionProps & { onNavigate?: () => void }) {
   return (
-    <div className="space-y-1 pt-2 border-t border-line">
+    <div className="space-y-1">
       {isLoggedIn ? (
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+          onClick={() => {
+            onNavigate?.();
+            void signOut({ callbackUrl: "/login" });
+          }}
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-5 w-5 shrink-0" aria-hidden />
           Sair
         </button>
       ) : (
         <Link
           href="/login"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+          onClick={onNavigate}
+          className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
           Entrar
         </Link>

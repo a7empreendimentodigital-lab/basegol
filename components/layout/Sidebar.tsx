@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { Logo } from "@/components/brand/Logo";
+import { PublicNavLinks } from "@/components/layout/PublicNavLinks";
 import { SidebarFavorites, SidebarFooterLinks } from "@/components/layout/SidebarFooter";
-import { PUBLIC_MAIN_NAV, isPublicNavActive } from "@/lib/public-nav";
 import { isClubPortalRoute } from "@/lib/public-routes";
 import { SidebarAdBanner } from "@/components/public/SidebarAdBanner";
 import type { PublicBannerDto } from "@/services/banner.service";
@@ -34,25 +32,8 @@ export function Sidebar({ leftBanner, isLoggedIn }: SidebarProps) {
         <Logo size="sidebar" className="w-full" />
       </div>
 
-      <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-0.5">
-        {PUBLIC_MAIN_NAV.map(({ href, label, icon: Icon }) => {
-          const active = isPublicNavActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "nav-active"
-                  : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{label}</span>
-            </Link>
-          );
-        })}
+      <nav className="flex-1 min-h-0 overflow-y-auto p-3">
+        <PublicNavLinks pathname={pathname ?? "/"} />
 
         <div className="pt-4 mt-2 border-t border-line">
           <SidebarFavorites isLoggedIn={isLoggedIn} />
