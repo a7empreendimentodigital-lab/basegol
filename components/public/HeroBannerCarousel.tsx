@@ -17,7 +17,7 @@ type HeroBannerCarouselProps = {
 };
 
 const ROTATE_MS = 6000;
-const HERO_HEIGHT_CLASS = "h-[390px]";
+const HERO_HEIGHT_CLASS = "h-[220px] sm:h-[300px] md:h-[360px] lg:h-[390px]";
 
 export function HeroBannerCarousel({
   slides,
@@ -59,7 +59,14 @@ export function HeroBannerCarousel({
         )}
       >
         {bg ? (
-          <SafeImage src={bg} alt="" fill className="object-cover" priority sizes="(max-width: 1280px) 100vw, 1200px" />
+          <SafeImage
+            src={bg}
+            alt=""
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1200px"
+          />
         ) : null}
         <div
           className={cn(
@@ -115,7 +122,8 @@ export function HeroBannerCarousel({
           fill
           className="object-cover"
           priority={index === 0}
-          sizes="(max-width: 1280px) 100vw, 1200px"
+          loading={index === 0 ? undefined : "lazy"}
+          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1200px"
         />
       ) : null}
       <div

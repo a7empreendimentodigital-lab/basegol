@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -22,6 +23,7 @@ export type FavoriteClub = {
 
 type ClubFavoritesContextValue = {
   items: FavoriteClub[];
+  favoriteCount: number;
   loading: boolean;
   isFavorite: (clubId: string) => boolean;
   toggleFavorite: (clubId: string) => Promise<void>;
@@ -34,16 +36,21 @@ const ClubFavoritesContext = createContext<ClubFavoritesContextValue | null>(nul
 export function ClubFavoritesProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const [items, setItems] = useState<FavoriteClub[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const loadedUserId = useRef<string | null>(null);
+  const userId = session?.user?.id ?? null;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     if (status === "loading") return;
 
-    if (!session?.user) {
+    if (!userId) {
       setItems([]);
       setLoading(false);
+      loadedUserId.current = null;
       return;
     }
+
+    if (!force && loadedUserId.current === userId) return;
 
     setLoading(true);
     try {
@@ -54,14 +61,23 @@ export function ClubFavoritesProvider({ children }: { children: ReactNode }) {
       }
       const data = await parseApiResponse<FavoriteClub[]>(res);
       setItems(Array.isArray(data) ? data : []);
+      loadedUserId.current = userId;
     } finally {
       setLoading(false);
     }
-  }, [session?.user, status]);
+  }, [status, userId]);
 
   useEffect(() => {
+    if (status === "loading") return;
+    if (!userId) {
+      setItems([]);
+      setLoading(false);
+      loadedUserId.current = null;
+      return;
+    }
+    if (loadedUserId.current === userId) return;
     void load();
-  }, [load]);
+  }, [status, userId, load]);
 
   const isFavorite = useCallback(
     (clubId: string) => items.some((i) => i.id === clubId),
@@ -72,7 +88,7 @@ export function ClubFavoritesProvider({ children }: { children: ReactNode }) {
     async (clubId: string) => {
       setItems((prev) => prev.filter((i) => i.id !== clubId));
       const res = await fetch(`/api/favorites/clubs/${clubId}`, { method: "DELETE" });
-      if (!res.ok) await load();
+      if (!res.ok) await load(true);
     },
     [load]
   );
@@ -88,22 +104,25 @@ export function ClubFavoritesProvider({ children }: { children: ReactNode }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ clubId }),
         });
-        if (res.ok) await load();
+        if (res.ok) await load(true);
       }
     },
     [items, load, removeFavorite]
   );
 
+  const favoriteCount = items.length;
+
   const value = useMemo(
     () => ({
       items,
+      favoriteCount,
       loading,
       isFavorite,
       toggleFavorite,
       removeFavorite,
-      reload: load,
+      reload: () => load(true),
     }),
-    [items, loading, isFavorite, toggleFavorite, removeFavorite, load]
+    [items, favoriteCount, loading, isFavorite, toggleFavorite, removeFavorite, load]
   );
 
   return (
@@ -117,4 +136,11 @@ export function useClubFavorites() {
     throw new Error("useClubFavorites deve ser usado dentro de ClubFavoritesProvider");
   }
   return ctx;
+}
+
+/** Contador para o header — evita depender do array completo de favoritos. */
+export function useClubFavoritesCount() {
+  const ctx = useContext(ClubFavoritesContext);
+  if (!ctx) return 0;
+  return ctx.favoriteCount;
 }

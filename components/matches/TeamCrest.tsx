@@ -36,6 +36,8 @@ export function TeamCrest({ url, name, size = "md" }: Props) {
           src={src!}
           alt={name}
           className="h-full w-full object-contain"
+          loading="lazy"
+          decoding="async"
           onError={() => setImgError(true)}
         />
       ) : (

@@ -1,12 +1,24 @@
 "use client";
 
+import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { ClubFavoritesProvider } from "@/contexts/club-favorites-context";
 import { ToastProvider } from "@/components/ui/toaster";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+const SESSION_REFETCH_SECONDS = 5 * 60;
+
+type Props = {
+  children: React.ReactNode;
+  session: Session | null;
+};
+
+export function Providers({ children, session }: Props) {
   return (
-    <SessionProvider>
+    <SessionProvider
+      session={session}
+      refetchInterval={SESSION_REFETCH_SECONDS}
+      refetchOnWindowFocus={false}
+    >
       <ClubFavoritesProvider>
         <ToastProvider>{children}</ToastProvider>
       </ClubFavoritesProvider>

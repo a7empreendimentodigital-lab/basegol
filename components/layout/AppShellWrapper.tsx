@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNavClient } from "@/components/layout/BottomNavClient";
@@ -16,6 +17,41 @@ type Props = {
   isLoggedIn?: boolean;
   mobileLogoUrl?: string | null;
 };
+
+type PublicChromeProps = {
+  children: React.ReactNode;
+  leftSidebarBanner?: PublicBannerDto | null;
+  userName?: string | null;
+  userImage?: string | null;
+  isLoggedIn?: boolean;
+  mobileLogoUrl?: string | null;
+};
+
+const PublicAppChrome = memo(function PublicAppChrome({
+  children,
+  leftSidebarBanner,
+  userName,
+  userImage,
+  isLoggedIn,
+  mobileLogoUrl,
+}: PublicChromeProps) {
+  return (
+    <>
+      <Sidebar leftBanner={leftSidebarBanner} isLoggedIn={isLoggedIn} />
+      <div className="flex min-h-screen flex-col pb-16 md:pb-0 md:pl-64 lg:pl-72">
+        <PublicTopBar
+          userName={userName}
+          userImage={userImage}
+          isLoggedIn={isLoggedIn}
+          mobileLogoUrl={mobileLogoUrl}
+        />
+        {children}
+      </div>
+      <BottomNavClient />
+      <InstallPwaPrompt />
+    </>
+  );
+});
 
 export function AppShellWrapper({
   children,
@@ -36,29 +72,35 @@ export function AppShellWrapper({
   }
 
   const showPublicChrome = isPublicAppRoute(pathname);
+  const showOperadorHeader = pathname.startsWith("/operador");
+
+  if (!showPublicChrome && !showOperadorHeader) {
+    return <div className="flex min-h-screen flex-col">{children}</div>;
+  }
+
+  if (showOperadorHeader && !showPublicChrome) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <PublicTopBar
+          userName={userName}
+          userImage={userImage}
+          isLoggedIn={isLoggedIn}
+          mobileLogoUrl={mobileLogoUrl}
+        />
+        {children}
+      </div>
+    );
+  }
 
   return (
-    <>
-      {showPublicChrome && <Sidebar leftBanner={leftSidebarBanner} isLoggedIn={isLoggedIn} />}
-      <div
-        className={
-          showPublicChrome
-            ? "flex min-h-screen flex-col pb-16 md:pb-0 md:pl-64 lg:pl-72"
-            : "flex min-h-screen flex-col"
-        }
-      >
-        {showPublicChrome && (
-          <PublicTopBar
-            userName={userName}
-            userImage={userImage}
-            isLoggedIn={isLoggedIn}
-            mobileLogoUrl={mobileLogoUrl}
-          />
-        )}
-        <div key={pathname}>{children}</div>
-      </div>
-      {showPublicChrome && <BottomNavClient />}
-      {showPublicChrome && <InstallPwaPrompt />}
-    </>
+    <PublicAppChrome
+      leftSidebarBanner={leftSidebarBanner}
+      userName={userName}
+      userImage={userImage}
+      isLoggedIn={isLoggedIn}
+      mobileLogoUrl={mobileLogoUrl}
+    >
+      {children}
+    </PublicAppChrome>
   );
 }

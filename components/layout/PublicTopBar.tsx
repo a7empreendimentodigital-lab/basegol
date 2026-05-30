@@ -1,8 +1,4 @@
-"use client";
-
-import { usePathname } from "next/navigation";
 import { PublicHeader } from "@/components/layout/PublicHeader";
-import { isAuthRoute, isPublicAppRoute } from "@/lib/public-routes";
 
 type Props = {
   userName?: string | null;
@@ -11,17 +7,8 @@ type Props = {
   mobileLogoUrl?: string | null;
 };
 
+/** Header público — renderizado apenas quando o shell público está ativo. */
 export function PublicTopBar({ userName, userImage, isLoggedIn, mobileLogoUrl }: Props) {
-  const pathname = usePathname() ?? "/";
-
-  if (isAuthRoute(pathname)) {
-    return null;
-  }
-
-  if (!isPublicAppRoute(pathname) && !pathname.startsWith("/operador")) {
-    return null;
-  }
-
   return (
     <PublicHeader
       userName={userName}

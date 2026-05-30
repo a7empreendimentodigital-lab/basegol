@@ -1,25 +1,14 @@
-import { normalizeBrandConfig, normalizeRecordImageFields } from "@/lib/image-url";
+import { normalizeRecordImageFields } from "@/lib/image-url";
+import { getCachedActiveThemeConfig, getCachedBrandConfig } from "@/lib/server-cache";
 import { prisma } from "@/lib/prisma";
 import type { Sponsor } from "@prisma/client";
 
 export async function getActiveThemeConfig() {
-  try {
-    return await prisma.themeConfig.findFirst({
-      where: { isActive: true },
-      orderBy: { updatedAt: "desc" },
-    });
-  } catch {
-    return null;
-  }
+  return getCachedActiveThemeConfig();
 }
 
 export async function getBrandConfig() {
-  try {
-    const brand = await prisma.brandConfig.findFirst({ orderBy: { updatedAt: "desc" } });
-    return brand ? normalizeBrandConfig(brand) : null;
-  } catch {
-    return null;
-  }
+  return getCachedBrandConfig();
 }
 
 export async function getPublicSiteConfig() {
@@ -33,7 +22,7 @@ export async function getPublicSiteConfig() {
       prisma.menuItem.findMany({ where: { area: "PUBLIC", isActive: true }, orderBy: { order: "asc" } }),
     ]);
     return {
-      brand: brand ? normalizeBrandConfig(brand) : null,
+      brand,
       theme,
       sponsors: sponsors.map((s) => normalizeRecordImageFields(s as Sponsor)),
       sections,

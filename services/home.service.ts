@@ -43,8 +43,9 @@ export async function getHomeCompetitionCategories(): Promise<HomeCategory[]> {
   }));
 }
 
-export async function getHomeSidebarData() {
-  const categories = await getHomeCompetitionCategories();
+export async function getHomeSidebarData(maxCategories = 4) {
+  const all = await getHomeCompetitionCategories();
+  const categories = all.slice(0, maxCategories);
   const standingsByCategory: Record<string, StandingRowDisplay[]> = {};
   const scorersByCategory: Record<string, TopScorerRow[]> = {};
 

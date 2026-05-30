@@ -69,7 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         style={cssVars}
         suppressHydrationWarning
       >
-        <Providers>
+        <Providers session={session}>
           <AppSplashScreenGate imageUrl={brand?.splashScreenUrl ?? null} />
           <RegisterSW />
           {brand?.systemName ? (

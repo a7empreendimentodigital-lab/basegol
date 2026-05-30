@@ -1,14 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { Heart, Menu, Search, User } from "lucide-react";
 import { MobileBrandLogo } from "@/components/brand/MobileBrandLogo";
-import { PublicMobileNavDrawer } from "@/components/layout/PublicMobileNavDrawer";
-import { useClubFavorites } from "@/hooks/use-club-favorites";
+import { useClubFavoritesCount } from "@/hooks/use-club-favorites";
 import { cn } from "@/lib/utils";
+
+const PublicMobileNavDrawer = dynamic(
+  () =>
+    import("@/components/layout/PublicMobileNavDrawer").then((m) => m.PublicMobileNavDrawer),
+  { ssr: false }
+);
 
 type Props = {
   userName?: string | null;
@@ -92,15 +98,8 @@ function WelcomeBlock({
   return <div className="flex min-w-0 items-center gap-3">{inner}</div>;
 }
 
-function FavoritesButton({ compact }: { compact?: boolean }) {
-  const { items } = useClubFavorites();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const count = mounted ? items.length : 0;
+const FavoritesButton = memo(function FavoritesButton({ compact }: { compact?: boolean }) {
+  const count = useClubFavoritesCount();
 
   return (
     <Link
@@ -130,7 +129,7 @@ function FavoritesButton({ compact }: { compact?: boolean }) {
       ) : null}
     </Link>
   );
-}
+});
 
 export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }: Props) {
   const router = useRouter();

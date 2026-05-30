@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { CalendarClock, CalendarOff, Hash, Radio, Tag, Trophy } from "lucide-react";
