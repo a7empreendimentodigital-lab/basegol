@@ -18,6 +18,8 @@ type HeroBannerCarouselProps = {
 
 const ROTATE_MS = 6000;
 const HERO_HEIGHT_CLASS = "h-[220px] sm:h-[300px] md:h-[360px] lg:h-[390px]";
+const HERO_TITLE_CLASS =
+  "font-display text-[37px] leading-[1.05] tracking-wide uppercase md:text-[52px] md:leading-[0.95] lg:text-[66px]";
 
 export function HeroBannerCarousel({
   slides,
@@ -78,10 +80,7 @@ export function HeroBannerCarousel({
           <div className="relative z-10 flex flex-col justify-center h-full p-6 sm:p-8 lg:p-10 max-w-xl">
             {fallbackTitle ? (
               <h1
-                className={cn(
-                  "font-display text-[66px] leading-[0.95] tracking-wide uppercase",
-                  bg ? "text-white" : "text-foreground"
-                )}
+                className={cn(HERO_TITLE_CLASS, bg ? "text-white" : "text-foreground")}
               >
                 {fallbackTitle}
               </h1>
@@ -137,7 +136,8 @@ export function HeroBannerCarousel({
           {slide.title ? (
             <h2
               className={cn(
-                "font-display text-[66px] leading-[0.95] tracking-wide uppercase drop-shadow-md",
+                HERO_TITLE_CLASS,
+                "drop-shadow-md",
                 slideImage ? "text-white" : "text-foreground"
               )}
             >
