@@ -1,30 +1,35 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { resolvePostLoginPath } from "@/lib/auth-redirect";
 import { getCanonicalOrigin, normalizeCallbackPath, toCanonicalUrl } from "@/lib/app-origin";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const canonicalOrigin = getCanonicalOrigin(request.url);
-  const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  if (!token?.id) {
+    console.warn("[auth] redirect-after-login: sessão JWT ausente (cookie não enviado ou secret incorreto)");
     const login = toCanonicalUrl("/login", request.url);
     const callbackPath = normalizeCallbackPath(
-      new URL(request.url).searchParams.get("callbackUrl"),
+      request.nextUrl.searchParams.get("callbackUrl"),
       request.url
     );
     if (callbackPath) {
       login.searchParams.set("callbackUrl", callbackPath);
     }
+    login.searchParams.set("error", "SessionRequired");
     return NextResponse.redirect(login);
   }
 
-  const url = new URL(request.url);
   const path = resolvePostLoginPath({
-    role: session.user.role,
-    mustChangePassword: session.user.mustChangePassword,
-    callbackUrl: url.searchParams.get("callbackUrl"),
+    role: token.role as string | undefined,
+    mustChangePassword: Boolean(token.mustChangePassword),
+    callbackUrl: request.nextUrl.searchParams.get("callbackUrl"),
     origin: canonicalOrigin,
   });
 

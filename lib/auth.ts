@@ -1,11 +1,19 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { authenticateCredentials } from "@/lib/auth-credentials";
+
+const secret = process.env.NEXTAUTH_SECRET;
+
+if (!secret && process.env.NODE_ENV === "production") {
+  console.error("[auth] NEXTAUTH_SECRET ausente em produção — login não funcionará.");
+}
+
+if (!process.env.NEXTAUTH_URL?.trim() && process.env.NODE_ENV === "production") {
+  console.warn("[auth] NEXTAUTH_URL ausente — use a URL pública do deploy (ex.: https://seu-app.vercel.app).");
+}
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
+  secret,
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: {
     signIn: "/login",
@@ -13,32 +21,33 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     CredentialsProvider({
+      id: "credentials",
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Senha", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
 
-        const email = credentials.email.trim().toLowerCase();
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: { role: true },
-        });
+        const result = await authenticateCredentials(
+          credentials.email,
+          credentials.password
+        );
 
-        if (!user?.passwordHash || user.status !== "ACTIVE") return null;
-
-        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!valid) return null;
+        if (!result.ok) {
+          return null;
+        }
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role.slug.toUpperCase(),
-          mustChangePassword: user.mustChangePassword,
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          image: result.user.image,
+          role: result.user.role,
+          mustChangePassword: result.user.mustChangePassword,
         };
       },
     }),
@@ -53,6 +62,7 @@ export const authOptions: NextAuthOptions = {
         token.picture = user.image ?? undefined;
       }
       if (trigger === "update" && token.id) {
+        const { prisma } = await import("@/lib/prisma");
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
           include: { role: true },

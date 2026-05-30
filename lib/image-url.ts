@@ -1,20 +1,8 @@
 /**
- * URLs de arquivos em /public (servidos na raiz do site).
+ * URLs de imagem vindas do banco ou de /public.
  * Nunca use prefixo "/public/" na URL.
+ * Não há fallback visual automático — retorne null quando não houver imagem válida.
  */
-export const STATIC_ASSETS = {
-  favicon: "/assets/favicon.webp",
-  logo: "/assets/logo.webp",
-  logoLogin: "/assets/logo2.webp",
-  bannerPrincipal: "/assets/bannerpricipal.webp",
-  bola: "/assets/bola.svg",
-  bgAoVivo: "/assets/bg-ao-vivo.webp",
-  bgCampeonato: "/assets/bg-campeonato.webp",
-  bgTabelas: "/assets/bg-tabelas.webp",
-  bgFavoritos: "/assets/bg-favoritos.webp",
-  icon192: "/icons/icon-192.svg",
-  icon512: "/icons/icon-512.svg",
-} as const;
 
 const BRASAO_FOLDER = "/assets/brasao/";
 
@@ -32,10 +20,7 @@ const IMAGE_URL_FIELDS = [
 ] as const;
 
 /**
- * Normaliza caminhos de imagem para produção (Vercel/Linux é case-sensitive).
- * - Remove prefixo errado `/public`
- * - Garante barra inicial em paths locais
- * - Padroniza pasta de brasões: `/assets/brasao/` (minúsculo)
+ * Normaliza e valida URL de imagem. Retorna null se vazio ou inválido.
  */
 export function normalizeImageSrc(url: string | null | undefined): string | null {
   if (url == null) return null;
@@ -60,13 +45,6 @@ export function normalizeImageSrc(url: string | null | undefined): string | null
   return value;
 }
 
-export function normalizeImageSrcOr(
-  url: string | null | undefined,
-  fallback: string
-): string {
-  return normalizeImageSrc(url) ?? fallback;
-}
-
 export function isLocalPublicImageSrc(src: string): boolean {
   return (
     src.startsWith("/assets/") ||
@@ -80,9 +58,7 @@ export function shouldUnoptimizeImageSrc(src: string): boolean {
   return isLocalPublicImageSrc(src) || /^https?:\/\//i.test(src);
 }
 
-export function normalizeRecordImageFields<T extends Record<string, unknown>>(
-  record: T
-): T {
+export function normalizeRecordImageFields<T extends Record<string, unknown>>(record: T): T {
   const out = { ...record };
   for (const field of IMAGE_URL_FIELDS) {
     if (field in out && typeof out[field] === "string") {

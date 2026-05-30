@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:ensure-master": "tsx scripts/ensure-master-user.ts",
     "db:purge-demo": "tsx prisma/purge-demo-data.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"

@@ -1,10 +1,10 @@
- "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { parseApiResponse } from "@/lib/api-client";
-import { normalizeImageSrcOr, shouldUnoptimizeImageSrc, STATIC_ASSETS } from "@/lib/image-url";
+import { normalizeImageSrc, shouldUnoptimizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 
 type LogoProps = {
@@ -40,21 +40,23 @@ export function Logo({
   const [dynamicSystemName, setDynamicSystemName] = useState<string | null>(null);
 
   useEffect(() => {
-    if (src && wordmarkText && wordmarkText !== "BASEGOL") return;
+    if (src) return;
     void fetch("/api/public/config")
       .then(async (res) => {
         if (!res.ok) return null;
         return parseApiResponse<{ brand?: { logoUrl?: string | null; systemName?: string | null } | null }>(res);
       })
       .then((cfg) => {
-        setDynamicLogo(cfg?.brand?.logoUrl ?? null);
+        setDynamicLogo(normalizeImageSrc(cfg?.brand?.logoUrl));
         setDynamicSystemName(cfg?.brand?.systemName ?? null);
       });
-  }, [src, wordmarkText]);
+  }, [src]);
 
   const s = sizes[size];
-  const logoSrc = normalizeImageSrcOr(src || dynamicLogo, STATIC_ASSETS.logo);
-  const finalWordmark = wordmarkText === "BASEGOL" ? dynamicSystemName || wordmarkText : wordmarkText;
+  const logoSrc = normalizeImageSrc(src) ?? dynamicLogo;
+  const finalWordmark =
+    wordmarkText === "BASEGOL" ? dynamicSystemName || wordmarkText : wordmarkText;
+
   const content = (
     <span
       className={cn(
@@ -63,23 +65,29 @@ export function Logo({
         className
       )}
     >
-      <Image
-        src={logoSrc}
-        alt={alt}
-        width={s.w}
-        height={s.h}
-        className={cn(
-          "h-auto w-auto object-contain",
-          size === "sidebar" && "w-full max-w-[260px] max-h-[200px]",
-          imageClassName
-        )}
-        style={size === "sidebar" ? undefined : { maxHeight: s.box }}
-        priority
-        unoptimized={shouldUnoptimizeImageSrc(logoSrc)}
-      />
-      {showWordmark && (
+      {logoSrc ? (
+        <Image
+          src={logoSrc}
+          alt={alt}
+          width={s.w}
+          height={s.h}
+          className={cn(
+            "h-auto w-auto object-contain",
+            size === "sidebar" && "w-full max-w-[260px] max-h-[200px]",
+            imageClassName
+          )}
+          style={size === "sidebar" ? undefined : { maxHeight: s.box }}
+          priority
+          unoptimized={shouldUnoptimizeImageSrc(logoSrc)}
+        />
+      ) : showWordmark ? (
         <span className="font-display text-2xl tracking-wider text-neon">{finalWordmark}</span>
+      ) : (
+        <span className="font-display text-lg tracking-wider text-foreground">{finalWordmark}</span>
       )}
+      {showWordmark && logoSrc ? (
+        <span className="font-display text-2xl tracking-wider text-neon">{finalWordmark}</span>
+      ) : null}
     </span>
   );
 

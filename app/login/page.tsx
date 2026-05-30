@@ -7,14 +7,14 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { parseApiResponse } from "@/lib/api-client";
-import { normalizeImageSrcOr, STATIC_ASSETS } from "@/lib/image-url";
+import { normalizeImageSrc } from "@/lib/image-url";
 
 type PublicBrand = {
   loginBackgroundUrl?: string | null;
+  logoUrl?: string | null;
+  mobileLogoUrl?: string | null;
+  systemName?: string | null;
 };
-
-const LOGIN_LOGO = STATIC_ASSETS.logoLogin;
-const FALLBACK_LOGIN_IMAGE = STATIC_ASSETS.bannerPrincipal;
 
 export default function LoginPage() {
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
@@ -23,7 +23,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loginImage, setLoginImage] = useState<string>(FALLBACK_LOGIN_IMAGE);
+  const [loginBg, setLoginBg] = useState<string | null>(null);
+  const [loginLogo, setLoginLogo] = useState<string | null>(null);
+  const [systemName, setSystemName] = useState("BASEGOL");
 
   useEffect(() => {
     if (window.location.hostname === "0.0.0.0") {
@@ -32,7 +34,13 @@ export default function LoginPage() {
       window.location.replace(fixed.toString());
       return;
     }
+
     const params = new URLSearchParams(window.location.search);
+    const authError = params.get("error");
+    if (authError === "CredentialsSignin" || authError === "SessionRequired") {
+      setError("Email ou senha inválidos. Verifique as credenciais e tente novamente.");
+    }
+
     const raw = params.get("callbackUrl");
     if (raw?.startsWith("/")) {
       setCallbackUrl(raw);
@@ -53,10 +61,14 @@ export default function LoginPage() {
         return parseApiResponse<{ brand: PublicBrand | null }>(res);
       })
       .then((cfg) => {
-        if (cfg?.brand?.loginBackgroundUrl) {
-          setLoginImage(
-            normalizeImageSrcOr(cfg.brand.loginBackgroundUrl, FALLBACK_LOGIN_IMAGE)
-          );
+        const brand = cfg?.brand;
+        if (!brand) return;
+        setLoginBg(normalizeImageSrc(brand.loginBackgroundUrl));
+        setLoginLogo(
+          normalizeImageSrc(brand.logoUrl) ?? normalizeImageSrc(brand.mobileLogoUrl)
+        );
+        if (brand.systemName?.trim()) {
+          setSystemName(brand.systemName.trim());
         }
       });
   }, []);
@@ -65,51 +77,75 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await signIn("credentials", {
-      email: email.trim().toLowerCase(),
-      password,
-      redirect: false,
-    });
-    if (res?.error || !res?.ok) {
-      setLoading(false);
-      setError("Email ou senha inválidos");
-      return;
-    }
 
     const params = new URLSearchParams();
     if (callbackUrl) params.set("callbackUrl", callbackUrl);
     const qs = params.toString();
-    window.location.href = `/api/auth/redirect-after-login${qs ? `?${qs}` : ""}`;
+    const redirectTo = `/api/auth/redirect-after-login${qs ? `?${qs}` : ""}`;
+
+    try {
+      const res = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+        callbackUrl: redirectTo,
+      });
+
+      if (res?.error || !res?.ok) {
+        setLoading(false);
+        setError("Email ou senha inválidos");
+        return;
+      }
+
+      window.location.assign(redirectTo);
+    } catch {
+      setLoading(false);
+      setError("Não foi possível conectar. Tente novamente em instantes.");
+    }
   }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-[7fr_3fr]">
-      {/* Imagem — lado esquerdo, maior (~70%) */}
-      <div className="relative min-h-[38vh] sm:min-h-[42vh] lg:min-h-screen">
-        <SafeImage
-          src={loginImage}
-          alt=""
-          fill
-          className="object-cover object-center"
-          priority
-          sizes="(max-width: 1024px) 100vw, 70vw"
-        />
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-pitch/90 to-transparent lg:hidden pointer-events-none" />
+      <div
+        className={`relative min-h-[38vh] sm:min-h-[42vh] lg:min-h-screen ${
+          loginBg ? "" : "bg-pitch border-b border-line lg:border-b-0 lg:border-r"
+        }`}
+      >
+        {loginBg ? (
+          <>
+            <SafeImage
+              src={loginBg}
+              alt=""
+              fill
+              className="object-cover object-center"
+              priority
+              sizes="(max-width: 1024px) 100vw, 70vw"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-pitch/90 to-transparent lg:hidden pointer-events-none" />
+          </>
+        ) : null}
       </div>
 
-      {/* Formulário — lado direito (~30%) */}
       <div className="flex flex-col justify-center bg-pitch px-6 py-10 sm:px-10 lg:px-12 xl:px-14">
         <div className="w-full max-w-sm mx-auto">
           <div className="mb-8 flex justify-center px-2">
-            <Link href="/" className="inline-flex w-full max-w-[280px] justify-center" aria-label="BaseGol — início">
-              <SafeImage
-                src={LOGIN_LOGO}
-                alt="BaseGol"
-                width={320}
-                height={96}
-                className="h-auto w-full max-h-24 sm:max-h-28 object-contain"
-                priority
-              />
+            <Link
+              href="/"
+              className="inline-flex w-full max-w-[280px] flex-col items-center justify-center gap-2"
+              aria-label={`${systemName} — início`}
+            >
+              {loginLogo ? (
+                <SafeImage
+                  src={loginLogo}
+                  alt={systemName}
+                  width={320}
+                  height={96}
+                  className="h-auto w-full max-h-24 sm:max-h-28 object-contain"
+                  priority
+                />
+              ) : (
+                <span className="font-display text-3xl tracking-wider text-neon">{systemName}</span>
+              )}
             </Link>
           </div>
 
@@ -159,7 +195,7 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+            {error ? <p className="text-sm text-red-400 text-center">{error}</p> : null}
             <Button type="submit" className="w-full h-12 rounded-xl text-base font-semibold" disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </Button>

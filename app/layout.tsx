@@ -5,7 +5,6 @@ import { Providers } from "@/app/providers";
 import { AppShellWrapper } from "@/components/layout/AppShellWrapper";
 import { AppSplashScreenGate } from "@/components/pwa/AppSplashScreenGate";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
-import { STATIC_ASSETS } from "@/lib/image-url";
 import { getActiveThemeConfig, getBrandConfig } from "@/lib/site-config";
 import { getActiveBannersByPlacement } from "@/services/banner.service";
 import { getServerSession } from "next-auth";
@@ -36,8 +35,8 @@ export const metadata: Metadata = {
     title: "BASEGOL",
   },
   icons: {
-    icon: STATIC_ASSETS.favicon,
-    apple: STATIC_ASSETS.favicon,
+    icon: "/icons/icon-192.svg",
+    apple: "/icons/icon-192.svg",
   },
 };
 

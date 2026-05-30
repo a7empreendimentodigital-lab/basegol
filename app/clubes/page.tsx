@@ -3,7 +3,6 @@ import { ClubesFilterTabs } from "@/components/clubes/ClubesFilterTabs";
 import { PublicGroupsView } from "@/components/clubes/PublicGroupsView";
 import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
-import { PAGE_TOP_BANNERS } from "@/lib/page-banners";
 import { listPublicClubs, listPublicGroupsByCategory } from "@/services/public.service";
 
 export const metadata = { title: "Clubes" };
@@ -24,7 +23,6 @@ export default async function ClubesPage({
   return (
     <PublicRightSidebarLayout>
       <PublicPageBanner
-        src={PAGE_TOP_BANNERS.clubes}
         title="Clubes"
         subtitle={
           showGroups

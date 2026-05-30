@@ -3,12 +3,27 @@ import { normalizeImageSrc } from "@/lib/image-url";
 import { PAGE_TOP_BANNER_HEIGHT_PX } from "@/lib/page-banners";
 
 type PublicPageBannerProps = {
-  src: string;
+  src?: string | null;
   title: string;
   subtitle?: string;
 };
 
 export function PublicPageBanner({ src, title, subtitle }: PublicPageBannerProps) {
+  const imageSrc = normalizeImageSrc(src);
+
+  if (!imageSrc) {
+    return (
+      <section className="border-b border-line bg-graphite-light/40 px-4 py-8 md:px-6 md:py-10">
+        <div className="max-w-6xl mx-auto w-full">
+          <h1 className="font-display text-3xl md:text-4xl tracking-wide text-foreground">{title}</h1>
+          {subtitle ? (
+            <p className="mt-1 text-sm text-muted-foreground max-w-xl">{subtitle}</p>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       className="relative w-full overflow-hidden border-b border-line shrink-0"
@@ -16,7 +31,7 @@ export function PublicPageBanner({ src, title, subtitle }: PublicPageBannerProps
       aria-label={title}
     >
       <SafeImage
-        src={normalizeImageSrc(src) ?? src}
+        src={imageSrc}
         alt=""
         fill
         className="object-cover object-center"

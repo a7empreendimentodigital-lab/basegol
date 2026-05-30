@@ -8,7 +8,6 @@ import { ChampionshipEmptyPanel } from "@/components/campeonatos/ChampionshipEmp
 import { FavoriteClubCard } from "@/components/favorites/FavoriteClubCard";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
 import { useClubFavorites } from "@/hooks/use-club-favorites";
-import { PAGE_TOP_BANNERS } from "@/lib/page-banners";
 
 export function FavoritosPageContent() {
   const { data: session } = useSession();
@@ -26,11 +25,7 @@ export function FavoritosPageContent() {
 
   return (
     <>
-      <PublicPageBanner
-        src={PAGE_TOP_BANNERS.favoritos}
-        title="Favoritos"
-        subtitle="Seus clubes salvos em um só lugar"
-      />
+      <PublicPageBanner title="Favoritos" subtitle="Seus clubes salvos em um só lugar" />
 
       <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         {!session?.user ? (

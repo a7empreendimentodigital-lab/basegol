@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SafeImage } from "@/components/ui/SafeImage";
-import { ArrowLeft, Calendar, Trophy } from "lucide-react";
+import { normalizeImageSrc } from "@/lib/image-url";
+import { ArrowLeft, Calendar } from "lucide-react";
 
 type Props = {
   name: string;
@@ -10,6 +11,8 @@ type Props = {
 };
 
 export function ChampionshipDetailHeader({ name, season, logoUrl, description }: Props) {
+  const logoSrc = normalizeImageSrc(logoUrl);
+
   return (
     <header className="space-y-4">
       <Link
@@ -22,20 +25,18 @@ export function ChampionshipDetailHeader({ name, season, logoUrl, description }:
 
       <div className="flex items-start gap-4 sm:gap-5 rounded-2xl border border-line bg-graphite-light p-5 sm:p-6">
         <div className="flex h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 items-center justify-center">
-          {logoUrl ? (
+          {logoSrc ? (
             <SafeImage
-              src={logoUrl}
+              src={logoSrc}
               alt=""
               width={72}
               height={72}
               className="h-full w-full object-contain"
             />
           ) : (
-            <Trophy
-              className="h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground/90"
-              strokeWidth={1.25}
-              aria-hidden
-            />
+            <span className="font-display text-2xl text-muted-foreground/80" aria-hidden>
+              {name.slice(0, 2).toUpperCase()}
+            </span>
           )}
         </div>
 

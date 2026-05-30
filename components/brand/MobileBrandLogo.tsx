@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { parseApiResponse } from "@/lib/api-client";
-import { normalizeImageSrcOr, STATIC_ASSETS } from "@/lib/image-url";
+import { normalizeImageSrc, shouldUnoptimizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
   src?: string | null;
   className?: string;
   imageClassName?: string;
+  systemName?: string;
 };
 
 export function MobileBrandLogo({
@@ -19,12 +20,15 @@ export function MobileBrandLogo({
   src,
   className,
   imageClassName,
+  systemName = "BASEGOL",
 }: Props) {
-  const resolvedSrc = normalizeImageSrcOr(src, STATIC_ASSETS.favicon);
-  const [logoSrc, setLogoSrc] = useState(resolvedSrc);
+  const [logoSrc, setLogoSrc] = useState<string | null>(normalizeImageSrc(src));
 
   useEffect(() => {
-    if (src) return;
+    if (src) {
+      setLogoSrc(normalizeImageSrc(src));
+      return;
+    }
     void fetch("/api/public/config")
       .then(async (res) => {
         if (!res.ok) return null;
@@ -39,26 +43,29 @@ export function MobileBrandLogo({
       .then((cfg) => {
         const b = cfg?.brand;
         setLogoSrc(
-          normalizeImageSrcOr(
-            b?.mobileLogoUrl ?? b?.faviconUrl ?? b?.logoUrl,
-            STATIC_ASSETS.favicon
-          )
+          normalizeImageSrc(b?.mobileLogoUrl) ??
+            normalizeImageSrc(b?.faviconUrl) ??
+            normalizeImageSrc(b?.logoUrl)
         );
       })
-      .catch(() => setLogoSrc(STATIC_ASSETS.favicon));
+      .catch(() => setLogoSrc(null));
   }, [src]);
 
   const content = (
     <span className={cn("inline-flex shrink-0 items-center justify-center", className)}>
-      <Image
-        src={logoSrc}
-        alt="BaseGol"
-        width={56}
-        height={56}
-        className={cn("h-11 w-11 object-contain", imageClassName)}
-        unoptimized
-        priority
-      />
+      {logoSrc ? (
+        <Image
+          src={logoSrc}
+          alt={systemName}
+          width={56}
+          height={56}
+          className={cn("h-11 w-11 object-contain", imageClassName)}
+          unoptimized={shouldUnoptimizeImageSrc(logoSrc)}
+          priority
+        />
+      ) : (
+        <span className="font-display text-sm tracking-wider text-neon">{systemName}</span>
+      )}
     </span>
   );
 

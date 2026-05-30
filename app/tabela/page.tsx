@@ -1,7 +1,6 @@
 import { TablesPageView } from "@/components/tabelas/TablesPageView";
 import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
-import { PAGE_TOP_BANNERS } from "@/lib/page-banners";
 import { getPublicTablesPageData } from "@/services/tables-public.service";
 
 export const metadata = { title: "Tabelas" };
@@ -12,7 +11,6 @@ export default async function TabelaPage() {
   return (
     <PublicRightSidebarLayout>
       <PublicPageBanner
-        src={PAGE_TOP_BANNERS.tabelas}
         title="Tabelas"
         subtitle="Classificação geral das competições"
       />

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { SafeImage } from "@/components/ui/SafeImage";
-import { normalizeImageSrcOr, STATIC_ASSETS } from "@/lib/image-url";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,60 +45,106 @@ export function HeroBannerCarousel({
   }, [count, next]);
 
   if (count === 0) {
-    const bg = normalizeImageSrcOr(fallbackBackgroundUrl, STATIC_ASSETS.bannerPrincipal);
+    const bg = normalizeImageSrc(fallbackBackgroundUrl);
+    const hasText = Boolean(fallbackTitle || fallbackSubtitle);
+
+    if (!bg && !hasText) return null;
+
     return (
       <section
         className={cn(
           "relative overflow-hidden rounded-2xl border border-line",
-          HERO_HEIGHT_CLASS
+          HERO_HEIGHT_CLASS,
+          !bg && "bg-graphite-light/50"
         )}
       >
-        <SafeImage src={bg} alt="" fill className="object-cover" priority sizes="(max-width: 1280px) 100vw, 1200px" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
-        <div className="relative z-10 flex flex-col justify-center h-full p-6 sm:p-8 lg:p-10 max-w-xl">
-          {fallbackTitle ? (
-            <h1 className="font-display text-[66px] leading-[0.95] tracking-wide uppercase text-white">
-              {fallbackTitle}
-            </h1>
-          ) : null}
-          {fallbackSubtitle ? (
-            <p className="mt-2 text-[16px] leading-snug text-white/85">{fallbackSubtitle}</p>
-          ) : null}
-          <Link
-            href="/campeonatos"
-            className="mt-5 inline-flex w-fit items-center gap-1 rounded-lg bg-selected px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-          >
-            Conheça as ligas
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
+        {bg ? (
+          <SafeImage src={bg} alt="" fill className="object-cover" priority sizes="(max-width: 1280px) 100vw, 1200px" />
+        ) : null}
+        <div
+          className={cn(
+            "absolute inset-0",
+            bg ? "bg-gradient-to-r from-black/85 via-black/50 to-transparent" : ""
+          )}
+        />
+        {hasText ? (
+          <div className="relative z-10 flex flex-col justify-center h-full p-6 sm:p-8 lg:p-10 max-w-xl">
+            {fallbackTitle ? (
+              <h1
+                className={cn(
+                  "font-display text-[66px] leading-[0.95] tracking-wide uppercase",
+                  bg ? "text-white" : "text-foreground"
+                )}
+              >
+                {fallbackTitle}
+              </h1>
+            ) : null}
+            {fallbackSubtitle ? (
+              <p
+                className={cn(
+                  "mt-2 text-[16px] leading-snug",
+                  bg ? "text-white/85" : "text-muted-foreground"
+                )}
+              >
+                {fallbackSubtitle}
+              </p>
+            ) : null}
+            <Link
+              href="/campeonatos"
+              className="mt-5 inline-flex w-fit items-center gap-1 rounded-lg bg-selected px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            >
+              Conheça as ligas
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        ) : null}
       </section>
     );
   }
 
   const slide = slides[index];
   const link = bannerLinkProps(slide.linkUrl);
+  const slideImage = normalizeImageSrc(slide.imageUrl);
 
   const slideContent = (
     <>
-      <SafeImage
-        src={slide.imageUrl}
-        alt={slide.title}
-        fill
-        className="object-cover"
-        priority={index === 0}
-        sizes="(max-width: 1280px) 100vw, 1200px"
+      {slideImage ? (
+        <SafeImage
+          src={slideImage}
+          alt={slide.title}
+          fill
+          className="object-cover"
+          priority={index === 0}
+          sizes="(max-width: 1280px) 100vw, 1200px"
+        />
+      ) : null}
+      <div
+        className={cn(
+          "absolute inset-0",
+          slideImage ? "bg-gradient-to-r from-black/80 via-black/40 to-black/20" : "bg-graphite-light/60"
+        )}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/20" />
       {(slide.title || slide.subtitle) && (
         <div className="relative z-10 flex flex-col justify-center h-full p-6 sm:p-8 lg:p-10 max-w-xl pointer-events-none">
           {slide.title ? (
-            <h2 className="font-display text-[66px] leading-[0.95] tracking-wide uppercase text-white drop-shadow-md">
+            <h2
+              className={cn(
+                "font-display text-[66px] leading-[0.95] tracking-wide uppercase drop-shadow-md",
+                slideImage ? "text-white" : "text-foreground"
+              )}
+            >
               {slide.title}
             </h2>
           ) : null}
           {slide.subtitle ? (
-            <p className="mt-2 text-[16px] leading-snug text-white/85 drop-shadow">{slide.subtitle}</p>
+            <p
+              className={cn(
+                "mt-2 text-[16px] leading-snug drop-shadow",
+                slideImage ? "text-white/85" : "text-muted-foreground"
+              )}
+            >
+              {slide.subtitle}
+            </p>
           ) : null}
         </div>
       )}

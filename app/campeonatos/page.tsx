@@ -1,7 +1,6 @@
 import { ChampionshipCard } from "@/components/campeonatos/ChampionshipCard";
 import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
-import { PAGE_TOP_BANNERS } from "@/lib/page-banners";
 import { listPublicChampionships } from "@/services/public.service";
 
 export const metadata = { title: "Campeonatos" };
@@ -12,7 +11,6 @@ export default async function CampeonatosPage() {
   return (
     <PublicRightSidebarLayout>
       <PublicPageBanner
-        src={PAGE_TOP_BANNERS.campeonatos}
         title="Campeonatos"
         subtitle="Competições e temporadas do futebol de base"
       />

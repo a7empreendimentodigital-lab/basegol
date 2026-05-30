@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { SafeImage } from "@/components/ui/SafeImage";
-import { Calendar, ChevronRight, Trophy } from "lucide-react";
+import { Calendar, ChevronRight } from "lucide-react";
 import { CHAMPIONSHIP_STATUS_LABELS } from "@/lib/admin-labels";
+import { normalizeImageSrc } from "@/lib/image-url";
 
 export type ChampionshipCardProps = {
   slug: string;
@@ -21,6 +22,7 @@ export function ChampionshipCard({
   description,
 }: ChampionshipCardProps) {
   const statusLabel = CHAMPIONSHIP_STATUS_LABELS[status] ?? status;
+  const logoSrc = normalizeImageSrc(logoUrl);
 
   return (
     <Link
@@ -28,20 +30,18 @@ export function ChampionshipCard({
       className="group flex w-full items-center gap-4 sm:gap-5 rounded-2xl border border-line bg-graphite-light p-4 sm:p-5 hover:bg-graphite/90 transition-colors"
     >
       <div className="flex h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 items-center justify-center">
-        {logoUrl ? (
+        {logoSrc ? (
           <SafeImage
-            src={logoUrl}
+            src={logoSrc}
             alt=""
             width={72}
             height={72}
             className="h-full w-full object-contain"
           />
         ) : (
-          <Trophy
-            className="h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground/90"
-            strokeWidth={1.25}
-            aria-hidden
-          />
+          <span className="font-display text-xl text-muted-foreground/80" aria-hidden>
+            {name.slice(0, 2).toUpperCase()}
+          </span>
         )}
       </div>
 

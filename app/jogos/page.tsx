@@ -3,7 +3,6 @@ import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebar
 import { MatchList } from "@/components/matches/MatchList";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
 import { getLiveMatches, getTodayMatches, getUpcomingMatches } from "@/services/match.service";
-import { PAGE_TOP_BANNERS } from "@/lib/page-banners";
 
 export const metadata = { title: "Jogos" };
 
@@ -36,11 +35,7 @@ export default async function JogosPage({
 
   return (
     <PublicRightSidebarLayout>
-      <PublicPageBanner
-        src={PAGE_TOP_BANNERS.aoVivo}
-        title={banner.title}
-        subtitle={banner.subtitle}
-      />
+      <PublicPageBanner title={banner.title} subtitle={banner.subtitle} />
 
       <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         <JogosFilterTabs isLive={isLive} isUpcoming={isUpcoming} />

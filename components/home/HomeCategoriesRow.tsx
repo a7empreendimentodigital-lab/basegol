@@ -1,6 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
-import { STATIC_ASSETS } from "@/lib/image-url";
 import { Layers } from "lucide-react";
 import type { HomeCategoryCircle } from "@/services/home.service";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
@@ -25,7 +23,7 @@ export function HomeCategoriesRow({ categories }: { categories: HomeCategoryCirc
             className="group flex min-w-[80px] shrink-0 flex-col items-center gap-2"
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-line bg-graphite-light transition-colors group-hover:border-foreground/30 group-hover:bg-graphite/80">
-              <Image src={STATIC_ASSETS.bola} alt="" width={32} height={32} className="opacity-90" unoptimized />
+              <Layers className="h-6 w-6 text-muted-foreground opacity-80" aria-hidden />
             </div>
             <span className="max-w-[88px] truncate text-center text-xs font-semibold leading-tight text-foreground">
               {cat.label}
