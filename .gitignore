@@ -44,3 +44,4 @@ next-env.d.ts
 # uploads
 /public/uploads
 public/assets/brasao/brasao.psd
+basegol.sql
