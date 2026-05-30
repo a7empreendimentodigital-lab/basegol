@@ -11,6 +11,7 @@ export type MatchWithTeams = {
   minute: number | null;
   elapsedSeconds?: number;
   clockRunning?: boolean;
+  clockStartedAt?: string | null;
   periodLengthMin?: number;
   periodCount?: number;
   inPenaltyShootout?: boolean;

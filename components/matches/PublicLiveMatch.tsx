@@ -16,6 +16,7 @@ type MatchPayload = {
   minute: number | null;
   elapsedSeconds?: number;
   clockRunning?: boolean;
+  clockStartedAt?: string | null;
   inPenaltyShootout?: boolean;
   penaltyKicks?: { home: boolean[]; away: boolean[] };
   scheduledAt: string;
@@ -67,6 +68,7 @@ function toMatchView(m: MatchPayload): MatchWithTeams {
     minute: m.minute,
     elapsedSeconds: m.elapsedSeconds,
     clockRunning: m.clockRunning,
+    clockStartedAt: m.clockStartedAt,
     inPenaltyShootout: m.inPenaltyShootout,
     penaltyKicks: m.penaltyKicks,
     scheduledAt: new Date(m.scheduledAt),

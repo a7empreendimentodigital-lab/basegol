@@ -8,6 +8,7 @@ import {
 import {
   enrichMatchForApi,
   reconcileAndPersistScores,
+  repairLiveClockIfNeeded,
   repairMatchPeriodIfNeeded,
   syncMatchClockToNow,
 } from "@/services/match-live.service";
@@ -57,6 +58,7 @@ function mapMatch(
       : m.minute,
     elapsedSeconds: elapsed,
     clockRunning: m.clockRunning,
+    clockStartedAt: m.clockStartedAt?.toISOString() ?? null,
     periodLengthMin: m.periodLengthMin,
     periodCount: m.periodCount,
     inPenaltyShootout: inPenalties,
@@ -119,6 +121,7 @@ export async function getLiveMatches(): Promise<MatchWithTeams[]> {
 
     for (const m of matches) {
       await repairMatchPeriodIfNeeded(m);
+      await repairLiveClockIfNeeded(m);
     }
 
     const refreshed = await prisma.match.findMany({
@@ -198,6 +201,8 @@ export async function getMatchDetailForApi(id: string): Promise<
       include: matchDetailInclude,
     });
     if (!match) return null;
+    await repairMatchPeriodIfNeeded(match);
+    await repairLiveClockIfNeeded(match);
     await reconcileAndPersistScores(
       id,
       match.homeTeamId,
@@ -242,6 +247,10 @@ export function toMatchWithTeams(
     minute: m.minute,
     elapsedSeconds: m.elapsedSeconds,
     clockRunning: m.clockRunning,
+    clockStartedAt:
+      m.clockStartedAt instanceof Date
+        ? m.clockStartedAt.toISOString()
+        : (m.clockStartedAt as string | null | undefined) ?? null,
     periodLengthMin: m.periodLengthMin,
     periodCount: m.periodCount,
     inPenaltyShootout,

@@ -21,7 +21,8 @@ import { StandingTable } from "@/components/matches/StandingTable";
 import { normalizeImageSrc } from "@/lib/image-url";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
-import { formatLiveClock, formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
+import { LiveClockLabel } from "@/components/matches/LiveClockLabel";
+import { formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
 import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
 import { formatTime } from "@/lib/utils";
 import type { MatchWithTeams, StandingRowDisplay } from "@/types";
@@ -106,10 +107,6 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
     match.inPenaltyShootout ||
     match.matchPeriod === "PENALTY_SHOOTOUT" ||
     (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0;
-  const clockLabel = isLive
-    ? formatLiveClock(match.status, match.minute, match)
-    : null;
-
   return (
     <div className="w-full space-y-6">
       <Link
@@ -125,11 +122,10 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
           {isLive ? (
             <>
               <LiveBadge />
-              {clockLabel && clockLabel !== "Ao vivo" ? (
-                <span className="font-mono text-sm text-red-400 tabular-nums">{clockLabel}</span>
-              ) : match.minute != null ? (
-                <span className="font-mono text-sm text-red-400 tabular-nums">{match.minute}&apos;</span>
-              ) : null}
+              <LiveClockLabel
+                match={match}
+                className="font-mono text-sm text-red-400 tabular-nums"
+              />
             </>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">

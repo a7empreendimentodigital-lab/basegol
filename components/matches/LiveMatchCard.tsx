@@ -1,13 +1,24 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Play, Trophy } from "lucide-react";
 import type { MatchWithTeams } from "@/types";
-import { formatLiveClock, formatMatchDateTime, matchProgressPercent } from "@/lib/match-display";
+import { LiveClockLabel } from "@/components/matches/LiveClockLabel";
+import { formatMatchDateTime, matchProgressPercent } from "@/lib/match-display";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 
 export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    if (!match.clockRunning) return;
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, [match.clockRunning, match.clockStartedAt, match.elapsedSeconds]);
   const homeName = match.homeTeam.club.shortName ?? match.homeTeam.club.name;
   const awayName = match.awayTeam.club.shortName ?? match.awayTeam.club.name;
-  const progress = matchProgressPercent(match.status, match.minute, match);
+  const progress = matchProgressPercent(match.status, match.minute, match, now);
   const competition =
     match.championshipName?.toUpperCase() ?? match.categoryName?.toUpperCase() ?? "CAMPEONATO";
 
@@ -23,9 +34,10 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
             {formatMatchDateTime(match.scheduledAt)}
           </p>
         </div>
-        <p className="shrink-0 whitespace-nowrap text-right text-[11px] font-medium text-red-400">
-          {formatLiveClock(match.status, match.minute, match)}
-        </p>
+        <LiveClockLabel
+          match={match}
+          className="shrink-0 whitespace-nowrap text-right text-[11px] font-medium text-red-400"
+        />
       </div>
 
       <div className="flex items-center justify-between gap-2">

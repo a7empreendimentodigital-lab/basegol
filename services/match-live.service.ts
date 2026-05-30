@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import {
-  pauseClockData,
   rebuildScoresFromEvents,
   resolveElapsedSeconds,
   resolveMatchPeriodForDisplay,
+  shouldMatchClockBeRunning,
   type MatchEventLike,
 } from "@/lib/match-live";
 import type { MatchPeriod } from "@prisma/client";
@@ -32,15 +32,35 @@ export async function syncMatchClockToNow(matchId: string) {
   const match = await prisma.match.findUnique({ where: { id: matchId } });
   if (!match?.clockRunning) return match;
 
-  const elapsed = resolveElapsedSeconds(match);
-  const minute = Math.max(
-    1,
-    Math.min(match.periodLengthMin * match.periodCount, Math.ceil(elapsed / 60) || 1)
-  );
+  const now = new Date();
+  const elapsed = resolveElapsedSeconds(match, now);
+  const minute = Math.max(1, Math.ceil(elapsed / 60) || match.minute || 1);
 
   return prisma.match.update({
     where: { id: matchId },
-    data: { minute, elapsedSeconds: elapsed },
+    data: {
+      minute,
+      elapsedSeconds: elapsed,
+      clockStartedAt: now,
+    },
+  });
+}
+
+/** Relógio parado indevidamente durante um tempo — retoma a contagem. */
+export async function repairLiveClockIfNeeded(
+  match: MatchWithRelations & { events?: MatchEventLike[] }
+) {
+  const events = match.events ?? [];
+  const period = resolveMatchPeriodForDisplay(match, events);
+  if (!shouldMatchClockBeRunning(match.status, period) || match.clockRunning) return;
+
+  const now = new Date();
+  await prisma.match.update({
+    where: { id: match.id },
+    data: {
+      clockRunning: true,
+      clockStartedAt: now,
+    },
   });
 }
 
@@ -107,6 +127,10 @@ export function enrichMatchForApi<T extends MatchWithRelations>(match: T) {
     awayPenaltyScore: scores.awayPenaltyScore,
     minute: match.clockRunning ? displayMinute : match.minute ?? displayMinute,
     elapsedSeconds: elapsed,
+    clockStartedAt:
+      match.clockStartedAt instanceof Date
+        ? match.clockStartedAt.toISOString()
+        : match.clockStartedAt,
     penaltyKicks: {
       home: scores.homePenaltyKicks,
       away: scores.awayPenaltyKicks,

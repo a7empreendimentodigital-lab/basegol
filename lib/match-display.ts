@@ -31,7 +31,11 @@ type LiveClockMatch = {
   periodCount?: number;
 };
 
-function formatPeriodClock(match: LiveClockMatch, period: string): string {
+function formatPeriodClock(
+  match: LiveClockMatch,
+  period: string,
+  now = new Date()
+): string {
   const clockMatch = {
     status: match.status ?? "LIVE",
     matchPeriod: period,
@@ -42,7 +46,7 @@ function formatPeriodClock(match: LiveClockMatch, period: string): string {
     periodLengthMin: match.periodLengthMin ?? 17,
     periodCount: match.periodCount ?? 3,
   };
-  const sec = getPeriodElapsedSeconds(clockMatch, period);
+  const sec = getPeriodElapsedSeconds(clockMatch, period, now);
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   const clock = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
@@ -55,7 +59,8 @@ function formatPeriodClock(match: LiveClockMatch, period: string): string {
 export function formatLiveClock(
   status: string,
   minute: number | null,
-  match?: LiveClockMatch | null
+  match?: LiveClockMatch | null,
+  now = new Date()
 ): string {
   if (!match) {
     if (status === "HALFTIME") return "Intervalo";
@@ -84,22 +89,25 @@ export function formatLiveClock(
     period === "SECOND_HALF" ||
     period === "THIRD_HALF"
   ) {
-    return formatPeriodClock({ ...match, status }, period);
+    return formatPeriodClock({ ...match, status }, period, now);
   }
   if (status === "HALFTIME") return "Intervalo";
   if (minute == null) return "Ao vivo";
 
   const len = match.periodLengthMin ?? 17;
-  const elapsed = resolveElapsedSeconds({
-    status,
-    matchPeriod: match.matchPeriod ?? "SCHEDULED",
-    minute,
-    elapsedSeconds: match.elapsedSeconds ?? 0,
-    clockRunning: match.clockRunning ?? false,
-    clockStartedAt: match.clockStartedAt ?? null,
-    periodLengthMin: len,
-    periodCount: match.periodCount ?? 3,
-  });
+  const elapsed = resolveElapsedSeconds(
+    {
+      status,
+      matchPeriod: match.matchPeriod ?? "SCHEDULED",
+      minute,
+      elapsedSeconds: match.elapsedSeconds ?? 0,
+      clockRunning: match.clockRunning ?? false,
+      clockStartedAt: match.clockStartedAt ?? null,
+      periodLengthMin: len,
+      periodCount: match.periodCount ?? 3,
+    },
+    now
+  );
   const periodSec = len * 60;
   const fallbackPeriod =
     elapsed >= periodSec * 2
@@ -107,13 +115,14 @@ export function formatLiveClock(
       : elapsed > periodSec
         ? "SECOND_HALF"
         : "FIRST_HALF";
-  return formatPeriodClock({ ...match, status }, fallbackPeriod);
+  return formatPeriodClock({ ...match, status }, fallbackPeriod, now);
 }
 
 export function matchProgressPercent(
   status: string,
   minute: number | null,
-  match?: LiveClockMatch | null
+  match?: LiveClockMatch | null,
+  now = new Date()
 ): number {
   if (status === "HALFTIME") {
     const len = match?.periodLengthMin ?? 17;
@@ -124,16 +133,19 @@ export function matchProgressPercent(
   const count = match?.periodCount ?? 3;
   const totalSec = len * count * 60;
   const elapsed = match
-    ? resolveElapsedSeconds({
-        status,
-        matchPeriod: match.matchPeriod ?? "SCHEDULED",
-        minute,
-        elapsedSeconds: match.elapsedSeconds ?? 0,
-        clockRunning: match.clockRunning ?? false,
-        clockStartedAt: match.clockStartedAt ?? null,
-        periodLengthMin: len,
-        periodCount: count,
-      })
+    ? resolveElapsedSeconds(
+        {
+          status,
+          matchPeriod: match.matchPeriod ?? "SCHEDULED",
+          minute,
+          elapsedSeconds: match.elapsedSeconds ?? 0,
+          clockRunning: match.clockRunning ?? false,
+          clockStartedAt: match.clockStartedAt ?? null,
+          periodLengthMin: len,
+          periodCount: count,
+        },
+        now
+      )
     : (minute ?? 0) * 60;
   return Math.min(100, Math.round((elapsed / totalSec) * 100));
 }

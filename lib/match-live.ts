@@ -66,10 +66,11 @@ export function resolveElapsedSeconds(match: MatchClockFields, now = new Date())
       match.clockStartedAt instanceof Date
         ? match.clockStartedAt.getTime()
         : new Date(match.clockStartedAt).getTime();
-    total += Math.max(0, Math.floor((now.getTime() - started) / 1000));
+    if (!Number.isNaN(started)) {
+      total += Math.max(0, Math.floor((now.getTime() - started) / 1000));
+    }
   }
-  const maxSec = getTotalMatchSeconds(match.periodLengthMin ?? 17, match.periodCount ?? 3);
-  return Math.min(total, maxSec);
+  return total;
 }
 
 export function pauseClockData(match: MatchClockFields, now = new Date()) {
@@ -145,13 +146,27 @@ export function resolveMatchPeriodForDisplay(
 /** Segundos decorridos só no período atual (ex.: 2º tempo começa em 00:00). */
 export function getPeriodElapsedSeconds(
   match: MatchClockFields,
-  period: string
+  period: string,
+  now = new Date()
 ): number {
-  const total = resolveElapsedSeconds(match);
+  const total = resolveElapsedSeconds(match, now);
   const periodSec = (match.periodLengthMin ?? 17) * 60;
-  if (period === "SECOND_HALF") return Math.max(0, total - periodSec);
-  if (period === "THIRD_HALF") return Math.max(0, total - periodSec * 2);
-  return total;
+  if (period === "SECOND_HALF") {
+    return Math.min(periodSec, Math.max(0, total - periodSec));
+  }
+  if (period === "THIRD_HALF") {
+    return Math.min(periodSec, Math.max(0, total - periodSec * 2));
+  }
+  return Math.min(periodSec, total);
+}
+
+const ACTIVE_CLOCK_PERIODS = new Set(["FIRST_HALF", "SECOND_HALF", "THIRD_HALF"]);
+
+export function shouldMatchClockBeRunning(
+  status: string,
+  matchPeriod: string | null | undefined
+): boolean {
+  return status === "LIVE" && !!matchPeriod && ACTIVE_CLOCK_PERIODS.has(matchPeriod);
 }
 
 export function rebuildScoresFromEvents(
