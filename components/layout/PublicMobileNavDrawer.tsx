@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
@@ -27,51 +28,58 @@ export function PublicMobileNavDrawer({
   const pathname = usePathname() ?? "/";
   const displayName = userName?.trim() || "Visitante";
   const initial = displayName.charAt(0).toUpperCase() || "?";
+  const [portalReady, setPortalReady] = useState(false);
+  const prevPathname = useRef(pathname);
+  const onCloseRef = useRef(onClose);
 
-  const skipPathClose = useRef(true);
   useEffect(() => {
-    if (skipPathClose.current) {
-      skipPathClose.current = false;
-      return;
-    }
-    onClose();
-  }, [pathname, onClose]);
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
+  // Fecha só quando a rota muda — não quando onClose é recriado no pai
+  useEffect(() => {
+    if (prevPathname.current === pathname) return;
+    prevPathname.current = pathname;
+    onCloseRef.current();
+  }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
-  if (!open) return null;
+  if (!open || !portalReady) return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-[70] md:hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Menu de navegação"
-    >
+  return createPortal(
+    <div className="fixed inset-0 md:hidden" role="presentation">
       <button
         type="button"
-        className="absolute inset-0 bg-pitch/85 backdrop-blur-sm"
+        className="fixed inset-0 z-[70] bg-pitch/85 backdrop-blur-sm"
         aria-label="Fechar menu"
         onClick={onClose}
       />
       <aside
         className={cn(
-          "absolute inset-y-0 left-0 flex w-[min(100%,320px)] flex-col",
+          "fixed inset-y-0 left-0 z-[80] flex w-[min(100%,320px)] flex-col",
           "border-r border-line bg-graphite shadow-2xl",
           "pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
         )}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu de navegação"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
           <span className="text-sm font-semibold text-foreground">Menu</span>
@@ -131,6 +139,7 @@ export function PublicMobileNavDrawer({
           <SidebarFooterLinks isLoggedIn={isLoggedIn} onNavigate={onClose} />
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body
   );
 }

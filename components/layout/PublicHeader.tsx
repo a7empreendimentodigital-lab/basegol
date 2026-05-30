@@ -1,20 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { useRouter } from "next/navigation";
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { Heart, Menu, Search, User } from "lucide-react";
 import { MobileBrandLogo } from "@/components/brand/MobileBrandLogo";
+import { PublicMobileNavDrawer } from "@/components/layout/PublicMobileNavDrawer";
 import { useClubFavoritesCount } from "@/hooks/use-club-favorites";
 import { cn } from "@/lib/utils";
-
-const PublicMobileNavDrawer = dynamic(
-  () =>
-    import("@/components/layout/PublicMobileNavDrawer").then((m) => m.PublicMobileNavDrawer),
-  { ssr: false }
-);
 
 type Props = {
   userName?: string | null;
@@ -24,7 +18,7 @@ type Props = {
 };
 
 const touchIconBtn =
-  "inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-line text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-graphite-light hover:text-foreground";
+  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-graphite-light hover:text-foreground";
 
 function HeaderSearch({ onSearch }: { onSearch: (q: string) => void }) {
   const [query, setQuery] = useState("");
@@ -54,7 +48,54 @@ function HeaderSearch({ onSearch }: { onSearch: (q: string) => void }) {
   );
 }
 
-function WelcomeBlock({
+function MobileUserSlot({
+  userName,
+  userImage,
+  isLoggedIn,
+}: {
+  userName?: string | null;
+  userImage?: string | null;
+  isLoggedIn?: boolean;
+}) {
+  const displayName = userName ?? "Visitante";
+  const initial = displayName.trim().charAt(0).toUpperCase() || "?";
+
+  const avatar = (
+    <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-graphite-light text-sm font-semibold text-foreground">
+      {userImage ? (
+        <SafeImage src={userImage} alt="" fill className="object-cover" sizes="44px" />
+      ) : (
+        <span aria-hidden>{initial}</span>
+      )}
+    </span>
+  );
+
+  if (isLoggedIn) {
+    return (
+      <Link
+        href="/configuracoes/perfil"
+        className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-90"
+        title="Meu perfil"
+        aria-label={`Perfil de ${displayName}`}
+      >
+        {avatar}
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href="/login"
+      className={touchIconBtn}
+      aria-label="Entrar"
+      title="Entrar"
+    >
+      <User className="h-5 w-5" aria-hidden />
+    </Link>
+  );
+}
+
+function DesktopWelcomeBlock({
   userName,
   userImage,
   isLoggedIn,
@@ -70,7 +111,7 @@ function WelcomeBlock({
     <>
       <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-graphite-light text-sm font-semibold text-foreground">
         {userImage ? (
-          <SafeImage src={userImage} alt="" fill className="object-cover" />
+          <SafeImage src={userImage} alt="" fill className="object-cover" sizes="40px" />
         ) : (
           <span aria-hidden>{initial}</span>
         )}
@@ -79,7 +120,6 @@ function WelcomeBlock({
         <p className="text-[11px] leading-none text-muted-foreground">Bem-vindo(a)</p>
         <p className="mt-1 truncate text-sm font-semibold text-foreground">{displayName}</p>
       </div>
-      <p className="truncate text-sm font-semibold text-foreground sm:hidden">{displayName}</p>
     </>
   );
 
@@ -98,32 +138,19 @@ function WelcomeBlock({
   return <div className="flex min-w-0 items-center gap-3">{inner}</div>;
 }
 
-const FavoritesButton = memo(function FavoritesButton({ compact }: { compact?: boolean }) {
+const DesktopFavoritesButton = memo(function DesktopFavoritesButton() {
   const count = useClubFavoritesCount();
 
   return (
     <Link
       href="/favoritos"
-      className={cn(
-        compact ? touchIconBtn : "",
-        "inline-flex shrink-0 items-center gap-2 rounded-full border border-line text-sm font-medium transition-colors",
-        !compact && "px-3 py-2",
-        "text-muted-foreground hover:border-foreground/30 hover:bg-graphite-light hover:text-foreground",
-        compact && count > 0 && "relative"
-      )}
+      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-line px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-graphite-light hover:text-foreground"
       aria-label={count > 0 ? `Favoritos (${count})` : "Favoritos"}
     >
-      <Heart className={cn("h-5 w-5", count > 0 && "fill-current text-foreground")} aria-hidden />
-      {!compact ? <span className="hidden lg:inline">Favoritos</span> : null}
+      <Heart className={cn("h-4 w-4", count > 0 && "fill-current text-foreground")} aria-hidden />
+      <span className="hidden lg:inline">Favoritos</span>
       {count > 0 ? (
-        <span
-          className={cn(
-            "flex items-center justify-center rounded-full bg-foreground font-bold text-background tabular-nums",
-            compact
-              ? "absolute -right-0.5 -top-0.5 h-4 min-w-4 px-0.5 text-[9px]"
-              : "h-5 min-w-5 px-1 text-[10px]"
-          )}
-        >
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-[10px] font-bold text-background tabular-nums">
           {count > 9 ? "9+" : count}
         </span>
       ) : null}
@@ -135,35 +162,41 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const openMenu = useCallback(() => setMenuOpen(true), []);
+
   function handleSearch(q: string) {
     router.push(q ? `/busca?q=${encodeURIComponent(q)}` : "/busca");
   }
 
   return (
     <>
-      <header className="sticky top-0 z-50 shrink-0 border-b border-line bg-pitch/95 backdrop-blur-xl">
-        {/* Mobile */}
+      <header className="sticky top-0 z-[60] shrink-0 border-b border-line bg-pitch/95 backdrop-blur-xl">
+        {/* Mobile: [☰] [Logo] [Usuário] + busca full width */}
         <div className="space-y-3 px-3 py-3 sm:px-4 md:hidden">
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2">
             <button
               type="button"
-              onClick={() => setMenuOpen(true)}
-              className={touchIconBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                openMenu();
+              }}
+              className={cn(touchIconBtn, "w-11")}
               aria-label="Abrir menu"
               aria-expanded={menuOpen}
             >
               <Menu className="h-5 w-5" aria-hidden />
             </button>
-            <MobileBrandLogo src={mobileLogoUrl} imageClassName="h-9 w-9 sm:h-10 sm:w-10" />
-            <div className="min-w-0 flex-1">
-              <WelcomeBlock userName={userName} userImage={userImage} isLoggedIn={isLoggedIn} />
+            <div className="flex min-w-0 justify-center">
+              <MobileBrandLogo src={mobileLogoUrl} imageClassName="h-10 w-10" />
             </div>
-            <FavoritesButton compact />
-            {!isLoggedIn ? (
-              <Link href="/login" className={touchIconBtn} aria-label="Entrar">
-                <User className="h-5 w-5" aria-hidden />
-              </Link>
-            ) : null}
+            <div className="flex justify-end">
+              <MobileUserSlot
+                userName={userName}
+                userImage={userImage}
+                isLoggedIn={isLoggedIn}
+              />
+            </div>
           </div>
           <HeaderSearch onSearch={handleSearch} />
         </div>
@@ -171,7 +204,11 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
         {/* Desktop */}
         <div className="hidden items-center gap-4 px-5 py-3.5 lg:px-6 md:flex">
           <div className="shrink-0">
-            <WelcomeBlock userName={userName} userImage={userImage} isLoggedIn={isLoggedIn} />
+            <DesktopWelcomeBlock
+              userName={userName}
+              userImage={userImage}
+              isLoggedIn={isLoggedIn}
+            />
           </div>
 
           <div className="mx-auto w-full max-w-2xl flex-1">
@@ -179,7 +216,7 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <FavoritesButton />
+            <DesktopFavoritesButton />
             {!isLoggedIn ? (
               <Link
                 href="/login"
@@ -195,7 +232,7 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
 
       <PublicMobileNavDrawer
         open={menuOpen}
-        onClose={() => setMenuOpen(false)}
+        onClose={closeMenu}
         isLoggedIn={isLoggedIn}
         userName={userName}
         userImage={userImage}
