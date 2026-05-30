@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -19,7 +20,7 @@ const sizeMap = {
 export function TeamCrest({ url, name, size = "md" }: Props) {
   const [imgError, setImgError] = useState(false);
   const initials = name.slice(0, 2).toUpperCase();
-  const src = url?.trim() || null;
+  const src = normalizeImageSrc(url);
   const showImg = Boolean(src) && !imgError;
 
   return (

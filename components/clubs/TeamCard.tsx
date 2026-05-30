@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { normalizeImageSrc } from "@/lib/image-url";
 
 type TeamCardProps = {
   slug: string;
@@ -15,9 +16,9 @@ export function TeamCard({ slug, name, city, crestUrl, athleteCount }: TeamCardP
       <Card className="hover:neon-border transition-all h-full">
         <CardContent className="flex items-center gap-4 p-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-secondary border border-border">
-            {crestUrl ? (
+            {normalizeImageSrc(crestUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={crestUrl} alt={name} className="h-10 w-10 object-contain" />
+              <img src={normalizeImageSrc(crestUrl)!} alt={name} className="h-10 w-10 object-contain" />
             ) : (
               <span className="font-display text-xl text-neon">{name.slice(0, 2)}</span>
             )}

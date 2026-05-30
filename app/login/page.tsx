@@ -2,18 +2,19 @@
 
 import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { parseApiResponse } from "@/lib/api-client";
+import { normalizeImageSrcOr, STATIC_ASSETS } from "@/lib/image-url";
 
 type PublicBrand = {
   loginBackgroundUrl?: string | null;
 };
 
-const LOGIN_LOGO = "/assets/logo2.webp";
-const FALLBACK_LOGIN_IMAGE = "/assets/bannerpricipal.webp";
+const LOGIN_LOGO = STATIC_ASSETS.logoLogin;
+const FALLBACK_LOGIN_IMAGE = STATIC_ASSETS.bannerPrincipal;
 
 export default function LoginPage() {
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loginImage, setLoginImage] = useState(FALLBACK_LOGIN_IMAGE);
+  const [loginImage, setLoginImage] = useState<string>(FALLBACK_LOGIN_IMAGE);
 
   useEffect(() => {
     if (window.location.hostname === "0.0.0.0") {
@@ -53,7 +54,9 @@ export default function LoginPage() {
       })
       .then((cfg) => {
         if (cfg?.brand?.loginBackgroundUrl) {
-          setLoginImage(cfg.brand.loginBackgroundUrl);
+          setLoginImage(
+            normalizeImageSrcOr(cfg.brand.loginBackgroundUrl, FALLBACK_LOGIN_IMAGE)
+          );
         }
       });
   }, []);
@@ -83,7 +86,7 @@ export default function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-[7fr_3fr]">
       {/* Imagem — lado esquerdo, maior (~70%) */}
       <div className="relative min-h-[38vh] sm:min-h-[42vh] lg:min-h-screen">
-        <Image
+        <SafeImage
           src={loginImage}
           alt=""
           fill
@@ -99,7 +102,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm mx-auto">
           <div className="mb-8 flex justify-center px-2">
             <Link href="/" className="inline-flex w-full max-w-[280px] justify-center" aria-label="BaseGol — início">
-              <Image
+              <SafeImage
                 src={LOGIN_LOGO}
                 alt="BaseGol"
                 width={320}

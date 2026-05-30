@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/toaster";
 import { parseApiResponse } from "@/lib/api-client";
@@ -62,13 +62,7 @@ export function ProfileAvatarUpload({ name, imageUrl, onImageChange, disabled }:
           )}
         >
           {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt=""
-              fill
-              className="object-cover"
-              unoptimized={imageUrl.startsWith("/uploads/")}
-            />
+            <SafeImage src={imageUrl} alt="" fill className="object-cover" />
           ) : (
             <span className="text-3xl font-semibold text-muted-foreground">{initial}</span>
           )}

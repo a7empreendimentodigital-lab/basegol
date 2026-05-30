@@ -1,4 +1,5 @@
 import { Award } from "lucide-react";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 
@@ -36,9 +37,9 @@ export function HomeTopScorersCard({ title, scorers }: Props) {
               {i + 1}
             </span>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-line bg-graphite text-xs font-semibold text-foreground">
-              {s.photoUrl ? (
+              {normalizeImageSrc(s.photoUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.photoUrl} alt="" className="h-full w-full object-cover" />
+                <img src={normalizeImageSrc(s.photoUrl)!} alt="" className="h-full w-full object-cover" />
               ) : (
                 s.name
                   .split(" ")

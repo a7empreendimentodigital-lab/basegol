@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/utils/api-response";
+import { normalizeImageSrc } from "@/lib/image-url";
 import {
   UPLOAD_ALLOWED_DOCUMENT_TYPES,
   UPLOAD_ALLOWED_IMAGE_TYPES,
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
   await fs.mkdir(uploadDir, { recursive: true });
   await fs.writeFile(path.join(uploadDir, fileName), bytes);
 
-  const url = `/uploads/${fileName}`;
+  const url = normalizeImageSrc(`/uploads/${fileName}`) ?? `/uploads/${fileName}`;
   const category = String(formData.get("category") ?? "general");
   const title = String(formData.get("title") ?? file.name);
 

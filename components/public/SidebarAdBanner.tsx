@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { bannerLinkProps } from "@/lib/banner-link";
 import { bannerDisplaySize } from "@/lib/banner-specs";
 import type { PublicBannerDto } from "@/services/banner.service";
@@ -27,13 +27,12 @@ export function SidebarAdBanner({ banner, variant, className }: SidebarAdBannerP
       )}
       style={{ height: `${height}px`, maxWidth: `${width}px`, marginInline: "auto" }}
     >
-      <Image
+      <SafeImage
         src={banner.imageUrl}
         alt={banner.title}
         fill
         className="object-cover"
         sizes={`${width}px`}
-        unoptimized={banner.imageUrl.startsWith("/uploads/")}
       />
     </div>
   );

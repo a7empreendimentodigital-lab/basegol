@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
+import { STATIC_ASSETS } from "@/lib/image-url";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -24,8 +25,8 @@ export function HeroBanner({
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-2xl border border-line min-h-[220px] md:min-h-[280px]"
     >
-      <Image
-        src="/assets/bannerpricipal.webp"
+      <SafeImage
+        src={STATIC_ASSETS.bannerPrincipal}
         alt=""
         fill
         className="object-cover"

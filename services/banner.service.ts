@@ -1,3 +1,4 @@
+import { normalizeImageSrc } from "@/lib/image-url";
 import { prisma } from "@/lib/prisma";
 import type { BannerPlacement } from "@prisma/client";
 
@@ -41,7 +42,7 @@ export async function getActiveBannersByPlacement(
       id: b.id,
       title: b.title,
       subtitle: b.subtitle,
-      imageUrl: b.imageUrl,
+      imageUrl: normalizeImageSrc(b.imageUrl) ?? b.imageUrl,
       linkUrl: b.linkUrl,
       placement: b.placement,
       order: b.order,

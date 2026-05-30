@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { parseApiResponse } from "@/lib/api-client";
+import { normalizeImageSrcOr, STATIC_ASSETS } from "@/lib/image-url";
+import { cn } from "@/lib/utils";
 
 type Props = {
   href?: string;
@@ -19,7 +20,7 @@ export function MobileBrandLogo({
   className,
   imageClassName,
 }: Props) {
-  const resolvedSrc = src ?? "/assets/favicon.webp";
+  const resolvedSrc = normalizeImageSrcOr(src, STATIC_ASSETS.favicon);
   const [logoSrc, setLogoSrc] = useState(resolvedSrc);
 
   useEffect(() => {
@@ -37,9 +38,14 @@ export function MobileBrandLogo({
       })
       .then((cfg) => {
         const b = cfg?.brand;
-        setLogoSrc(b?.mobileLogoUrl ?? b?.faviconUrl ?? b?.logoUrl ?? "/assets/favicon.webp");
+        setLogoSrc(
+          normalizeImageSrcOr(
+            b?.mobileLogoUrl ?? b?.faviconUrl ?? b?.logoUrl,
+            STATIC_ASSETS.favicon
+          )
+        );
       })
-      .catch(() => setLogoSrc("/assets/favicon.webp"));
+      .catch(() => setLogoSrc(STATIC_ASSETS.favicon));
   }, [src]);
 
   const content = (

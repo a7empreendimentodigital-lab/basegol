@@ -1,5 +1,6 @@
 import { Award } from "lucide-react";
 import { TeamCrest } from "@/components/matches/TeamCrest";
+import { normalizeImageSrc } from "@/lib/image-url";
 import type { TopScorer } from "@/services/statistics.service";
 import { ChampionshipEmptyPanel } from "./ChampionshipEmptyPanel";
 
@@ -27,10 +28,10 @@ export function ChampionshipTopScorersList({ scorers }: { scorers: TopScorer[] }
           >
             {i + 1}
           </span>
-          {s.photoUrl ? (
+          {normalizeImageSrc(s.photoUrl) ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={s.photoUrl}
+              src={normalizeImageSrc(s.photoUrl)!}
               alt=""
               className="h-11 w-11 shrink-0 rounded-lg object-cover"
             />

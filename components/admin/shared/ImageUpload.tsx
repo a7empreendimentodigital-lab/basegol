@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,7 +47,7 @@ export function ImageUpload({
         }
         const { url } = await parseApiResponse<{ url: string; assetId: string }>(res);
         if (!url) throw new Error("URL do upload não retornada");
-        onChange(url);
+        onChange(normalizeImageSrc(url));
         toast({ title: "Upload concluído", variant: "success" });
       } catch (e) {
         toast({
@@ -77,7 +78,7 @@ export function ImageUpload({
       {value ? (
         <div className="relative rounded-lg border border-border overflow-hidden bg-secondary/50">
           <div className="relative h-40 w-full">
-            <Image src={value} alt="" fill className="object-contain p-2" unoptimized />
+            <SafeImage src={value} alt="" fill className="object-contain p-2" />
           </div>
           <div className="flex gap-2 p-2 border-t border-border bg-black/40">
             <label className="flex-1">

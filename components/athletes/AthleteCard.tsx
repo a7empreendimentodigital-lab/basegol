@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { Badge } from "@/components/ui/badge";
 
 type AthleteCardProps = {
@@ -25,9 +26,9 @@ export function AthleteCard({
         <CardContent className="p-0">
           <div className="flex items-stretch">
             <div className="w-20 bg-secondary flex items-center justify-center shrink-0">
-              {photoUrl ? (
+              {normalizeImageSrc(photoUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoUrl} alt={name} className="h-20 w-full object-cover" />
+                <img src={normalizeImageSrc(photoUrl)!} alt={name} className="h-20 w-full object-cover" />
               ) : (
                 <span className="font-display text-3xl text-neon/50">
                   {shirtNumber ?? "—"}

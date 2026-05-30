@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { ArrowLeft, Calendar, Trophy } from "lucide-react";
 
 type Props = {
@@ -23,13 +23,12 @@ export function ChampionshipDetailHeader({ name, season, logoUrl, description }:
       <div className="flex items-start gap-4 sm:gap-5 rounded-2xl border border-line bg-graphite-light p-5 sm:p-6">
         <div className="flex h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 items-center justify-center">
           {logoUrl ? (
-            <Image
+            <SafeImage
               src={logoUrl}
               alt=""
               width={72}
               height={72}
               className="h-full w-full object-contain"
-              unoptimized={logoUrl.startsWith("/uploads/")}
             />
           ) : (
             <Trophy

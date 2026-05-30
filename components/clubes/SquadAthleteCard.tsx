@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { PLAYER_POSITION_LABELS } from "@/lib/admin-labels";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -32,9 +33,9 @@ export function SquadAthleteCard({
       )}
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
-        {photoUrl ? (
+        {normalizeImageSrc(photoUrl) ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+          <img src={normalizeImageSrc(photoUrl)!} alt="" className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center font-display text-2xl text-neon/40">
             {shirtNumber ?? "—"}

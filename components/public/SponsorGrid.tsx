@@ -1,3 +1,5 @@
+import { normalizeImageSrc } from "@/lib/image-url";
+
 type SponsorGridProps = {
   sponsors: { id: string; name: string; logoUrl?: string | null; websiteUrl?: string | null }[];
 };
@@ -16,9 +18,13 @@ export function SponsorGrid({ sponsors }: SponsorGridProps) {
           className="glass-card p-4 neon-hover"
         >
           <div className="h-12 mb-2 flex items-center justify-center">
-            {sponsor.logoUrl ? (
+            {normalizeImageSrc(sponsor.logoUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={sponsor.logoUrl} alt={sponsor.name} className="max-h-10 object-contain" />
+              <img
+                src={normalizeImageSrc(sponsor.logoUrl)!}
+                alt={sponsor.name}
+                className="max-h-10 object-contain"
+              />
             ) : (
               <span className="text-sm text-neon">{sponsor.name.slice(0, 16)}</span>
             )}

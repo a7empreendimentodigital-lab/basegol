@@ -1,4 +1,5 @@
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { PAGE_TOP_BANNER_HEIGHT_PX } from "@/lib/page-banners";
 
 type PublicPageBannerProps = {
@@ -14,8 +15,8 @@ export function PublicPageBanner({ src, title, subtitle }: PublicPageBannerProps
       style={{ height: PAGE_TOP_BANNER_HEIGHT_PX }}
       aria-label={title}
     >
-      <Image
-        src={src}
+      <SafeImage
+        src={normalizeImageSrc(src) ?? src}
         alt=""
         fill
         className="object-cover object-center"

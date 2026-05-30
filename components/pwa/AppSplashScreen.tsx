@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "basegol-splash-seen";
@@ -16,9 +17,10 @@ export function AppSplashScreen({ imageUrl }: Props) {
   const pathname = usePathname() ?? "/";
   const [visible, setVisible] = useState(false);
   const [fading, setFading] = useState(false);
+  const splashSrc = normalizeImageSrc(imageUrl);
 
   useEffect(() => {
-    if (!imageUrl) return;
+    if (!splashSrc) return;
     if (pathname.startsWith("/admin")) return;
     if (sessionStorage.getItem(STORAGE_KEY)) return;
 
@@ -53,7 +55,7 @@ export function AppSplashScreen({ imageUrl }: Props) {
       if (cancelled) return;
       sessionStorage.setItem(STORAGE_KEY, "1");
     };
-    img.src = imageUrl;
+    img.src = splashSrc;
 
     const maxTimer = setTimeout(hide, MAX_VISIBLE_MS);
 
@@ -63,9 +65,9 @@ export function AppSplashScreen({ imageUrl }: Props) {
       clearTimeout(maxTimer);
       window.removeEventListener("load", scheduleHide);
     };
-  }, [imageUrl, pathname]);
+  }, [splashSrc, pathname]);
 
-  if (!visible || !imageUrl) return null;
+  if (!visible || !splashSrc) return null;
 
   return (
     <div
@@ -78,7 +80,7 @@ export function AppSplashScreen({ imageUrl }: Props) {
     >
       <div className="relative flex h-full w-full max-h-[min(100%,720px)] max-w-lg items-center justify-center p-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt="" className="max-h-full max-w-full object-contain" />
+        <img src={splashSrc} alt="" className="max-h-full max-w-full object-contain" />
       </div>
     </div>
   );

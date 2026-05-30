@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, Search, User } from "lucide-react";
@@ -60,13 +60,7 @@ function WelcomeBlock({
     <>
       <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-graphite-light text-sm font-semibold text-foreground">
         {userImage ? (
-          <Image
-            src={userImage}
-            alt=""
-            fill
-            className="object-cover"
-            unoptimized={userImage.startsWith("/uploads/")}
-          />
+          <SafeImage src={userImage} alt="" fill className="object-cover" />
         ) : (
           <span aria-hidden>{initial}</span>
         )}

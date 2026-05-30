@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { Copy, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,7 +149,7 @@ export function MediaManager() {
             <div key={item.id} className="glass-card overflow-hidden group">
               <div className="relative aspect-square bg-secondary/50">
                 {item.type === "IMAGE" ? (
-                  <Image src={item.url} alt="" fill className="object-cover" unoptimized />
+                  <SafeImage src={item.url} alt="" fill className="object-cover" />
                 ) : (
                   <div className="flex h-full items-center justify-center text-xs text-muted-foreground p-2 text-center">
                     {item.originalName ?? "Documento"}

@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -98,12 +99,13 @@ export function AdminDataTable<T extends { id: string }>({
 }
 
 export function Thumb({ src, alt }: { src?: string | null; alt?: string }) {
-  if (!src) {
+  const normalized = normalizeImageSrc(src);
+  if (!normalized) {
     return <div className="h-10 w-10 rounded-lg bg-secondary border border-border" />;
   }
   return (
     <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-border bg-secondary">
-      <Image src={src} alt={alt ?? ""} fill className="object-cover" unoptimized />
+      <SafeImage src={normalized} alt={alt ?? ""} fill className="object-cover" />
     </div>
   );
 }

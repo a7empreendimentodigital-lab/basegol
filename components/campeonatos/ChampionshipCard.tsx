@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { Calendar, ChevronRight, Trophy } from "lucide-react";
 import { CHAMPIONSHIP_STATUS_LABELS } from "@/lib/admin-labels";
 
@@ -29,13 +29,12 @@ export function ChampionshipCard({
     >
       <div className="flex h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 items-center justify-center">
         {logoUrl ? (
-          <Image
+          <SafeImage
             src={logoUrl}
             alt=""
             width={72}
             height={72}
             className="h-full w-full object-contain"
-            unoptimized={logoUrl.startsWith("/uploads/")}
           />
         ) : (
           <Trophy

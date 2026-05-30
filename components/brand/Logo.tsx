@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { parseApiResponse } from "@/lib/api-client";
+import { normalizeImageSrcOr, shouldUnoptimizeImageSrc, STATIC_ASSETS } from "@/lib/image-url";
+import { cn } from "@/lib/utils";
 
 type LogoProps = {
   href?: string | null;
@@ -52,7 +53,7 @@ export function Logo({
   }, [src, wordmarkText]);
 
   const s = sizes[size];
-  const logoSrc = src || dynamicLogo || "/assets/logo.webp";
+  const logoSrc = normalizeImageSrcOr(src || dynamicLogo, STATIC_ASSETS.logo);
   const finalWordmark = wordmarkText === "BASEGOL" ? dynamicSystemName || wordmarkText : wordmarkText;
   const content = (
     <span
@@ -74,6 +75,7 @@ export function Logo({
         )}
         style={size === "sidebar" ? undefined : { maxHeight: s.box }}
         priority
+        unoptimized={shouldUnoptimizeImageSrc(logoSrc)}
       />
       {showWordmark && (
         <span className="font-display text-2xl tracking-wider text-neon">{finalWordmark}</span>

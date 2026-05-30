@@ -18,6 +18,7 @@ import { ChampionshipEmptyPanel } from "@/components/campeonatos/ChampionshipEmp
 import { LiveBadge } from "@/components/layout/LiveBadge";
 import { StatisticBar } from "@/components/matches/StatisticBar";
 import { StandingTable } from "@/components/matches/StandingTable";
+import { normalizeImageSrc } from "@/lib/image-url";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { formatLiveClock, formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
 import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
@@ -223,10 +224,10 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
                     </span>
                     <span className="shrink-0 text-base">{eventIcon(ev.type)}</span>
                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                      {ev.athlete?.photoUrl ? (
+                      {normalizeImageSrc(ev.athlete?.photoUrl) ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={ev.athlete.photoUrl}
+                          src={normalizeImageSrc(ev.athlete?.photoUrl)!}
                           alt=""
                           className="h-8 w-8 shrink-0 rounded-lg object-cover"
                         />

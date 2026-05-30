@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { SafeImage } from "@/components/ui/SafeImage";
+import { normalizeImageSrcOr, STATIC_ASSETS } from "@/lib/image-url";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,7 +45,7 @@ export function HeroBannerCarousel({
   }, [count, next]);
 
   if (count === 0) {
-    const bg = fallbackBackgroundUrl || "/assets/bannerpricipal.webp";
+    const bg = normalizeImageSrcOr(fallbackBackgroundUrl, STATIC_ASSETS.bannerPrincipal);
     return (
       <section
         className={cn(
@@ -52,7 +53,7 @@ export function HeroBannerCarousel({
           HERO_HEIGHT_CLASS
         )}
       >
-        <Image src={bg} alt="" fill className="object-cover" priority sizes="(max-width: 1280px) 100vw, 1200px" />
+        <SafeImage src={bg} alt="" fill className="object-cover" priority sizes="(max-width: 1280px) 100vw, 1200px" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
         <div className="relative z-10 flex flex-col justify-center h-full p-6 sm:p-8 lg:p-10 max-w-xl">
           {fallbackTitle ? (
@@ -80,7 +81,7 @@ export function HeroBannerCarousel({
 
   const slideContent = (
     <>
-      <Image
+      <SafeImage
         src={slide.imageUrl}
         alt={slide.title}
         fill

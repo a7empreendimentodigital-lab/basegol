@@ -1,5 +1,19 @@
+import { normalizeImageSrc } from "@/lib/image-url";
 import { formatClubDisplayName, normalizeClubName } from "@/lib/normalize-name";
 import { slugify } from "@/lib/utils";
+
+const ADMIN_IMAGE_URL_FIELDS = [
+  "logoUrl",
+  "faviconUrl",
+  "mobileLogoUrl",
+  "loginBackgroundUrl",
+  "homeHeroBackgroundUrl",
+  "splashScreenUrl",
+  "crestUrl",
+  "bannerUrl",
+  "imageUrl",
+  "photoUrl",
+] as const;
 
 export function prepareAdminPayload(entity: string, data: Record<string, unknown>): Record<string, unknown> {
   const out = { ...data };
@@ -50,6 +64,13 @@ export function prepareAdminPayload(entity: string, data: Record<string, unknown
 
   if (typeof out.scheduledAt === "string" && out.scheduledAt) {
     out.scheduledAt = new Date(out.scheduledAt);
+  }
+
+  for (const field of ADMIN_IMAGE_URL_FIELDS) {
+    if (typeof out[field] === "string") {
+      const normalized = normalizeImageSrc(out[field] as string);
+      out[field] = normalized ?? "";
+    }
   }
 
   return out;

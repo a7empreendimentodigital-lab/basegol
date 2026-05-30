@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { useEffect, useMemo, useState } from "react";
 import { Calendar, ChevronRight, Radio, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -159,12 +159,11 @@ export default function AdminPlacarAoVivoPage() {
                     <div className="flex flex-1 items-center gap-3 min-w-0">
                       {m.homeTeam.club.crestUrl ? (
                         <div className="relative h-10 w-10 shrink-0">
-                          <Image
+                          <SafeImage
                             src={m.homeTeam.club.crestUrl}
                             alt=""
                             fill
                             className="object-contain"
-                            unoptimized
                           />
                         </div>
                       ) : (
@@ -186,12 +185,11 @@ export default function AdminPlacarAoVivoPage() {
                     <div className="flex flex-1 items-center gap-3 min-w-0 sm:flex-row-reverse sm:text-right">
                       {m.awayTeam.club.crestUrl ? (
                         <div className="relative h-10 w-10 shrink-0">
-                          <Image
+                          <SafeImage
                             src={m.awayTeam.club.crestUrl}
                             alt=""
                             fill
                             className="object-contain"
-                            unoptimized
                           />
                         </div>
                       ) : (

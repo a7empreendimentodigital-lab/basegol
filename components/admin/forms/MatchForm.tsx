@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -122,7 +122,7 @@ export function MatchForm({ initial, onSuccess, onCancel }: AdminFormProps) {
           </Select>
           {homeTeam?.crestUrl && (
             <div className="relative h-8 w-8 mt-2">
-              <Image src={homeTeam.crestUrl} alt="" fill className="object-contain" unoptimized />
+              <SafeImage src={homeTeam.crestUrl} alt="" fill className="object-contain" />
             </div>
           )}
         </FormField>
@@ -145,7 +145,7 @@ export function MatchForm({ initial, onSuccess, onCancel }: AdminFormProps) {
           </Select>
           {awayTeam?.crestUrl && (
             <div className="relative h-8 w-8 mt-2">
-              <Image src={awayTeam.crestUrl} alt="" fill className="object-contain" unoptimized />
+              <SafeImage src={awayTeam.crestUrl} alt="" fill className="object-contain" />
             </div>
           )}
         </FormField>
