@@ -18,7 +18,7 @@ type Props = {
 };
 
 const touchIconBtn =
-  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-graphite-light hover:text-foreground";
+  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-graphite-light hover:text-foreground";
 
 function HeaderSearch({ onSearch }: { onSearch: (q: string) => void }) {
   const [query, setQuery] = useState("");
@@ -41,7 +41,7 @@ function HeaderSearch({ onSearch }: { onSearch: (q: string) => void }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar campeonatos, clubes ou jogos..."
-          className="h-11 w-full rounded-full border border-line bg-graphite-light/90 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/25 focus:outline-none focus:ring-2 focus:ring-foreground/10"
+          className="h-10 w-full rounded-full border border-line bg-graphite-light/90 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/25 focus:outline-none focus:ring-2 focus:ring-foreground/10"
         />
       </div>
     </form>
@@ -61,7 +61,7 @@ function MobileUserSlot({
   const initial = displayName.trim().charAt(0).toUpperCase() || "?";
 
   const avatar = (
-    <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-graphite-light text-sm font-semibold text-foreground">
+    <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-graphite-light text-sm font-semibold text-foreground">
       {userImage ? (
         <SafeImage src={userImage} alt="" fill className="object-cover" sizes="44px" />
       ) : (
@@ -172,23 +172,27 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
   return (
     <>
       <header className="sticky top-0 z-[60] shrink-0 border-b border-line bg-pitch/95 backdrop-blur-xl">
-        {/* Mobile: [☰] [Logo] [Usuário] + busca full width */}
-        <div className="space-y-3 px-3 py-3 sm:px-4 md:hidden">
-          <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2">
+        {/* Mobile: linha compacta + busca */}
+        <div className="space-y-2 px-3 py-2 sm:px-4 md:hidden">
+          <div className="grid h-11 grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 openMenu();
               }}
-              className={cn(touchIconBtn, "w-11")}
+              className={cn(
+                touchIconBtn,
+                "h-10 w-10 border-white/10 bg-white/[0.03]",
+                menuOpen && "border-selected/40 bg-selected/10 text-foreground"
+              )}
               aria-label="Abrir menu"
               aria-expanded={menuOpen}
             >
               <Menu className="h-5 w-5" aria-hidden />
             </button>
             <div className="flex min-w-0 justify-center">
-              <MobileBrandLogo src={mobileLogoUrl} imageClassName="h-10 w-10" />
+              <MobileBrandLogo src={mobileLogoUrl} imageClassName="h-9 w-9" />
             </div>
             <div className="flex justify-end">
               <MobileUserSlot
