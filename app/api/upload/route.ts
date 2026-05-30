@@ -1,11 +1,9 @@
-import path from "path";
-import fs from "fs/promises";
-import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/utils/api-response";
 import { normalizeImageSrc } from "@/lib/image-url";
+import { storeUploadedFile } from "@/lib/upload-storage";
 import {
   UPLOAD_ALLOWED_DOCUMENT_TYPES,
   UPLOAD_ALLOWED_IMAGE_TYPES,
@@ -22,49 +20,65 @@ function isAllowedMime(mime: string, allowDocs: boolean) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return fail("Não autenticado", 401);
-  }
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return fail("Não autenticado", 401);
+    }
 
-  const formData = await req.formData();
-  const file = formData.get("file");
-  if (!(file instanceof File)) {
-    return fail("Arquivo inválido", 400);
-  }
+    const formData = await req.formData();
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      return fail("Arquivo inválido", 400);
+    }
 
-  if (file.size > UPLOAD_MAX_BYTES) {
-    return fail(`Arquivo muito grande. Máximo ${UPLOAD_MAX_BYTES / 1024 / 1024}MB`, 400);
-  }
+    if (file.size > UPLOAD_MAX_BYTES) {
+      return fail(`Arquivo muito grande. Máximo ${UPLOAD_MAX_BYTES / 1024 / 1024}MB`, 400);
+    }
 
-  const allowDocs = formData.get("allowDocuments") === "true";
-  if (!isAllowedMime(file.type, allowDocs)) {
-    return fail("Tipo de arquivo não permitido", 400);
-  }
+    const allowDocs = formData.get("allowDocuments") === "true";
+    if (!isAllowedMime(file.type, allowDocs)) {
+      return fail("Tipo de arquivo não permitido", 400);
+    }
 
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const ext = path.extname(file.name) || ".bin";
-  const fileName = `${Date.now()}-${randomUUID()}${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(uploadDir, { recursive: true });
-  await fs.writeFile(path.join(uploadDir, fileName), bytes);
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const category = String(formData.get("category") ?? "general");
+    const title = String(formData.get("title") ?? file.name);
 
-  const url = normalizeImageSrc(`/uploads/${fileName}`) ?? `/uploads/${fileName}`;
-  const category = String(formData.get("category") ?? "general");
-  const title = String(formData.get("title") ?? file.name);
-
-  const asset = await prisma.mediaAsset.create({
-    data: {
-      type: file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT",
-      category,
-      title,
+    const stored = await storeUploadedFile({
+      buffer: bytes,
       originalName: file.name,
-      mimeType: file.type,
-      url,
-      sizeBytes: bytes.length,
-      uploadedBy: session.user.id,
-    },
-  });
+      contentType: file.type,
+      category,
+    });
 
-  return ok({ url, assetId: asset.id });
+    const url = normalizeImageSrc(stored.url) ?? stored.url;
+
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        type: file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT",
+        category,
+        title,
+        originalName: file.name,
+        mimeType: file.type,
+        url,
+        sizeBytes: bytes.length,
+        uploadedBy: session.user.id,
+      },
+    });
+
+    console.info("[upload] ok", {
+      storage: stored.storage,
+      userId: session.user.id,
+      category,
+      url,
+    });
+
+    return ok({ url, assetId: asset.id });
+  } catch (e) {
+    console.error("[upload] error", e);
+    const message =
+      e instanceof Error ? e.message : "Falha no upload";
+    return fail(message, 500);
+  }
 }

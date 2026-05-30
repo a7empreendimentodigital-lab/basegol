@@ -1,7 +1,6 @@
-import path from "path";
-import fs from "fs/promises";
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import { prisma } from "@/lib/prisma";
+import { deleteStoredFile } from "@/lib/upload-storage";
 import { fail, ok } from "@/utils/api-response";
 
 async function ensureAdmin() {
@@ -19,14 +18,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const asset = await prisma.mediaAsset.findUnique({ where: { id } });
     if (!asset) return fail("Mídia não encontrada", 404);
 
-    if (asset.url.startsWith("/uploads/")) {
-      const filePath = path.join(process.cwd(), "public", asset.url);
-      try {
-        await fs.unlink(filePath);
-      } catch {
-        // arquivo pode já ter sido removido
-      }
-    }
+    await deleteStoredFile(asset.url);
 
     await prisma.mediaAsset.delete({ where: { id } });
     return ok({ deleted: true });
