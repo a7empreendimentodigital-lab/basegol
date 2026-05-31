@@ -114,7 +114,14 @@ export async function reconcileAndPersistScores(
   awayTeamId: string,
   events: MatchEventLike[]
 ) {
-  const scores = rebuildScoresFromEvents(events, homeTeamId, awayTeamId);
+  const matchRow = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: { homePenaltyAttempts: true, awayPenaltyAttempts: true },
+  });
+  const scores = rebuildScoresFromEvents(events, homeTeamId, awayTeamId, {
+    storedHomePenaltyAttempts: matchRow?.homePenaltyAttempts,
+    storedAwayPenaltyAttempts: matchRow?.awayPenaltyAttempts,
+  });
   await prisma.match.update({
     where: { id: matchId },
     data: {
@@ -185,7 +192,10 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
       ? resolvePhaseElapsed(match as MatchPhaseFields)
       : resolveElapsedSeconds(match);
 
-  const scores = rebuildScoresFromEvents(events, match.homeTeamId, match.awayTeamId);
+  const scores = rebuildScoresFromEvents(events, match.homeTeamId, match.awayTeamId, {
+    storedHomePenaltyAttempts: match.homePenaltyAttempts,
+    storedAwayPenaltyAttempts: match.awayPenaltyAttempts,
+  });
   const running = match.isClockRunning ?? match.clockRunning;
   const inPenaltyShootout =
     phase === "PENALTIES" ||

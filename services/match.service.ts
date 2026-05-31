@@ -50,7 +50,10 @@ function mapMatchWithScoreEvents(
   }
 ): MatchWithTeams | null {
   if (!m) return null;
-  const scores = rebuildScoresFromEvents(m.events ?? [], m.homeTeamId, m.awayTeamId);
+  const scores = rebuildScoresFromEvents(m.events ?? [], m.homeTeamId, m.awayTeamId, {
+    storedHomePenaltyAttempts: m.homePenaltyAttempts,
+    storedAwayPenaltyAttempts: m.awayPenaltyAttempts,
+  });
   const base = mapMatch({
     ...m,
     homeScore: scores.homeScore,

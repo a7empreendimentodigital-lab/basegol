@@ -77,7 +77,13 @@ export async function listMatchesAdmin(
             type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] },
           },
           orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
-          select: { type: true, teamId: true, description: true },
+          select: {
+            type: true,
+            teamId: true,
+            description: true,
+            minute: true,
+            createdAt: true,
+          },
         },
       },
       orderBy: { scheduledAt: "desc" },
@@ -88,7 +94,10 @@ export async function listMatchesAdmin(
   ]);
 
   const items = rows.map((m) => {
-    const scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId);
+    const scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId, {
+      storedHomePenaltyAttempts: m.homePenaltyAttempts,
+      storedAwayPenaltyAttempts: m.awayPenaltyAttempts,
+    });
     return {
       ...m,
       homeScore: scores.homeScore,

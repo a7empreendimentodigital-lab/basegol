@@ -1,38 +1,65 @@
 "use client";
 
 import {
-  formatAttemptsSequence,
+  countConvertedAttempts,
+  parsePenaltyAttempts,
   type PenaltyAttemptChar,
 } from "@/lib/match-penalties";
 import { cn } from "@/lib/utils";
 
-function AttemptSequence({
+function KickDots({ attempts }: { attempts: PenaltyAttemptChar[] }) {
+  if (attempts.length === 0) {
+    return (
+      <div className="flex justify-center gap-1.5 min-h-[14px]">
+        <span className="h-3.5 w-3.5 rounded-full bg-muted-foreground/20" aria-hidden />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-wrap justify-center gap-1.5 max-w-[11rem]"
+      role="list"
+      aria-label={`${attempts.filter((a) => a === "O").length} convertidos de ${attempts.length} cobranças`}
+    >
+      {attempts.map((kick, i) => (
+        <span
+          key={i}
+          role="listitem"
+          title={kick === "O" ? "Convertido" : "Perdido"}
+          className={cn(
+            "h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border-2 shrink-0",
+            kick === "O"
+              ? "border-emerald-500 bg-emerald-500"
+              : "border-red-500 bg-transparent"
+          )}
+          aria-label={kick === "O" ? "Pênalti convertido" : "Pênalti perdido"}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SideKicks({
   attempts,
   label,
-  align = "center",
+  align,
 }: {
   attempts: PenaltyAttemptChar[];
   label: string;
-  align?: "left" | "center" | "right";
+  align: "left" | "right";
 }) {
   return (
     <div
       className={cn(
-        "min-w-0 flex-1",
-        align === "left" && "text-left",
-        align === "right" && "text-right",
-        align === "center" && "text-center"
+        "flex flex-col gap-2 min-w-0 flex-1",
+        align === "right" ? "items-end" : "items-start"
       )}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate mb-1">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate max-w-full">
         {label}
       </p>
-      <p
-        className="font-mono text-sm sm:text-base tracking-[0.2em] text-foreground tabular-nums"
-        aria-label={`Cobranças: ${formatAttemptsSequence(attempts)}`}
-      >
-        {attempts.length > 0 ? formatAttemptsSequence(attempts) : "—"}
-      </p>
+      <KickDots attempts={attempts} />
     </div>
   );
 }
@@ -42,8 +69,8 @@ export function PenaltyShootoutPanel({
   awayScore,
   homeLabel,
   awayLabel,
-  homeAttempts = [],
-  awayAttempts = [],
+  homeAttempts,
+  awayAttempts,
   homeKicks = [],
   awayKicks = [],
   className,
@@ -52,20 +79,28 @@ export function PenaltyShootoutPanel({
   awayScore: number;
   homeLabel?: string;
   awayLabel?: string;
-  homeAttempts?: PenaltyAttemptChar[];
-  awayAttempts?: PenaltyAttemptChar[];
+  homeAttempts?: PenaltyAttemptChar[] | unknown;
+  awayAttempts?: PenaltyAttemptChar[] | unknown;
   homeKicks?: boolean[];
   awayKicks?: boolean[];
   className?: string;
 }) {
-  const homeSeq: PenaltyAttemptChar[] =
-    homeAttempts.length > 0
-      ? homeAttempts
-      : homeKicks.map((k) => (k ? "O" : "X"));
-  const awaySeq: PenaltyAttemptChar[] =
-    awayAttempts.length > 0
-      ? awayAttempts
-      : awayKicks.map((k) => (k ? "O" : "X"));
+  const homeSeq: PenaltyAttemptChar[] = (() => {
+    const parsed = parsePenaltyAttempts(homeAttempts);
+    if (parsed.length > 0) return parsed;
+    return homeKicks.map((k) => (k ? "O" : "X") as PenaltyAttemptChar);
+  })();
+
+  const awaySeq: PenaltyAttemptChar[] = (() => {
+    const parsed = parsePenaltyAttempts(awayAttempts);
+    if (parsed.length > 0) return parsed;
+    return awayKicks.map((k) => (k ? "O" : "X") as PenaltyAttemptChar);
+  })();
+
+  const displayHome =
+    homeSeq.length > 0 ? countConvertedAttempts(homeSeq) : homeScore;
+  const displayAway =
+    awaySeq.length > 0 ? countConvertedAttempts(awaySeq) : awayScore;
 
   return (
     <div
@@ -77,24 +112,16 @@ export function PenaltyShootoutPanel({
       <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         Disputa de pênaltis
       </p>
-      <div className="flex items-center justify-center gap-3 sm:gap-6">
-        <AttemptSequence
-          attempts={homeSeq}
-          label={homeLabel ?? "Mandante"}
-          align="right"
-        />
-        <div className="shrink-0 text-center px-2">
+      <div className="flex items-center justify-center gap-3 sm:gap-5">
+        <SideKicks attempts={homeSeq} label={homeLabel ?? "Mandante"} align="right" />
+        <div className="shrink-0 text-center px-1 sm:px-2">
           <p className="font-display text-3xl tabular-nums tracking-wide text-foreground sm:text-4xl">
-            {homeScore}
+            {displayHome}
             <span className="mx-1.5 text-muted-foreground">:</span>
-            {awayScore}
+            {displayAway}
           </p>
         </div>
-        <AttemptSequence
-          attempts={awaySeq}
-          label={awayLabel ?? "Visitante"}
-          align="left"
-        />
+        <SideKicks attempts={awaySeq} label={awayLabel ?? "Visitante"} align="left" />
       </div>
     </div>
   );

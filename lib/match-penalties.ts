@@ -7,11 +7,53 @@ export type PenaltyShootoutScore = {
   awayScore: number;
   homeAttempts: PenaltyAttemptChar[];
   awayAttempts: PenaltyAttemptChar[];
-  /** @deprecated use homeAttempts — true = O, false = X */
+  /** true = convertido (O), false = perdido (X) */
   homePenaltyKicks: boolean[];
   awayPenaltyKicks: boolean[];
   inPenaltyShootout: boolean;
 };
+
+/** Normaliza JSON/string/array do banco para sequência O/X. */
+export function parsePenaltyAttempts(raw: unknown): PenaltyAttemptChar[] {
+  if (raw == null) return [];
+
+  if (typeof raw === "string") {
+    const trimmed = raw.trim().toUpperCase();
+    if (trimmed.startsWith("[")) {
+      try {
+        return parsePenaltyAttempts(JSON.parse(trimmed));
+      } catch {
+        return [];
+      }
+    }
+    return trimmed
+      .split("")
+      .filter((c): c is PenaltyAttemptChar => c === "O" || c === "X");
+  }
+
+  if (Array.isArray(raw)) {
+    const out: PenaltyAttemptChar[] = [];
+    for (const item of raw) {
+      if (item === true || item === "O" || item === "o") out.push("O");
+      else if (item === false || item === "X" || item === "x") out.push("X");
+    }
+    return out;
+  }
+
+  return [];
+}
+
+export function countConvertedAttempts(attempts: PenaltyAttemptChar[]): number {
+  return attempts.filter((a) => a === "O").length;
+}
+
+export function attemptsToBooleans(attempts: PenaltyAttemptChar[]): boolean[] {
+  return attempts.map((a) => a === "O");
+}
+
+export function formatAttemptsSequence(attempts: PenaltyAttemptChar[]): string {
+  return attempts.join("");
+}
 
 function isPenaltyShootoutKickoff(e: MatchEventLike): boolean {
   const desc = (e.description ?? "").toLowerCase();
@@ -61,18 +103,6 @@ function resolveSide(
   return null;
 }
 
-export function countConvertedAttempts(attempts: PenaltyAttemptChar[]): number {
-  return attempts.filter((a) => a === "O").length;
-}
-
-export function attemptsToBooleans(attempts: PenaltyAttemptChar[]): boolean[] {
-  return attempts.map((a) => a === "O");
-}
-
-export function formatAttemptsSequence(attempts: PenaltyAttemptChar[]): string {
-  return attempts.join("");
-}
-
 /** Reconstrói cobranças e placar de pênaltis somente a partir de eventos. */
 export function rebuildPenaltyShootoutFromEvents(
   events: MatchEventLike[],
@@ -85,15 +115,7 @@ export function rebuildPenaltyShootoutFromEvents(
   const awayAttempts: PenaltyAttemptChar[] = [];
 
   if (firstIdx < 0) {
-    return {
-      homeScore: 0,
-      awayScore: 0,
-      homeAttempts,
-      awayAttempts,
-      homePenaltyKicks: [],
-      awayPenaltyKicks: [],
-      inPenaltyShootout: false,
-    };
+    return emptyPenaltyScore();
   }
 
   let shootoutStarted = false;
@@ -127,6 +149,14 @@ export function rebuildPenaltyShootoutFromEvents(
     }
   }
 
+  return buildPenaltyScoreFromAttempts(homeAttempts, awayAttempts, true);
+}
+
+export function buildPenaltyScoreFromAttempts(
+  homeAttempts: PenaltyAttemptChar[],
+  awayAttempts: PenaltyAttemptChar[],
+  inPenaltyShootout = true
+): PenaltyShootoutScore {
   const homeScore = countConvertedAttempts(homeAttempts);
   const awayScore = countConvertedAttempts(awayAttempts);
 
@@ -138,8 +168,49 @@ export function rebuildPenaltyShootoutFromEvents(
     homePenaltyKicks: attemptsToBooleans(homeAttempts),
     awayPenaltyKicks: attemptsToBooleans(awayAttempts),
     inPenaltyShootout:
-      firstIdx >= 0 || homeAttempts.length > 0 || awayAttempts.length > 0,
+      inPenaltyShootout &&
+      (homeAttempts.length > 0 ||
+        awayAttempts.length > 0 ||
+        homeScore + awayScore > 0),
   };
+}
+
+function emptyPenaltyScore(): PenaltyShootoutScore {
+  return {
+    homeScore: 0,
+    awayScore: 0,
+    homeAttempts: [],
+    awayAttempts: [],
+    homePenaltyKicks: [],
+    awayPenaltyKicks: [],
+    inPenaltyShootout: false,
+  };
+}
+
+/**
+ * Placar de pênaltis: prioriza arrays persistidos no banco; senão reconstrói dos eventos.
+ */
+export function resolvePenaltyShootoutData(
+  events: MatchEventLike[],
+  homeTeamId: string,
+  awayTeamId: string,
+  storedHome?: unknown,
+  storedAway?: unknown
+): PenaltyShootoutScore {
+  const fromEvents = rebuildPenaltyShootoutFromEvents(
+    events,
+    homeTeamId,
+    awayTeamId
+  );
+
+  const parsedHome = parsePenaltyAttempts(storedHome);
+  const parsedAway = parsePenaltyAttempts(storedAway);
+
+  if (parsedHome.length > 0 || parsedAway.length > 0) {
+    return buildPenaltyScoreFromAttempts(parsedHome, parsedAway, true);
+  }
+
+  return fromEvents;
 }
 
 export function penaltyShootoutWinner(
@@ -149,3 +220,9 @@ export function penaltyShootoutWinner(
   if (homeScore === awayScore) return "draw";
   return homeScore > awayScore ? "home" : "away";
 }
+
+/** Sequência correta: Bebedouro (mandante) x LG Futebol (visitante). */
+export const BEBEDOURO_LG_PENALTY_REFERENCE = {
+  homeAttempts: ["O", "X", "O", "O", "O", "O", "X"] as PenaltyAttemptChar[],
+  awayAttempts: ["O", "O", "X", "O", "O", "O", "O"] as PenaltyAttemptChar[],
+};

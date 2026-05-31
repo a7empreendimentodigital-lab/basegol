@@ -3,7 +3,24 @@
  * Uso: npx tsx scripts/reconcile-match-penalties.ts
  */
 import { rebuildScoresFromEvents } from "@/lib/match-live";
+import {
+  BEBEDOURO_LG_PENALTY_REFERENCE,
+  buildPenaltyScoreFromAttempts,
+  formatAttemptsSequence,
+} from "@/lib/match-penalties";
 import { prisma } from "@/lib/prisma";
+
+function isBebedouroLgMatch(homeClub: string, awayClub: string): boolean {
+  const home = homeClub.toLowerCase();
+  const away = awayClub.toLowerCase();
+  const hasLg = home.includes("lg futebol") || away.includes("lg futebol");
+  const hasBebedouro =
+    home.includes("bebedouro") ||
+    away.includes("bebedouro") ||
+    home.includes("internacional") ||
+    away.includes("internacional");
+  return hasLg && hasBebedouro;
+}
 
 async function main() {
   const matches = await prisma.match.findMany({
@@ -15,6 +32,10 @@ async function main() {
       awayScore: true,
       homePenaltyScore: true,
       awayPenaltyScore: true,
+      homePenaltyAttempts: true,
+      awayPenaltyAttempts: true,
+      homeTeam: { select: { club: { select: { name: true } } } },
+      awayTeam: { select: { club: { select: { name: true } } } },
       events: {
         where: {
           type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] },
@@ -34,14 +55,43 @@ async function main() {
   let updated = 0;
 
   for (const m of matches) {
-    const scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId);
+    const homeClub = m.homeTeam.club.name;
+    const awayClub = m.awayTeam.club.name;
+
+    let scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId, {
+      storedHomePenaltyAttempts: m.homePenaltyAttempts,
+      storedAwayPenaltyAttempts: m.awayPenaltyAttempts,
+    });
+
+    if (isBebedouroLgMatch(homeClub, awayClub)) {
+      const pen = buildPenaltyScoreFromAttempts(
+        BEBEDOURO_LG_PENALTY_REFERENCE.homeAttempts,
+        BEBEDOURO_LG_PENALTY_REFERENCE.awayAttempts
+      );
+      scores = {
+        homeScore: 0,
+        awayScore: 0,
+        homePenaltyScore: pen.homeScore,
+        awayPenaltyScore: pen.awayScore,
+        homePenaltyAttempts: pen.homeAttempts,
+        awayPenaltyAttempts: pen.awayAttempts,
+        homePenaltyKicks: pen.homePenaltyKicks,
+        awayPenaltyKicks: pen.awayPenaltyKicks,
+        inPenaltyShootout: true,
+      };
+    }
+
     const changed =
       m.homeScore !== scores.homeScore ||
       m.awayScore !== scores.awayScore ||
       m.homePenaltyScore !== scores.homePenaltyScore ||
-      m.awayPenaltyScore !== scores.awayPenaltyScore;
+      m.awayPenaltyScore !== scores.awayPenaltyScore ||
+      JSON.stringify(m.homePenaltyAttempts) !==
+        JSON.stringify(scores.homePenaltyAttempts) ||
+      JSON.stringify(m.awayPenaltyAttempts) !==
+        JSON.stringify(scores.awayPenaltyAttempts);
 
-    if (!changed && scores.homePenaltyAttempts.length === 0) continue;
+    if (!changed) continue;
 
     await prisma.match.update({
       where: { id: m.id },
@@ -61,7 +111,7 @@ async function main() {
     updated += 1;
     if (scores.homePenaltyScore + scores.awayPenaltyScore > 0) {
       console.log(
-        `${m.id}: ${scores.homeScore}x${scores.awayScore} (reg) · Pen ${scores.homePenaltyScore}x${scores.awayPenaltyScore} [${scores.homePenaltyAttempts.join("")} / ${scores.awayPenaltyAttempts.join("")}]`
+        `${m.id}: ${scores.homeScore}x${scores.awayScore} (reg) · Pen ${scores.homePenaltyScore}x${scores.awayPenaltyScore} [${formatAttemptsSequence(scores.homePenaltyAttempts)} / ${formatAttemptsSequence(scores.awayPenaltyAttempts)}]`
       );
     }
   }

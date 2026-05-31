@@ -1,6 +1,7 @@
 import type { MatchPeriod } from "@prisma/client";
 import {
   rebuildPenaltyShootoutFromEvents,
+  resolvePenaltyShootoutData,
   sortEventsForScoring,
 } from "@/lib/match-penalties";
 
@@ -234,13 +235,25 @@ function indexOfFirstPenaltyShootoutEvent(events: MatchEventLike[]): number {
   );
 }
 
+export type RebuildScoresOptions = {
+  storedHomePenaltyAttempts?: unknown;
+  storedAwayPenaltyAttempts?: unknown;
+};
+
 export function rebuildScoresFromEvents(
   events: MatchEventLike[],
   homeTeamId: string,
-  awayTeamId: string
+  awayTeamId: string,
+  options?: RebuildScoresOptions
 ) {
   const sorted = sortEventsForScoring(events);
-  const penalties = rebuildPenaltyShootoutFromEvents(sorted, homeTeamId, awayTeamId);
+  const penalties = resolvePenaltyShootoutData(
+    sorted,
+    homeTeamId,
+    awayTeamId,
+    options?.storedHomePenaltyAttempts,
+    options?.storedAwayPenaltyAttempts
+  );
   const firstPenaltyIdx = indexOfFirstPenaltyShootoutEvent(sorted);
 
   let homeScore = 0;
