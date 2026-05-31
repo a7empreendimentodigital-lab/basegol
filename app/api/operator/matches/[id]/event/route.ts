@@ -22,7 +22,7 @@ import { pausePhaseClock } from "@/lib/match-phase";
 import { fail, ok } from "@/utils/api-response";
 import { writeAuditLog } from "@/lib/audit";
 import { AUDIT_ACTIONS } from "@/utils/audit-actions";
-import type { MatchEventType, Prisma } from "@prisma/client";
+import { Prisma, type MatchEventType } from "@prisma/client";
 
 const matchReturnInclude = {
   statistics: true,
@@ -317,6 +317,36 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           extraMinute,
           teamId: payload.teamId ?? teamIdFromSide(payload.side),
           description: payload.description ?? "Substituição",
+        },
+      });
+    } else if (payload.action === "SET_PENALTY_SCORE") {
+      const homePen = payload.homePenaltyScore ?? 0;
+      const awayPen = payload.awayPenaltyScore ?? 0;
+      if (homePen < 0 || awayPen < 0 || homePen > 99 || awayPen > 99) {
+        return fail("Placar de pênaltis inválido", 400);
+      }
+      await prisma.matchEvent.deleteMany({
+        where: {
+          matchId,
+          type: { in: ["PENALTY_GOAL", "PENALTY_MISS"] },
+        },
+      });
+      await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          homePenaltyScore: homePen,
+          awayPenaltyScore: awayPen,
+          hasPenaltyShootout: true,
+          homePenaltyAttempts: Prisma.DbNull,
+          awayPenaltyAttempts: Prisma.DbNull,
+        },
+      });
+      await prisma.matchEvent.create({
+        data: {
+          matchId,
+          type: "KICKOFF",
+          minute: 0,
+          description: `Pênaltis — placar final: ${homePen} x ${awayPen}`,
         },
       });
     } else if (payload.action === "UPDATE_STATS" && payload.stats) {

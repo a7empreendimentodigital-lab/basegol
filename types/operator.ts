@@ -27,4 +27,5 @@ export type OperatorAction =
   | "SUBSTITUTION"
   | "PENALTY_GOAL"
   | "PENALTY_MISS"
+  | "SET_PENALTY_SCORE"
   | "UPDATE_STATS";

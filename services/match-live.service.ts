@@ -133,23 +133,43 @@ export async function reconcileAndPersistScores(
 ) {
   const { Prisma } = await import("@prisma/client");
   const { rebuildScoresFromEvents } = await import("@/lib/match-live");
-  // Sempre reconstrói a partir de todos os eventos (não reutiliza array antigo do banco).
-  const scores = rebuildScoresFromEvents(events, homeTeamId, awayTeamId);
+  const hasKickEvents = events.some(
+    (e) => e.type === "PENALTY_GOAL" || e.type === "PENALTY_MISS"
+  );
+  const matchRow = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: {
+      homePenaltyScore: true,
+      awayPenaltyScore: true,
+      homePenaltyAttempts: true,
+      awayPenaltyAttempts: true,
+    },
+  });
+  const scores = rebuildScoresFromEvents(events, homeTeamId, awayTeamId, {
+    storedHomePenaltyAttempts: matchRow?.homePenaltyAttempts,
+    storedAwayPenaltyAttempts: matchRow?.awayPenaltyAttempts,
+  });
   await prisma.match.update({
     where: { id: matchId },
     data: {
       homeScore: scores.homeScore,
       awayScore: scores.awayScore,
-      homePenaltyScore: scores.homePenaltyScore,
-      awayPenaltyScore: scores.awayPenaltyScore,
-      homePenaltyAttempts:
-        scores.homePenaltyAttempts.length > 0
+      homePenaltyScore: hasKickEvents
+        ? scores.homePenaltyScore
+        : (matchRow?.homePenaltyScore ?? 0),
+      awayPenaltyScore: hasKickEvents
+        ? scores.awayPenaltyScore
+        : (matchRow?.awayPenaltyScore ?? 0),
+      homePenaltyAttempts: hasKickEvents
+        ? scores.homePenaltyAttempts.length > 0
           ? scores.homePenaltyAttempts
-          : Prisma.DbNull,
-      awayPenaltyAttempts:
-        scores.awayPenaltyAttempts.length > 0
+          : Prisma.DbNull
+        : Prisma.DbNull,
+      awayPenaltyAttempts: hasKickEvents
+        ? scores.awayPenaltyAttempts.length > 0
           ? scores.awayPenaltyAttempts
-          : Prisma.DbNull,
+          : Prisma.DbNull
+        : Prisma.DbNull,
     },
   });
   return scores;
@@ -221,24 +241,36 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
     }
   );
 
+  const hasKickEvents = events.some(
+    (e) => e.type === "PENALTY_GOAL" || e.type === "PENALTY_MISS"
+  );
+
   const homeScore = scores.homeScore;
   const awayScore = scores.awayScore;
-  const homeAttempts = scores.homePenaltyAttempts;
-  const awayAttempts = scores.awayPenaltyAttempts;
-  const homePenaltyScore = scores.homePenaltyScore;
-  const awayPenaltyScore = scores.awayPenaltyScore;
+  const homeAttempts = hasKickEvents ? scores.homePenaltyAttempts : [];
+  const awayAttempts = hasKickEvents ? scores.awayPenaltyAttempts : [];
+  const homePenaltyScore = hasKickEvents
+    ? scores.homePenaltyScore
+    : (match.homePenaltyScore ?? 0);
+  const awayPenaltyScore = hasKickEvents
+    ? scores.awayPenaltyScore
+    : (match.awayPenaltyScore ?? 0);
 
   const running = match.isClockRunning ?? match.clockRunning;
   const hasPenaltyAttempts =
     homeAttempts.length > 0 || awayAttempts.length > 0;
+  const hasPenaltyScores = homePenaltyScore > 0 || awayPenaltyScore > 0;
   const inPenaltyShootout =
     phase === "PENALTIES" ||
     match.hasPenaltyShootout === true ||
-    hasPenaltyAttempts;
+    hasPenaltyAttempts ||
+    hasPenaltyScores;
 
   const shootoutResult = penaltyShootoutWinner(homePenaltyScore, awayPenaltyScore);
   const penaltyWinner =
-    hasPenaltyAttempts && shootoutResult !== "draw" ? shootoutResult : null;
+    (hasPenaltyAttempts || hasPenaltyScores) && shootoutResult !== "draw"
+      ? shootoutResult
+      : null;
 
   const displayMinute = Math.max(
     1,

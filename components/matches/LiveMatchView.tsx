@@ -185,6 +185,12 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
               awayAttempts={match.awayPenaltyAttempts ?? match.penaltyAttempts?.away}
               homeKicks={match.penaltyKicks?.home}
               awayKicks={match.penaltyKicks?.away}
+              showKickSequence={
+                (match.homePenaltyAttempts?.length ?? match.penaltyAttempts?.home?.length ?? 0) > 0 ||
+                (match.awayPenaltyAttempts?.length ?? match.penaltyAttempts?.away?.length ?? 0) > 0 ||
+                (match.penaltyKicks?.home?.length ?? 0) > 0 ||
+                (match.penaltyKicks?.away?.length ?? 0) > 0
+              }
             />
             {penaltyWinner ? (
               <p className="text-center text-sm font-medium text-neon">

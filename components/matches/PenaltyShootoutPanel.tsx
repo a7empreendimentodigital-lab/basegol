@@ -57,6 +57,8 @@ export function PenaltyShootoutPanel({
   homeKicks = [],
   awayKicks = [],
   showTeamLabels = false,
+  /** Bolinhas por cobrança — só para partidas com sequência legada no banco */
+  showKickSequence = false,
   className,
 }: {
   homeScore: number;
@@ -69,6 +71,7 @@ export function PenaltyShootoutPanel({
   awayKicks?: boolean[];
   /** Exibe nome do clube acima das bolinhas (ex.: painel do operador) */
   showTeamLabels?: boolean;
+  showKickSequence?: boolean;
   className?: string;
 }) {
   const homeSeq: PenaltyAttemptChar[] = (() => {
@@ -106,7 +109,7 @@ export function PenaltyShootoutPanel({
               {homeLabel}
             </p>
           ) : null}
-          <KickDots attempts={homeSeq} align="end" />
+          {showKickSequence ? <KickDots attempts={homeSeq} align="end" /> : null}
         </div>
 
         <div className="shrink-0 px-2 sm:px-4 text-center">
@@ -131,7 +134,7 @@ export function PenaltyShootoutPanel({
               {awayLabel}
             </p>
           ) : null}
-          <KickDots attempts={awaySeq} align="start" />
+          {showKickSequence ? <KickDots attempts={awaySeq} align="start" /> : null}
         </div>
       </div>
     </div>

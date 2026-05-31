@@ -24,6 +24,7 @@ import {
 } from "@/lib/match-phase";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { MatchScoreBoard } from "@/components/matches/MatchScoreBoard";
+import { PenaltyFinalScoreEditor } from "@/components/match-operator/PenaltyFinalScoreEditor";
 import { cn } from "@/lib/utils";
 
 export type MatchData = {
@@ -124,6 +125,8 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const [hasIntervals, setHasIntervals] = useState(true);
   const [hasPenaltyShootout, setHasPenaltyShootout] = useState(false);
   const [penaltyBonusPointsEnabled, setPenaltyBonusPointsEnabled] = useState(false);
+  const [penHomeInput, setPenHomeInput] = useState(0);
+  const [penAwayInput, setPenAwayInput] = useState(0);
   /** Evita que o poll sobrescreva o formulário enquanto o operador edita. */
   const configFormDirty = useRef(false);
 
@@ -135,6 +138,8 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
     if (data.penaltyBonusPointsEnabled != null) {
       setPenaltyBonusPointsEnabled(data.penaltyBonusPointsEnabled);
     }
+    setPenHomeInput(data.homePenaltyScore ?? 0);
+    setPenAwayInput(data.awayPenaltyScore ?? 0);
   }, []);
 
   const loadAthletes = useCallback(
@@ -197,6 +202,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
       const updated = await parseApiResponse<MatchData>(res);
       setMatch(updated);
       setMinute(updated?.minute ?? minute);
+      if (updated) {
+        setPenHomeInput(updated.homePenaltyScore ?? 0);
+        setPenAwayInput(updated.awayPenaltyScore ?? 0);
+      }
       if (actionName === "SET_MATCH_CONFIG" && updated) {
         applyConfigFromMatch(updated);
         configFormDirty.current = false;
@@ -215,6 +224,19 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const awayName = match?.awayTeam?.club.name ?? "Visitante";
   const isLivePhase =
     match?.status === "LIVE" || match?.status === "HALFTIME";
+
+  const showPenaltyScoreEditor =
+    !!match &&
+    (hasPenaltyShootout ||
+      match.currentPhase === "PENALTIES" ||
+      (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0);
+
+  async function savePenaltyScore() {
+    await action("SET_PENALTY_SCORE", {
+      homePenaltyScore: penHomeInput,
+      awayPenaltyScore: penAwayInput,
+    });
+  }
 
   const phaseDurationSeconds = periodLengthMin * 60;
 
@@ -397,6 +419,19 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             </div>
           </div>
 
+          {showPenaltyScoreEditor ? (
+            <PenaltyFinalScoreEditor
+              homeLabel={homeName}
+              awayLabel={awayName}
+              homeScore={penHomeInput}
+              awayScore={penAwayInput}
+              onHomeChange={setPenHomeInput}
+              onAwayChange={setPenAwayInput}
+              onSave={() => void savePenaltyScore()}
+              loading={loading}
+            />
+          ) : null}
+
           <div className="flex flex-wrap items-end justify-center gap-6 mb-6">
             <div className="text-center">
               <Label className="text-muted-foreground">Minuto</Label>
@@ -523,12 +558,6 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                 </Button>
                 <Button disabled={loading} variant="outline" onClick={() => action("SUBSTITUTION")}>
                   Substituição
-                </Button>
-                <Button disabled={loading} variant="outline" onClick={() => action("PENALTY_GOAL")}>
-                  Pênalti ✓
-                </Button>
-                <Button disabled={loading} variant="outline" onClick={() => action("PENALTY_MISS")}>
-                  Pênalti ✕
                 </Button>
               </div>
             </div>

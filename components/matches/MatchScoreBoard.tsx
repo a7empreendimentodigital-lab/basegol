@@ -53,6 +53,7 @@ export function MatchScoreBoard({
 
   const penHome = homePenaltyScore;
   const penAway = awayPenaltyScore;
+  const showKickSequence = homeSeq.length > 0 || awaySeq.length > 0;
 
   return (
     <div
@@ -91,6 +92,7 @@ export function MatchScoreBoard({
             homeKicks={penaltyKicks?.home}
             awayKicks={penaltyKicks?.away}
             showTeamLabels={!isPublic}
+            showKickSequence={showKickSequence}
             className={isPublic ? "max-w-lg" : undefined}
           />
           {penaltyWinner ? (
