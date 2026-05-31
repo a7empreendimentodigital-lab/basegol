@@ -59,10 +59,7 @@ async function main() {
     const homeClub = m.homeTeam.club.name;
     const awayClub = m.awayTeam.club.name;
 
-    let scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId, {
-      storedHomePenaltyAttempts: m.homePenaltyAttempts,
-      storedAwayPenaltyAttempts: m.awayPenaltyAttempts,
-    });
+    let scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId);
 
     const categorySlug = m.group?.category?.slug;
 

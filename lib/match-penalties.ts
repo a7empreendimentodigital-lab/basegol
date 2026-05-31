@@ -188,7 +188,8 @@ function emptyPenaltyScore(): PenaltyShootoutScore {
 }
 
 /**
- * Placar de pênaltis: prioriza arrays persistidos no banco; senão reconstrói dos eventos.
+ * Placar de pênaltis: eventos ao vivo têm prioridade quando há mais cobranças;
+ * arrays só no banco (ex.: correção manual) valem quando não há eventos ou são mais completos.
  */
 export function resolvePenaltyShootoutData(
   events: MatchEventLike[],
@@ -206,7 +207,15 @@ export function resolvePenaltyShootoutData(
   const parsedHome = parsePenaltyAttempts(storedHome);
   const parsedAway = parsePenaltyAttempts(storedAway);
 
-  if (parsedHome.length > 0 || parsedAway.length > 0) {
+  const eventCount =
+    fromEvents.homeAttempts.length + fromEvents.awayAttempts.length;
+  const storedCount = parsedHome.length + parsedAway.length;
+
+  if (eventCount > 0 && eventCount >= storedCount) {
+    return fromEvents;
+  }
+
+  if (storedCount > 0) {
     return buildPenaltyScoreFromAttempts(parsedHome, parsedAway, true);
   }
 

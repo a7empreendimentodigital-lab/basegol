@@ -14,8 +14,8 @@ import {
 } from "@/lib/match-live";
 import {
   attemptsToBooleans,
-  parsePenaltyAttempts,
   penaltyShootoutWinner,
+  resolvePenaltyShootoutData,
 } from "@/lib/match-penalties";
 import {
   buildSyncPhaseClockData,
@@ -131,15 +131,10 @@ export async function reconcileAndPersistScores(
   awayTeamId: string,
   events: MatchEventLike[]
 ) {
+  const { Prisma } = await import("@prisma/client");
   const { rebuildScoresFromEvents } = await import("@/lib/match-live");
-  const matchRow = await prisma.match.findUnique({
-    where: { id: matchId },
-    select: { homePenaltyAttempts: true, awayPenaltyAttempts: true },
-  });
-  const scores = rebuildScoresFromEvents(events, homeTeamId, awayTeamId, {
-    storedHomePenaltyAttempts: matchRow?.homePenaltyAttempts,
-    storedAwayPenaltyAttempts: matchRow?.awayPenaltyAttempts,
-  });
+  // Sempre reconstrói a partir de todos os eventos (não reutiliza array antigo do banco).
+  const scores = rebuildScoresFromEvents(events, homeTeamId, awayTeamId);
   await prisma.match.update({
     where: { id: matchId },
     data: {
@@ -147,12 +142,14 @@ export async function reconcileAndPersistScores(
       awayScore: scores.awayScore,
       homePenaltyScore: scores.homePenaltyScore,
       awayPenaltyScore: scores.awayPenaltyScore,
-      ...(scores.homePenaltyAttempts.length > 0
-        ? { homePenaltyAttempts: scores.homePenaltyAttempts }
-        : {}),
-      ...(scores.awayPenaltyAttempts.length > 0
-        ? { awayPenaltyAttempts: scores.awayPenaltyAttempts }
-        : {}),
+      homePenaltyAttempts:
+        scores.homePenaltyAttempts.length > 0
+          ? scores.homePenaltyAttempts
+          : Prisma.DbNull,
+      awayPenaltyAttempts:
+        scores.awayPenaltyAttempts.length > 0
+          ? scores.awayPenaltyAttempts
+          : Prisma.DbNull,
     },
   });
   return scores;
@@ -216,11 +213,22 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
 
   const homeScore = match.homeScore;
   const awayScore = match.awayScore;
-  const homePenaltyScore = match.homePenaltyScore;
-  const awayPenaltyScore = match.awayPenaltyScore;
 
-  const homeAttempts = parsePenaltyAttempts(match.homePenaltyAttempts);
-  const awayAttempts = parsePenaltyAttempts(match.awayPenaltyAttempts);
+  const penaltyData = resolvePenaltyShootoutData(
+    events,
+    match.homeTeamId,
+    match.awayTeamId,
+    match.homePenaltyAttempts,
+    match.awayPenaltyAttempts
+  );
+  const homeAttempts = penaltyData.homeAttempts;
+  const awayAttempts = penaltyData.awayAttempts;
+  const homePenaltyScore = penaltyData.inPenaltyShootout
+    ? penaltyData.homeScore
+    : match.homePenaltyScore;
+  const awayPenaltyScore = penaltyData.inPenaltyShootout
+    ? penaltyData.awayScore
+    : match.awayPenaltyScore;
 
   const running = match.isClockRunning ?? match.clockRunning;
   const inPenaltyShootout =
