@@ -5,11 +5,11 @@ import { Providers } from "@/app/providers";
 import { AppShellWrapper } from "@/components/layout/AppShellWrapper";
 import { AppSplashScreenGate } from "@/components/pwa/AppSplashScreenGate";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
+import { buildMetadataIcons } from "@/lib/brand-icons";
 import { getActiveThemeConfig, getBrandConfig } from "@/lib/site-config";
 import { getActiveBannersByPlacement } from "@/services/banner.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PWA_ICONS } from "@/lib/pwa-icons";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,29 +22,25 @@ const bebas = Bebas_Neue({
   variable: "--font-bebas",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "BASEGOL — Campeonato Paulista de Base",
-    template: "%s | BASEGOL",
-  },
-  description:
-    "Plataforma profissional para campeonatos de base, clubes, atletas, jogos ao vivo e estatísticas.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "BASEGOL",
-  },
-  icons: {
-    icon: [
-      { url: PWA_ICONS.favicon16, sizes: "16x16", type: "image/png" },
-      { url: PWA_ICONS.favicon32, sizes: "32x32", type: "image/png" },
-      { url: PWA_ICONS.icon192, sizes: "192x192", type: "image/png" },
-    ],
-    apple: [{ url: PWA_ICONS.appleTouch, sizes: "180x180", type: "image/png" }],
-    shortcut: PWA_ICONS.favicon32,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = await getBrandConfig();
+  const systemName = brand?.systemName?.trim() || "BASEGOL";
+
+  return {
+    title: {
+      default: `${systemName} — Campeonato Paulista de Base`,
+      template: `%s | ${systemName}`,
+    },
+    description:
+      "Plataforma profissional para campeonatos de base, clubes, atletas, jogos ao vivo e estatísticas.",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: systemName,
+    },
+    icons: buildMetadataIcons(brand),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#121212",

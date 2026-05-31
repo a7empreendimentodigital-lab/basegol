@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { adminListQuerySchema } from "@/utils/zod-schemas";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
 import { prepareAdminPayload } from "@/lib/admin-transform";
+import { revalidateBrandConfig } from "@/lib/revalidate-brand";
 import { fail, ok } from "@/utils/api-response";
 import { prismaContains } from "@/lib/prisma-search";
 import { normalizePagination } from "@/utils/pagination";
@@ -324,7 +325,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ entity:
     if (entity === "documents") return ok(await prisma.document.create({ data: payload as never }), 201);
     if (entity === "media_assets") return ok(await prisma.mediaAsset.create({ data: payload as never }), 201);
     if (entity === "theme_configs") return ok(await prisma.themeConfig.create({ data: payload as never }), 201);
-    if (entity === "brand_configs") return ok(await prisma.brandConfig.create({ data: payload as never }), 201);
+    if (entity === "brand_configs") {
+      const created = await prisma.brandConfig.create({ data: payload as never });
+      revalidateBrandConfig();
+      return ok(created, 201);
+    }
     if (entity === "sponsors") return ok(await prisma.sponsor.create({ data: payload as never }), 201);
     if (entity === "site_sections") return ok(await prisma.siteSection.create({ data: payload as never }), 201);
     if (entity === "site_texts") return ok(await prisma.siteText.create({ data: payload as never }), 201);

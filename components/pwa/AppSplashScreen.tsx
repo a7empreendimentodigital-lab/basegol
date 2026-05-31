@@ -9,9 +9,17 @@ const STORAGE_KEY = "basegol-splash-seen";
 const MIN_VISIBLE_MS = 600;
 const MAX_VISIBLE_MS = 3500;
 
+/** Apenas celular (viewport estreita + touch). */
+const MOBILE_SPLASH_QUERY = "(max-width: 767px) and (hover: none), (max-width: 767px) and (pointer: coarse)";
+
 type Props = {
   imageUrl: string | null;
 };
+
+function isMobileSplashDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(MOBILE_SPLASH_QUERY).matches;
+}
 
 export function AppSplashScreen({ imageUrl }: Props) {
   const pathname = usePathname() ?? "/";
@@ -22,6 +30,7 @@ export function AppSplashScreen({ imageUrl }: Props) {
   useEffect(() => {
     if (!splashSrc) return;
     if (pathname.startsWith("/admin")) return;
+    if (!isMobileSplashDevice()) return;
     if (sessionStorage.getItem(STORAGE_KEY)) return;
 
     let cancelled = false;
@@ -44,6 +53,7 @@ export function AppSplashScreen({ imageUrl }: Props) {
     const img = new window.Image();
     img.onload = () => {
       if (cancelled) return;
+      if (!isMobileSplashDevice()) return;
       setVisible(true);
       if (document.readyState === "complete") {
         scheduleHide();
@@ -59,11 +69,18 @@ export function AppSplashScreen({ imageUrl }: Props) {
 
     const maxTimer = setTimeout(hide, MAX_VISIBLE_MS);
 
+    const mq = window.matchMedia(MOBILE_SPLASH_QUERY);
+    const onMqChange = () => {
+      if (!mq.matches) hide();
+    };
+    mq.addEventListener("change", onMqChange);
+
     return () => {
       cancelled = true;
       if (hideTimer) clearTimeout(hideTimer);
       clearTimeout(maxTimer);
       window.removeEventListener("load", scheduleHide);
+      mq.removeEventListener("change", onMqChange);
     };
   }, [splashSrc, pathname]);
 
@@ -72,16 +89,20 @@ export function AppSplashScreen({ imageUrl }: Props) {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[200] flex items-center justify-center bg-background transition-opacity duration-300",
+        "fixed inset-0 z-[200] overflow-hidden bg-pitch transition-opacity duration-300",
+        "h-[100dvh] w-full max-h-[100dvh] max-w-[100vw]",
         fading && "opacity-0 pointer-events-none"
       )}
       role="presentation"
       aria-hidden
     >
-      <div className="relative flex h-full w-full max-h-[min(100%,720px)] max-w-lg items-center justify-center p-8">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={splashSrc} alt="" className="max-h-full max-w-full object-contain" />
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={splashSrc}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover object-center"
+        decoding="async"
+      />
     </div>
   );
 }

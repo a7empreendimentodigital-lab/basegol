@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
 import { prepareAdminPayload } from "@/lib/admin-transform";
+import { revalidateBrandConfig } from "@/lib/revalidate-brand";
 import { fail, ok } from "@/utils/api-response";
 
 const allowed = [
@@ -91,7 +92,11 @@ export async function PATCH(
     if (entity === "documents") return ok(await prisma.document.update({ where: { id }, data: payload as never }));
     if (entity === "media_assets") return ok(await prisma.mediaAsset.update({ where: { id }, data: payload as never }));
     if (entity === "theme_configs") return ok(await prisma.themeConfig.update({ where: { id }, data: payload as never }));
-    if (entity === "brand_configs") return ok(await prisma.brandConfig.update({ where: { id }, data: payload as never }));
+    if (entity === "brand_configs") {
+      const updated = await prisma.brandConfig.update({ where: { id }, data: payload as never });
+      revalidateBrandConfig();
+      return ok(updated);
+    }
     if (entity === "sponsors") return ok(await prisma.sponsor.update({ where: { id }, data: payload as never }));
     if (entity === "site_sections") return ok(await prisma.siteSection.update({ where: { id }, data: payload as never }));
     if (entity === "site_texts") return ok(await prisma.siteText.update({ where: { id }, data: payload as never }));

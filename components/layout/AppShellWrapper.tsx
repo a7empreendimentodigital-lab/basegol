@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNavClient } from "@/components/layout/BottomNavClient";
 import { PublicTopBar } from "@/components/layout/PublicTopBar";
 import { InstallPwaPrompt } from "@/components/pwa/InstallPwaPrompt";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { isAuthRoute, isPublicAppRoute } from "@/lib/public-routes";
 import type { PublicBannerDto } from "@/services/banner.service";
 
@@ -64,7 +65,12 @@ export function AppShellWrapper({
   const pathname = usePathname() ?? "/";
 
   if (isAuthRoute(pathname)) {
-    return <div className="min-h-screen bg-pitch">{children}</div>;
+    return (
+      <div className="flex min-h-screen flex-col bg-pitch">
+        <div className="flex-1">{children}</div>
+        <SiteFooter className="border-line/50 bg-pitch/80" />
+      </div>
+    );
   }
 
   if (pathname.startsWith("/admin")) {

@@ -12,7 +12,7 @@ export const getCachedBrandConfig = unstable_cache(
     }
   },
   ["brand-config"],
-  { revalidate: 120 }
+  { revalidate: 120, tags: ["brand-config"] }
 );
 
 export const getCachedActiveThemeConfig = unstable_cache(

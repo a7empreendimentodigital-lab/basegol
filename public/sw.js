@@ -1,10 +1,5 @@
-const CACHE = "basegol-v3";
-const OFFLINE_URLS = [
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/apple-touch-icon.png",
-];
+const CACHE = "basegol-v4";
+const OFFLINE_URLS = ["/manifest.webmanifest"];
 
 function shouldBypassCache(url) {
   const path = new URL(url).pathname;
