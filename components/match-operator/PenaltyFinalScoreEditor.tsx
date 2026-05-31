@@ -34,20 +34,20 @@ export function PenaltyFinalScoreEditor({
   const awaySigla = clubSigla(awayShortName, awayName);
 
   return (
-    <div className="mb-6 rounded-2xl border border-neon/20 bg-gradient-to-b from-neon/5 to-pitch/40 p-4 sm:p-5 space-y-4">
-      <div className="text-center space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-neon">
-          Placar final — disputa de pênaltis
+    <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 sm:p-5 space-y-4">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Disputa de pênaltis
         </p>
-        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+        <p className="text-xs text-muted-foreground">
           Informe o resultado (ex.: 5 × 6). O tempo regulamentar não é alterado.
         </p>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-4 items-center max-w-md mx-auto">
-        <div className="flex flex-col items-center gap-2 min-w-0">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-4 items-center max-w-md sm:max-w-lg">
+        <div className="flex flex-col items-center sm:items-start gap-2 min-w-0">
           <span
-            className="font-display text-lg sm:text-xl font-semibold tracking-wide text-foreground truncate max-w-full"
+            className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full"
             title={homeName}
           >
             {homeSigla}
@@ -61,8 +61,8 @@ export function PenaltyFinalScoreEditor({
             max={99}
             aria-label={`Pênaltis ${homeSigla}`}
             className={cn(
-              "w-full max-w-[5rem] h-14 text-center text-2xl font-display font-semibold tabular-nums",
-              "border-line bg-graphite-light focus-visible:ring-neon/40"
+              "w-full max-w-[5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
+              "border-line bg-graphite-light"
             )}
             value={homeScore}
             onChange={(e) => onHomeChange(Math.max(0, Number(e.target.value) || 0))}
@@ -70,14 +70,14 @@ export function PenaltyFinalScoreEditor({
         </div>
 
         <div className="flex flex-col items-center justify-center px-1 pt-6 sm:pt-7">
-          <span className="font-display text-3xl sm:text-4xl text-muted-foreground leading-none">
+          <span className="font-display text-2xl sm:text-3xl text-muted-foreground leading-none">
             ×
           </span>
         </div>
 
-        <div className="flex flex-col items-center gap-2 min-w-0">
+        <div className="flex flex-col items-center sm:items-end gap-2 min-w-0">
           <span
-            className="font-display text-lg sm:text-xl font-semibold tracking-wide text-foreground truncate max-w-full"
+            className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full"
             title={awayName}
           >
             {awaySigla}
@@ -91,8 +91,8 @@ export function PenaltyFinalScoreEditor({
             max={99}
             aria-label={`Pênaltis ${awaySigla}`}
             className={cn(
-              "w-full max-w-[5rem] h-14 text-center text-2xl font-display font-semibold tabular-nums",
-              "border-line bg-graphite-light focus-visible:ring-neon/40"
+              "w-full max-w-[5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
+              "border-line bg-graphite-light"
             )}
             value={awayScore}
             onChange={(e) => onAwayChange(Math.max(0, Number(e.target.value) || 0))}
@@ -100,13 +100,8 @@ export function PenaltyFinalScoreEditor({
         </div>
       </div>
 
-      <div className="flex justify-center pt-1">
-        <Button
-          type="button"
-          disabled={loading}
-          onClick={onSave}
-          className="min-w-[12rem] bg-neon hover:bg-neon/90 text-background font-semibold"
-        >
+      <div className="flex justify-center sm:justify-start">
+        <Button type="button" variant="outline" disabled={loading} onClick={onSave}>
           Salvar placar de pênaltis
         </Button>
       </div>

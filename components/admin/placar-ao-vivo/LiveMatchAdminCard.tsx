@@ -57,7 +57,7 @@ function TeamBlock({
       )}
       title={name}
     >
-      <div className="relative h-10 w-10 sm:h-12 sm:w-12 shrink-0">
+      <div className="relative h-9 w-9 sm:h-12 sm:w-12 shrink-0">
         {crestUrl ? (
           <SafeImage src={crestUrl} alt={sigla} fill className="object-contain" sizes="48px" />
         ) : (
@@ -67,7 +67,7 @@ function TeamBlock({
         )}
       </div>
       <div className="min-w-0 w-full sm:flex-1">
-        <p className="font-display text-xs sm:text-xl font-bold tracking-wide text-foreground leading-tight line-clamp-2">
+        <p className="font-display text-[11px] sm:text-xl font-bold tracking-wide text-foreground leading-tight line-clamp-1">
           {sigla}
         </p>
         <p className="hidden sm:block text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{name}</p>
@@ -95,10 +95,10 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
       )}
     >
       {categoryName ? (
-        <div className="flex items-center justify-between gap-3 border-b border-black/10 bg-white px-4 py-3 sm:px-5 sm:py-3.5">
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-pitch/35 px-4 py-3 sm:px-5 sm:py-3.5">
           <div className="flex min-w-0 items-center gap-3">
             {categoryImageUrl ? (
-              <span className="relative block h-11 w-11 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-lg">
+              <span className="relative block h-11 w-11 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-line/60">
                 <SafeImage
                   src={categoryImageUrl}
                   alt=""
@@ -109,11 +109,11 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
               </span>
             ) : null}
             <div className="min-w-0">
-              <p className="font-display text-lg sm:text-xl font-bold uppercase tracking-wide text-pitch leading-tight">
+              <p className="font-display text-lg sm:text-xl font-bold uppercase tracking-wide text-foreground leading-tight">
                 {categoryName}
               </p>
               {championshipName ? (
-                <p className="text-[11px] sm:text-xs text-pitch/60 truncate mt-0.5 max-w-[12rem] sm:max-w-xs">
+                <p className="text-[11px] sm:text-xs text-muted-foreground truncate mt-0.5 max-w-[10rem] sm:max-w-xs">
                   {championshipName}
                 </p>
               ) : null}
@@ -156,7 +156,7 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
           ) : null}
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-6">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(7.5rem,auto)_minmax(0,1fr)] items-center gap-3 sm:gap-6">
           <TeamBlock
             crestUrl={match.homeTeam.club.crestUrl}
             name={match.homeTeam.club.name}
@@ -164,28 +164,28 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
             align="left"
           />
 
-          <div className="flex flex-col items-center justify-center px-0.5 sm:px-3 shrink-0">
-            <div className="rounded-lg sm:rounded-xl bg-pitch/50 px-2 py-2 sm:px-6 sm:py-4 text-center">
+          <div className="flex flex-col items-center justify-center sm:px-3">
+            <div className="w-full min-w-[7.5rem] rounded-xl bg-pitch/55 px-3 py-2.5 sm:px-6 sm:py-4 text-center">
               {hasPenalties ? (
-                <p className="text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                  Reg.
+                <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Regulamentar
                 </p>
               ) : null}
-              <p className="font-display text-xl sm:text-4xl tabular-nums text-neon leading-none whitespace-nowrap">
+              <p className="font-display text-[1.65rem] sm:text-4xl tabular-nums text-neon leading-none whitespace-nowrap">
                 {match.homeScore}
-                <span className="mx-0.5 sm:mx-1.5 text-muted-foreground font-sans font-normal text-base sm:text-3xl">
+                <span className="mx-1 sm:mx-1.5 text-muted-foreground font-sans font-normal text-xl sm:text-3xl">
                   :
                 </span>
                 {match.awayScore}
               </p>
               {hasPenalties ? (
-                <div className="mt-1 pt-1 sm:mt-2 sm:pt-2 border-t border-line/60">
-                  <p className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                    Pen.
+                <div className="mt-1.5 pt-1.5 sm:mt-2 sm:pt-2 border-t border-line/60">
+                  <p className="text-[9px] sm:text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                    Pênaltis
                   </p>
-                  <p className="font-display text-sm sm:text-xl tabular-nums text-foreground leading-none whitespace-nowrap">
+                  <p className="font-display text-lg sm:text-xl tabular-nums text-foreground leading-none whitespace-nowrap">
                     {homePen}
-                    <span className="mx-0.5 text-muted-foreground">:</span>
+                    <span className="mx-1 text-muted-foreground">:</span>
                     {awayPen}
                   </p>
                 </div>

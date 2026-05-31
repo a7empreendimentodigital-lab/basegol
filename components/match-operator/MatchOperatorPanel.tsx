@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CircleDot,
+  Minus,
   Pause,
   Play,
+  Plus,
   Square,
   Timer,
 } from "lucide-react";
@@ -23,6 +25,11 @@ import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDispla
 import { MatchScoreBoard } from "@/components/matches/MatchScoreBoard";
 import { MatchOperatorEventsSection } from "@/components/match-operator/MatchOperatorEventsSection";
 import { PenaltyFinalScoreEditor } from "@/components/match-operator/PenaltyFinalScoreEditor";
+import {
+  formatOperatorEventMinutePreview,
+  operatorPhaseLabelForMinute,
+  resolveOperatorEventMinute,
+} from "@/lib/match-event-minute";
 import { cn } from "@/lib/utils";
 
 export type MatchData = {
@@ -111,8 +118,8 @@ function SectionCard({
 export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string; mode?: PanelMode }) {
   const { toast } = useToast();
   const [match, setMatch] = useState<MatchData | null>(null);
-  const [minute, setMinute] = useState(0);
   const [extraMinute, setExtraMinute] = useState(0);
+  const [clockTick, setClockTick] = useState(0);
   const [loading, setLoading] = useState(false);
   const [athletes, setAthletes] = useState<AthleteOption[]>([]);
   const [eventSide, setEventSide] = useState<"home" | "away">("home");
@@ -162,7 +169,6 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
     if (!res.ok) return;
     const data = await parseApiResponse<MatchData>(res);
     setMatch(data);
-    if (data?.minute != null) setMinute(data.minute);
     if (data && !configFormDirty.current) {
       applyConfigFromMatch(data);
     }
@@ -180,6 +186,33 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
     setAthleteId("");
   }, [eventSide, loadAthletes]);
 
+  const clockRunning = !!(match?.isClockRunning || match?.clockRunning);
+  const inTimedPeriod =
+    match != null &&
+    resolveOperatorEventMinute(match) > 0 &&
+    match.status === "LIVE";
+
+  useEffect(() => {
+    if (!clockRunning) return;
+    const t = setInterval(() => setClockTick((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [clockRunning, match?.phaseStartedAt, match?.clockStartedAt]);
+
+  const eventMinute = useMemo(() => {
+    if (!match) return 0;
+    void clockTick;
+    return resolveOperatorEventMinute(match);
+  }, [match, clockTick]);
+
+  const eventMinutePreview = useMemo(() => {
+    if (!match) return "—";
+    return formatOperatorEventMinutePreview(
+      eventMinute,
+      extraMinute,
+      operatorPhaseLabelForMinute(match)
+    );
+  }, [match, eventMinute, extraMinute]);
+
   async function action(actionName: string, extra?: object) {
     setLoading(true);
     try {
@@ -188,7 +221,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: actionName,
-          minute,
+          minute: eventMinute,
           extraMinute: extraMinute || undefined,
           side: eventSide,
           athleteId: athleteId || undefined,
@@ -199,7 +232,6 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
       if (!res.ok) throw new Error();
       const updated = await parseApiResponse<MatchData>(res);
       setMatch(updated);
-      setMinute(updated?.minute ?? minute);
       if (updated) {
         setPenHomeInput(updated.homePenaltyScore ?? 0);
         setPenAwayInput(updated.awayPenaltyScore ?? 0);
@@ -437,29 +469,71 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             />
           ) : null}
 
-          <div className="flex flex-wrap items-end justify-center gap-6 mb-6">
-            <div className="text-center">
-              <Label className="text-muted-foreground">Minuto</Label>
-              <Input
-                type="number"
-                min={0}
-                max={130}
-                className="w-24 text-center text-lg font-semibold mt-1 tabular-nums"
-                value={minute}
-                onChange={(e) => setMinute(Number(e.target.value))}
-              />
+          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 sm:p-5 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Minuto do evento
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-muted-foreground">Minuto (automático)</Label>
+                <div
+                  className="mt-1 flex h-12 items-center justify-center rounded-lg border border-line bg-graphite tabular-nums text-2xl font-display font-semibold text-foreground"
+                  aria-live="polite"
+                >
+                  {inTimedPeriod || eventMinute > 0 ? eventMinute : "—"}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
+                  Segue o cronômetro do tempo em andamento. Na linha do tempo e no público
+                  aparece como no exemplo: 12+3&apos;.
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Acréscimo (manual)</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-12 w-12 shrink-0"
+                    disabled={loading || extraMinute <= 0}
+                    aria-label="Diminuir acréscimo"
+                    onClick={() => setExtraMinute((v) => Math.max(0, v - 1))}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={30}
+                    inputMode="numeric"
+                    className="h-12 flex-1 text-center text-xl font-display font-semibold tabular-nums"
+                    value={extraMinute}
+                    onChange={(e) =>
+                      setExtraMinute(Math.min(30, Math.max(0, Number(e.target.value) || 0)))
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-12 w-12 shrink-0"
+                    disabled={loading || extraMinute >= 30}
+                    aria-label="Aumentar acréscimo"
+                    onClick={() => setExtraMinute((v) => Math.min(30, v + 1))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
+                  Ajuste antes de registrar gol, cartão ou falta. Zere após o lance se não houver
+                  acréscimo.
+                </p>
+              </div>
             </div>
-            <div className="text-center">
-              <Label className="text-muted-foreground">Acréscimo</Label>
-              <Input
-                type="number"
-                min={0}
-                max={30}
-                className="w-24 text-center text-lg font-semibold mt-1 tabular-nums"
-                value={extraMinute}
-                onChange={(e) => setExtraMinute(Number(e.target.value))}
-              />
-            </div>
+            <p className="text-sm rounded-lg bg-pitch/40 border border-line/80 px-3 py-2">
+              <span className="text-muted-foreground">Próximo evento: </span>
+              <span className="font-semibold text-neon tabular-nums">{eventMinutePreview}</span>
+            </p>
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">

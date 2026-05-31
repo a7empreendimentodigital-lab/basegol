@@ -113,7 +113,7 @@ export function MatchScoreBoard({
             showKickSequence={showKickSequence}
             className={isPublic ? "max-w-lg" : "max-w-lg mx-auto"}
           />
-          {penaltyWinner && winnerSigla ? (
+          {penaltyWinner && winnerSigla && layout !== "operator" ? (
             <p
               className="text-center text-sm font-semibold text-neon"
               title={winnerFullName ?? undefined}
