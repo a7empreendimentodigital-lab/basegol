@@ -13,19 +13,27 @@ import {
   buildPhaseUpdateData,
   buildResumeClockData,
 } from "@/services/match-phase.service";
+import {
+  minuteForPhaseTransition,
+  nextPenaltyKickMinute,
+  shouldUsePenaltyKickMinute,
+} from "@/lib/match-event-minute";
 import { pausePhaseClock } from "@/lib/match-phase";
 import { fail, ok } from "@/utils/api-response";
 import { writeAuditLog } from "@/lib/audit";
 import { AUDIT_ACTIONS } from "@/utils/audit-actions";
-import type { MatchEventType } from "@prisma/client";
+import type { MatchEventType, Prisma } from "@prisma/client";
 
 const matchReturnInclude = {
   statistics: true,
-  events: { orderBy: { minute: "asc" as const }, include: { athlete: true } },
+  events: {
+    orderBy: [{ minute: "asc" as const }, { createdAt: "asc" as const }],
+    include: { athlete: true },
+  },
   homeTeam: { include: { club: true } },
   awayTeam: { include: { club: true } },
   group: { include: { category: { include: { championship: true } } } },
-} as const;
+} satisfies Prisma.MatchInclude;
 
 async function descriptionWithAthlete(
   athleteId: string | undefined,
@@ -192,13 +200,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       const ev = phaseEventForTransition(targetPhase);
       if (ev) {
-        const paused = pausePhaseClock(fresh, now);
+        await pausePhaseClock(fresh, now);
         await prisma.matchEvent.create({
           data: {
             matchId,
             type: ev.type,
-            minute: paused.minute,
-            extraMinute,
+            minute: minuteForPhaseTransition(targetPhase),
+            extraMinute: targetPhase === "FINISHED" ? undefined : extraMinute,
             description: payload.description ?? ev.description,
           },
         });
@@ -236,16 +244,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       if (!resolvedTeamId) {
         return fail("Selecione o time para registrar o pênalti", 400);
       }
-      await prisma.match.update({
-        where: { id: matchId },
-        data: { minute },
+      const freshPen = await prisma.match.findUnique({ where: { id: matchId } });
+      const useKickMinute = freshPen && shouldUsePenaltyKickMinute(freshPen);
+      const priorPen = await prisma.matchEvent.count({
+        where: { matchId, type: { in: ["PENALTY_GOAL", "PENALTY_MISS"] } },
       });
+      const eventMinute = useKickMinute ? nextPenaltyKickMinute(priorPen) : minute;
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "PENALTY_GOAL",
-          minute,
-          extraMinute,
+          minute: eventMinute,
+          extraMinute: useKickMinute ? undefined : extraMinute,
           teamId: resolvedTeamId,
           athleteId: payload.athleteId,
           description: await descriptionWithAthlete(
@@ -260,12 +270,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       if (!resolvedTeamId) {
         return fail("Selecione o time para registrar o pênalti", 400);
       }
+      const freshPen = await prisma.match.findUnique({ where: { id: matchId } });
+      const useKickMinute = freshPen && shouldUsePenaltyKickMinute(freshPen);
+      const priorPen = await prisma.matchEvent.count({
+        where: { matchId, type: { in: ["PENALTY_GOAL", "PENALTY_MISS"] } },
+      });
+      const eventMinute = useKickMinute ? nextPenaltyKickMinute(priorPen) : minute;
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "PENALTY_MISS",
-          minute,
-          extraMinute,
+          minute: eventMinute,
+          extraMinute: useKickMinute ? undefined : extraMinute,
           teamId: resolvedTeamId,
           athleteId: payload.athleteId,
           description: await descriptionWithAthlete(

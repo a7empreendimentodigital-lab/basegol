@@ -16,6 +16,7 @@
     "db:purge-demo": "tsx prisma/purge-demo-data.ts",
     "db:reconcile-penalties": "tsx scripts/reconcile-match-penalties.ts",
     "db:fix-bebedouro-lg": "tsx scripts/fix-bebedouro-lg-penalties.ts",
+    "db:repair-match-timeline": "tsx scripts/repair-match-penalties-timeline.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

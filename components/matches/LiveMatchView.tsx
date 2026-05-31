@@ -23,7 +23,13 @@ import { TeamCrest } from "@/components/matches/TeamCrest";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
 import { penaltyShootoutWinner } from "@/lib/match-penalties";
+import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
 import { formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
+import {
+  dedupeTimelineEvents,
+  formatTimelineMinute,
+  timelineEventTitle,
+} from "@/lib/match-timeline";
 import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
 import { formatTime } from "@/lib/utils";
 import type { MatchWithTeams, StandingRowDisplay } from "@/types";
@@ -79,11 +85,6 @@ function eventIcon(type: string) {
   }
 }
 
-function formatMinute(minute: number, extra?: number | null) {
-  if (extra && extra > 0) return `${minute}+${extra}'`;
-  return `${minute}'`;
-}
-
 function MatchMetaRow({
   icon: Icon,
   children,
@@ -100,6 +101,7 @@ function MatchMetaRow({
 }
 
 export function LiveMatchView({ match, events = [], stats, standings = [] }: LiveMatchViewProps) {
+  const timelineEvents = dedupeTimelineEvents(events);
   const homeName = match.homeTeam.club.shortName ?? match.homeTeam.club.name;
   const awayName = match.awayTeam.club.shortName ?? match.awayTeam.club.name;
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
@@ -247,7 +249,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
               <ClipboardList className="h-4 w-4 text-muted-foreground" aria-hidden />
               Cronologia
             </h3>
-            {events.length === 0 ? (
+            {timelineEvents.length === 0 ? (
               <ChampionshipEmptyPanel
                 icon={ClipboardList}
                 title="Nenhum evento registrado ainda"
@@ -255,10 +257,10 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
               />
             ) : (
               <div className="divide-y divide-[#a1a1aa17] overflow-hidden rounded-2xl border border-line bg-graphite-light">
-                {events.map((ev) => (
+                {timelineEvents.map((ev) => (
                   <div key={ev.id} className="flex items-center gap-3 px-4 py-3 text-sm sm:px-5">
                     <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                      {formatMinute(ev.minute, ev.extraMinute)}
+                      {formatTimelineMinute(ev)}
                     </span>
                     <span className="shrink-0 text-base">{eventIcon(ev.type)}</span>
                     <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -271,10 +273,11 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
                         />
                       ) : null}
                       <span className="truncate">
-                        {ev.description ??
-                          (ev.athlete
-                            ? `${ev.athlete.firstName} ${ev.athlete.lastName}`
-                            : ev.type.replace(/_/g, " "))}
+                        {ev.athlete
+                          ? `${ev.athlete.firstName} ${ev.athlete.lastName}${
+                              ev.description ? ` · ${ev.description}` : ""
+                            }`
+                          : timelineEventTitle(ev, MATCH_EVENT_LABELS)}
                       </span>
                     </div>
                   </div>
