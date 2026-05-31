@@ -272,6 +272,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
           {match ? (
             <div className="mb-5">
               <MatchScoreBoard
+                layout="operator"
                 homeName={homeName}
                 awayName={awayName}
                 homeScore={match.homeScore}

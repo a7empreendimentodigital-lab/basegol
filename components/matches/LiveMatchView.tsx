@@ -21,7 +21,7 @@ import { StandingTable } from "@/components/matches/StandingTable";
 import { normalizeImageSrc } from "@/lib/image-url";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
-import { MatchScoreBoard } from "@/components/matches/MatchScoreBoard";
+import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
 import { penaltyShootoutWinner } from "@/lib/match-penalties";
 import { formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
 import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
@@ -153,21 +153,17 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
             </p>
           </div>
 
-          <div className="shrink-0 min-w-[10rem] sm:min-w-[14rem]">
-            <MatchScoreBoard
-              homeName={homeName}
-              awayName={awayName}
-              homeScore={match.homeScore}
-              awayScore={match.awayScore}
-              homePenaltyScore={match.homePenaltyScore}
-              awayPenaltyScore={match.awayPenaltyScore}
-              homePenaltyAttempts={match.homePenaltyAttempts ?? match.penaltyAttempts?.home}
-              awayPenaltyAttempts={match.awayPenaltyAttempts ?? match.penaltyAttempts?.away}
-              penaltyKicks={match.penaltyKicks}
-              showPenalties={showPenalties}
-              penaltyWinner={penaltyWinner}
-              size="lg"
-            />
+          <div className="shrink-0 text-center px-2">
+            {showPenalties ? (
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                Tempo regulamentar
+              </p>
+            ) : null}
+            <p className="font-display text-4xl tracking-wider text-foreground tabular-nums sm:text-5xl">
+              {match.homeScore}
+              <span className="mx-1 text-muted-foreground">:</span>
+              {match.awayScore}
+            </p>
           </div>
 
           <div className="flex min-w-0 max-w-[9rem] flex-1 flex-col items-center gap-2.5">
@@ -177,6 +173,24 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
             </p>
           </div>
         </div>
+
+        {showPenalties ? (
+          <div className="w-full max-w-lg mx-auto space-y-3">
+            <PenaltyShootoutPanel
+              homeScore={match.homePenaltyScore ?? 0}
+              awayScore={match.awayPenaltyScore ?? 0}
+              homeAttempts={match.homePenaltyAttempts ?? match.penaltyAttempts?.home}
+              awayAttempts={match.awayPenaltyAttempts ?? match.penaltyAttempts?.away}
+              homeKicks={match.penaltyKicks?.home}
+              awayKicks={match.penaltyKicks?.away}
+            />
+            {penaltyWinner ? (
+              <p className="text-center text-sm font-medium text-neon">
+                Vencedor: {penaltyWinner === "home" ? homeName : awayName}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="space-y-1.5 border-t border-line/60 pt-4">
           <MatchMetaRow icon={Calendar}>{formatMatchDateTime(match.scheduledAt)}</MatchMetaRow>

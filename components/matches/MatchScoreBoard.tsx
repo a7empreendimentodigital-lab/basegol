@@ -2,6 +2,7 @@
 
 import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
 import type { PenaltyAttemptChar } from "@/lib/match-penalties";
+import { countConvertedAttempts, parsePenaltyAttempts } from "@/lib/match-penalties";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -17,6 +18,8 @@ type Props = {
   showPenalties: boolean;
   penaltyWinner?: "home" | "away" | null;
   size?: "sm" | "lg";
+  /** Público: pênaltis em faixa larga abaixo; operador: bloco compacto com nomes */
+  layout?: "public" | "operator";
   className?: string;
 };
 
@@ -33,12 +36,33 @@ export function MatchScoreBoard({
   showPenalties,
   penaltyWinner,
   size = "lg",
+  layout = "operator",
   className,
 }: Props) {
   const isLarge = size === "lg";
+  const isPublic = layout === "public";
+
+  const homeSeq =
+    parsePenaltyAttempts(homePenaltyAttempts).length > 0
+      ? parsePenaltyAttempts(homePenaltyAttempts)
+      : (penaltyKicks?.home ?? []).map((k) => (k ? "O" : "X") as PenaltyAttemptChar);
+  const awaySeq =
+    parsePenaltyAttempts(awayPenaltyAttempts).length > 0
+      ? parsePenaltyAttempts(awayPenaltyAttempts)
+      : (penaltyKicks?.away ?? []).map((k) => (k ? "O" : "X") as PenaltyAttemptChar);
+
+  const penHome =
+    homeSeq.length > 0 ? countConvertedAttempts(homeSeq) : homePenaltyScore;
+  const penAway =
+    awaySeq.length > 0 ? countConvertedAttempts(awaySeq) : awayPenaltyScore;
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div
+      className={cn(
+        isPublic ? "w-full space-y-4" : "space-y-4",
+        className
+      )}
+    >
       <div className="flex flex-col items-center gap-1">
         {showPenalties ? (
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -60,19 +84,20 @@ export function MatchScoreBoard({
       {showPenalties ? (
         <>
           <PenaltyShootoutPanel
-            homeScore={homePenaltyScore}
-            awayScore={awayPenaltyScore}
+            homeScore={penHome}
+            awayScore={penAway}
             homeLabel={homeName}
             awayLabel={awayName}
-            homeAttempts={homePenaltyAttempts}
-            awayAttempts={awayPenaltyAttempts}
+            homeAttempts={homeSeq}
+            awayAttempts={awaySeq}
             homeKicks={penaltyKicks?.home}
             awayKicks={penaltyKicks?.away}
+            showTeamLabels={!isPublic}
+            className={isPublic ? "max-w-lg" : undefined}
           />
           {penaltyWinner ? (
             <p className="text-center text-sm font-medium text-neon">
-              Vencedor:{" "}
-              {penaltyWinner === "home" ? homeName : awayName}
+              Vencedor: {penaltyWinner === "home" ? homeName : awayName}
             </p>
           ) : null}
         </>
