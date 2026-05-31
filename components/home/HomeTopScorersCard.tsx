@@ -14,12 +14,32 @@ type Props = {
   title: string;
   categoryLabel?: string;
   scorers: TopScorerRow[];
+  layout?: "card" | "sidebar";
 };
 
-export function HomeTopScorersCard({ title, categoryLabel, scorers }: Props) {
+export function HomeTopScorersCard({
+  title,
+  categoryLabel,
+  scorers,
+  layout = "card",
+}: Props) {
+  const isSidebar = layout === "sidebar";
+
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
-      <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-4">
+    <section
+      className={cn(
+        "overflow-hidden",
+        isSidebar
+          ? "py-4 xl:rounded-2xl xl:border xl:border-line xl:bg-graphite-light"
+          : "rounded-2xl border border-line bg-graphite-light"
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2 pb-3",
+          isSidebar ? "pt-0 xl:px-4 xl:pt-4" : "px-4 pt-4"
+        )}
+      >
         <h2 className="flex min-w-0 flex-1 items-center gap-2 text-base font-semibold text-foreground">
           <Award className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="truncate">{title}</span>

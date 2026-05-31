@@ -8,6 +8,8 @@ type Props = {
   categoryLabel?: string;
   groupLabel?: string;
   rows: StandingRowDisplay[];
+  /** Na sidebar mobile: sem caixa, só linha de separação do bloco pai */
+  layout?: "card" | "sidebar";
 };
 
 export function HomeStandingsCard({
@@ -15,10 +17,25 @@ export function HomeStandingsCard({
   categoryLabel,
   groupLabel = "Grupo 1",
   rows,
+  layout = "card",
 }: Props) {
+  const isSidebar = layout === "sidebar";
+
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
-      <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-4">
+    <section
+      className={cn(
+        "overflow-hidden",
+        isSidebar
+          ? "py-4 xl:rounded-2xl xl:border xl:border-line xl:bg-graphite-light"
+          : "rounded-2xl border border-line bg-graphite-light"
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2 pb-3",
+          isSidebar ? "pt-0 xl:px-4 xl:pt-4" : "px-4 pt-4"
+        )}
+      >
         <h2 className="flex min-w-0 flex-1 items-baseline gap-2 text-base font-semibold text-foreground">
           <span className="truncate">{title}</span>
           {categoryLabel ? (
