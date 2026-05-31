@@ -27,11 +27,13 @@ function RightSidebarPatrocinio({
   if (!rightBanner?.imageUrl) return null;
 
   return (
-    <div className="mt-2 border-t border-line pt-4 max-md:-mx-3 max-md:px-0">
+    <div className="mt-2 border-t border-line pt-4">
       <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         Patrocinador
       </p>
-      <SidebarAdBanner banner={rightBanner} variant="right" className="max-md:rounded-2xl" />
+      <div className="max-md:px-4 sm:max-md:px-5 md:px-0">
+        <SidebarAdBanner banner={rightBanner} variant="right" className="max-md:rounded-2xl" />
+      </div>
     </div>
   );
 }
