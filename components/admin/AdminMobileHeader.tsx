@@ -4,11 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
+import { MobileBrandLogo } from "@/components/brand/MobileBrandLogo";
 import { AdminNavList } from "@/components/admin/AdminNavList";
 import { cn } from "@/lib/utils";
 
-export function AdminMobileHeader() {
+type Props = {
+  mobileLogoUrl?: string | null;
+  systemName?: string;
+};
+
+export function AdminMobileHeader({ mobileLogoUrl, systemName = "BASEGOL" }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "/";
   const skipPathClose = useRef(true);
@@ -39,14 +44,18 @@ export function AdminMobileHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex h-14 items-center justify-between gap-3 border-b border-line bg-graphite/95 px-4 backdrop-blur-xl lg:hidden">
-        <Link href="/admin" className="min-w-0">
-          <Logo size="sm" href={null} />
-        </Link>
+      <header className="sticky top-0 z-50 flex h-14 items-center justify-between gap-3 border-b border-line bg-graphite/95 px-3 backdrop-blur-xl sm:px-4 lg:hidden">
+        <MobileBrandLogo
+          href="/admin"
+          src={mobileLogoUrl}
+          systemName={systemName}
+          className="min-w-0 flex-1 justify-start"
+          imageClassName="max-h-10 max-w-[140px]"
+        />
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-lg border border-line text-foreground"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line text-foreground"
           aria-label="Abrir menu"
           aria-expanded={open}
         >
@@ -75,11 +84,16 @@ export function AdminMobileHeader() {
             )}
           >
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
-              <span className="text-sm font-semibold">Menu admin</span>
+              <MobileBrandLogo
+                href={null}
+                src={mobileLogoUrl}
+                systemName={systemName}
+                imageClassName="max-h-9 max-w-[120px]"
+              />
               <button
                 type="button"
                 onClick={close}
-                className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-graphite-light"
+                className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-graphite-light"
                 aria-label="Fechar menu"
               >
                 <X className="h-5 w-5" aria-hidden />

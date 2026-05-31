@@ -4,7 +4,8 @@ import { normalizeImageSrc, shouldUnoptimizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  href?: string;
+  /** `null` = sem link; omitido = "/" */
+  href?: string | null;
   src?: string | null;
   className?: string;
   imageClassName?: string;
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export function MobileBrandLogo({
-  href = "/",
+  href,
   src,
   className,
   imageClassName,
@@ -41,9 +42,10 @@ export function MobileBrandLogo({
     </span>
   );
 
-  if (!href) return content;
+  const linkHref = href === null ? null : href ?? "/";
+  if (linkHref === null) return content;
   return (
-    <Link href={href} className="inline-flex shrink-0" aria-label="Início">
+    <Link href={linkHref} className="inline-flex shrink-0" aria-label="Início">
       {content}
     </Link>
   );
