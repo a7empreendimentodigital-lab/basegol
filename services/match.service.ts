@@ -1,6 +1,7 @@
 import type { MatchEventType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
+  rebuildScoresFromEvents,
   resolveElapsedSeconds,
   resolveMatchPeriodForDisplay,
   type MatchEventLike,
@@ -12,7 +13,7 @@ import {
   repairMatchPeriodIfNeeded,
   syncMatchClockToNow,
 } from "@/services/match-live.service";
-import type { MatchWithTeams } from "@/types";
+import type { ClubPublicMatches, MatchWithTeams } from "@/types";
 
 const matchInclude = {
   homeTeam: { include: { club: true } },
@@ -33,6 +34,30 @@ const periodEventsInclude = {
   orderBy: [{ createdAt: "asc" as const }],
   select: { type: true, description: true, minute: true },
 };
+
+const scoreEventsInclude = {
+  where: {
+    type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] as MatchEventType[] },
+  },
+  orderBy: [{ createdAt: "asc" as const }],
+  select: { type: true, teamId: true, description: true },
+};
+
+function mapMatchWithScoreEvents(
+  m: Awaited<ReturnType<typeof fetchMatchRaw>> & {
+    events?: MatchEventLike[];
+  }
+): MatchWithTeams | null {
+  if (!m) return null;
+  const scores = rebuildScoresFromEvents(m.events ?? [], m.homeTeamId, m.awayTeamId);
+  return mapMatch({
+    ...m,
+    homeScore: scores.homeScore,
+    awayScore: scores.awayScore,
+    homePenaltyScore: scores.homePenaltyScore,
+    awayPenaltyScore: scores.awayPenaltyScore,
+  });
+}
 
 function mapMatch(
   m: Awaited<ReturnType<typeof fetchMatchRaw>> & {
@@ -57,6 +82,7 @@ function mapMatch(
       ? Math.max(1, Math.ceil(elapsed / 60) || (m.minute ?? 1))
       : m.minute,
     elapsedSeconds: elapsed,
+    accumulatedPeriodSeconds: m.accumulatedPeriodSeconds,
     clockRunning: m.clockRunning,
     clockStartedAt: m.clockStartedAt?.toISOString() ?? null,
     periodLengthMin: m.periodLengthMin,
@@ -246,6 +272,7 @@ export function toMatchWithTeams(
     matchPeriod: m.matchPeriod,
     minute: m.minute,
     elapsedSeconds: m.elapsedSeconds,
+    accumulatedPeriodSeconds: m.accumulatedPeriodSeconds,
     clockRunning: m.clockRunning,
     clockStartedAt:
       m.clockStartedAt instanceof Date
@@ -309,5 +336,60 @@ export async function getAllMatches(status?: string) {
     });
   } catch {
     return [];
+  }
+}
+
+const clubMatchInclude = {
+  ...matchInclude,
+  events: scoreEventsInclude,
+} as const;
+
+export async function getClubPublicMatches(clubId: string): Promise<ClubPublicMatches> {
+  const empty = { live: [], upcoming: [], finished: [] };
+  try {
+    const teams = await prisma.team.findMany({
+      where: { clubId },
+      select: { id: true },
+    });
+    const teamIds = teams.map((t) => t.id);
+    if (!teamIds.length) return empty;
+
+    const teamFilter = {
+      OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }],
+    };
+    const now = new Date();
+
+    const [liveRows, upcomingRows, finishedRows] = await Promise.all([
+      prisma.match.findMany({
+        where: { ...teamFilter, status: { in: ["LIVE", "HALFTIME"] } },
+        include: clubMatchInclude,
+        orderBy: { scheduledAt: "desc" },
+        take: 20,
+      }),
+      prisma.match.findMany({
+        where: {
+          ...teamFilter,
+          status: { in: ["SCHEDULED", "POSTPONED"] },
+          scheduledAt: { gte: now },
+        },
+        include: clubMatchInclude,
+        orderBy: { scheduledAt: "asc" },
+        take: 50,
+      }),
+      prisma.match.findMany({
+        where: { ...teamFilter, status: "FINISHED" },
+        include: clubMatchInclude,
+        orderBy: { scheduledAt: "desc" },
+        take: 50,
+      }),
+    ]);
+
+    return {
+      live: liveRows.map((m) => mapMatchWithScoreEvents(m)!).filter(Boolean),
+      upcoming: upcomingRows.map((m) => mapMatchWithScoreEvents(m)!).filter(Boolean),
+      finished: finishedRows.map((m) => mapMatchWithScoreEvents(m)!).filter(Boolean),
+    };
+  } catch {
+    return empty;
   }
 }

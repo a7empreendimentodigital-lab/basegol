@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
-import { formatPublicLiveClock } from "@/lib/match-live";
+import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { cn } from "@/lib/utils";
 
 export type MatchData = {
@@ -26,7 +26,9 @@ export type MatchData = {
   matchPeriod?: string | null;
   minute: number | null;
   elapsedSeconds?: number;
+  accumulatedPeriodSeconds?: number;
   clockRunning?: boolean;
+  clockStartedAt?: string | null;
   periodLengthMin?: number;
   periodCount?: number;
   homeScore: number;
@@ -95,6 +97,8 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const [eventSide, setEventSide] = useState<"home" | "away">("home");
   const [athleteId, setAthleteId] = useState("");
   const [eventDescription, setEventDescription] = useState("");
+  const [periodLengthMin, setPeriodLengthMin] = useState(17);
+  const [periodCount, setPeriodCount] = useState(3);
 
   const loadAthletes = useCallback(
     async (side: "home" | "away") => {
@@ -117,6 +121,8 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
     const data = await parseApiResponse<MatchData>(res);
     setMatch(data);
     if (data?.minute != null) setMinute(data.minute);
+    if (data?.periodLengthMin != null) setPeriodLengthMin(data.periodLengthMin);
+    if (data?.periodCount != null) setPeriodCount(data.periodCount);
   }, [matchId]);
 
   useEffect(() => {
@@ -163,34 +169,20 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const stats = match?.statistics;
   const homeName = match?.homeTeam?.club.name ?? "Mandante";
   const awayName = match?.awayTeam?.club.name ?? "Visitante";
-  const liveClockLabel =
-    match && (match.status === "LIVE" || match.status === "HALFTIME")
-      ? formatPublicLiveClock(
-          {
-            status: match.status,
-            matchPeriod: match.matchPeriod ?? "SCHEDULED",
-            minute: match.minute,
-            elapsedSeconds: match.elapsedSeconds ?? 0,
-            clockRunning: match.clockRunning ?? false,
-            clockStartedAt: null,
-            periodLengthMin: match.periodLengthMin ?? 17,
-            periodCount: match.periodCount ?? 3,
-          },
-          match.events ?? []
-        )
-      : null;
+  const isLivePhase =
+    match?.status === "LIVE" || match?.status === "HALFTIME";
 
   return (
     <div className="space-y-4">
       {(mode === "all" || mode === "placar") && (
         <SectionCard
           title="Controle da partida"
-          description="O cronômetro roda automaticamente (3×17 min). Intervalo pausa; 2º e 3º tempo retomam de onde parou."
+          description="Defina os minutos de cada tempo. Ao iniciar, o público vê o período, o cronômetro regressivo e o tempo total de jogo."
         >
-          {liveClockLabel ? (
-            <p className="mb-4 text-center font-mono text-lg font-semibold text-neon tabular-nums">
-              {liveClockLabel}
-            </p>
+          {match && isLivePhase ? (
+            <div className="mb-5 flex justify-center">
+              <LiveMatchClockDisplay match={match} size="lg" />
+            </div>
           ) : null}
           {match?.inPenaltyShootout ? (
             <p className="mb-4 text-center text-sm text-muted-foreground">
@@ -198,6 +190,51 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
               {match.homePenaltyScore ?? 0} × {match.awayPenaltyScore ?? 0}
             </p>
           ) : null}
+
+          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              Duração dos tempos
+            </p>
+            <div className="flex flex-wrap items-end justify-center gap-4">
+              <div className="text-center">
+                <Label className="text-muted-foreground">Minutos por tempo</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={60}
+                  className="w-24 text-center text-lg font-semibold mt-1 tabular-nums"
+                  value={periodLengthMin}
+                  onChange={(e) => setPeriodLengthMin(Number(e.target.value))}
+                />
+              </div>
+              <div className="text-center">
+                <Label className="text-muted-foreground">Quantidade de tempos</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={5}
+                  className="w-24 text-center text-lg font-semibold mt-1 tabular-nums"
+                  value={periodCount}
+                  onChange={(e) => setPeriodCount(Number(e.target.value))}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                className="h-10"
+                onClick={() =>
+                  action("SET_CLOCK", { periodLengthMin, periodCount })
+                }
+              >
+                Salvar duração
+              </Button>
+            </div>
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              Total regulamentar: {periodLengthMin * periodCount} min
+            </p>
+          </div>
+
           <div className="flex flex-wrap items-end justify-center gap-6 mb-6">
             <div className="text-center">
               <Label className="text-muted-foreground">Minuto</Label>
@@ -227,7 +264,11 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             Fluxo do jogo
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <Button disabled={loading} onClick={() => action("START_MATCH")} className="h-11">
+            <Button
+              disabled={loading}
+              onClick={() => action("START_MATCH", { periodLengthMin, periodCount })}
+              className="h-11"
+            >
               <Play className="h-4 w-4 mr-2" />
               Iniciar
             </Button>

@@ -21,6 +21,7 @@ const statsSchema = z
 
 export const operatorActionSchema = z.object({
   action: z.enum([
+    "SET_CLOCK",
     "START_MATCH",
     "HALFTIME",
     "SECOND_HALF",
@@ -44,4 +45,6 @@ export const operatorActionSchema = z.object({
   teamId: z.string().optional(),
   side: z.enum(["home", "away"]).optional(),
   stats: statsSchema,
+  periodLengthMin: z.number().int().min(1).max(60).optional(),
+  periodCount: z.number().int().min(1).max(5).optional(),
 });

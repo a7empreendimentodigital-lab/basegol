@@ -533,8 +533,9 @@ model Match {
   awayPenaltyScore   Int               @default(0)
   minute             Int?
   extraTime          Int?
-  elapsedSeconds     Int               @default(0)
-  clockRunning       Boolean           @default(false)
+  elapsedSeconds            Int               @default(0)
+  accumulatedPeriodSeconds  Int               @default(0)
+  clockRunning              Boolean           @default(false)
   clockStartedAt     DateTime?
   periodLengthMin    Int               @default(17)
   periodCount        Int               @default(3)

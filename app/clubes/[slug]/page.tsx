@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, Layers } from "lucide-react";
+import { ClubMatchesSection } from "@/components/clubes/ClubMatchesSection";
 import { ClubSquadSection } from "@/components/clubes/ClubSquadSection";
+import { getClubPublicMatches } from "@/services/match.service";
 import { ClubFavoriteAction } from "@/components/favorites/ClubFavoriteAction";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
@@ -11,6 +13,8 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const club = await getPublicClubBySlug(slug);
   if (!club) notFound();
+
+  const clubMatches = await getClubPublicMatches(club.id);
 
   const groupEntries = club.teams
     .map((t) => ({
@@ -101,6 +105,8 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
             </Link>
           </section>
         ) : null}
+
+        <ClubMatchesSection {...clubMatches} />
 
         <section className="space-y-4">
           <div>

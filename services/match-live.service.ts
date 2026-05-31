@@ -18,6 +18,7 @@ type MatchWithRelations = {
   awayPenaltyScore: number;
   minute: number | null;
   elapsedSeconds: number;
+  accumulatedPeriodSeconds: number;
   clockRunning: boolean;
   clockStartedAt: Date | null;
   periodLengthMin: number;

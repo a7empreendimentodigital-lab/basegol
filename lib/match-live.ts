@@ -4,7 +4,9 @@ export type MatchClockFields = {
   status: string;
   matchPeriod: MatchPeriod | string;
   minute: number | null;
+  /** Segundos decorridos no período em andamento. */
   elapsedSeconds: number;
+  accumulatedPeriodSeconds?: number;
   clockRunning: boolean;
   clockStartedAt: Date | string | null;
   periodLengthMin: number;
@@ -74,17 +76,58 @@ export function resolveElapsedSeconds(match: MatchClockFields, now = new Date())
 }
 
 export function pauseClockData(match: MatchClockFields, now = new Date()) {
-  const elapsed = resolveElapsedSeconds(match, now);
+  const periodElapsed = resolveElapsedSeconds(match, now);
+  const accumulated = (match.accumulatedPeriodSeconds ?? 0) + periodElapsed;
+  const totalMin = Math.max(1, Math.ceil(accumulated / 60));
   return {
-    elapsedSeconds: elapsed,
+    elapsedSeconds: periodElapsed,
+    accumulatedPeriodSeconds: accumulated,
     clockRunning: false,
     clockStartedAt: null as Date | null,
-    minute: Math.max(1, Math.min(match.periodLengthMin * match.periodCount, Math.ceil(elapsed / 60) || 1)),
+    minute: totalMin,
   };
 }
 
 export function resumeClockData(match: MatchClockFields, now = new Date()) {
   return {
+    clockRunning: true,
+    clockStartedAt: now,
+  };
+}
+
+/** Encerra período em andamento, soma ao acumulado e zera o cronômetro do período. */
+export function startNewPeriodClock(
+  match: MatchClockFields,
+  now = new Date()
+): {
+  elapsedSeconds: number;
+  accumulatedPeriodSeconds: number;
+  clockRunning: boolean;
+  clockStartedAt: Date;
+} {
+  const periodElapsed = resolveElapsedSeconds(match, now);
+  const wasActivePeriod =
+    match.matchPeriod === "FIRST_HALF" ||
+    match.matchPeriod === "SECOND_HALF" ||
+    match.matchPeriod === "THIRD_HALF";
+
+  return {
+    elapsedSeconds: 0,
+    accumulatedPeriodSeconds:
+      (match.accumulatedPeriodSeconds ?? 0) + (wasActivePeriod ? periodElapsed : 0),
+    clockRunning: true,
+    clockStartedAt: now,
+  };
+}
+
+/** Retoma período já salvo no acumulado (ex.: após intervalo). */
+export function resumeNewPeriodClock(
+  match: MatchClockFields,
+  now = new Date()
+) {
+  return {
+    elapsedSeconds: 0,
+    accumulatedPeriodSeconds: match.accumulatedPeriodSeconds ?? 0,
     clockRunning: true,
     clockStartedAt: now,
   };
@@ -143,21 +186,22 @@ export function resolveMatchPeriodForDisplay(
   return stored ?? "FIRST_HALF";
 }
 
-/** Segundos decorridos só no período atual (ex.: 2º tempo começa em 00:00). */
+/** Segundos decorridos no período atual. */
 export function getPeriodElapsedSeconds(
   match: MatchClockFields,
-  period: string,
+  _period?: string,
   now = new Date()
 ): number {
-  const total = resolveElapsedSeconds(match, now);
   const periodSec = (match.periodLengthMin ?? 17) * 60;
-  if (period === "SECOND_HALF") {
-    return Math.min(periodSec, Math.max(0, total - periodSec));
-  }
-  if (period === "THIRD_HALF") {
-    return Math.min(periodSec, Math.max(0, total - periodSec * 2));
-  }
-  return Math.min(periodSec, total);
+  return Math.min(periodSec, resolveElapsedSeconds(match, now));
+}
+
+export function getPeriodRemainingSeconds(
+  match: MatchClockFields,
+  now = new Date()
+): number {
+  const periodSec = (match.periodLengthMin ?? 17) * 60;
+  return Math.max(0, periodSec - getPeriodElapsedSeconds(match, undefined, now));
 }
 
 const ACTIVE_CLOCK_PERIODS = new Set(["FIRST_HALF", "SECOND_HALF", "THIRD_HALF"]);
@@ -263,26 +307,21 @@ export function buildMatchLiveDisplay(
 }
 
 export function formatPublicLiveClock(
-  match: MatchClockFields & { homePenaltyScore?: number; awayPenaltyScore?: number },
-  events: MatchEventLike[] = []
+  match: MatchClockFields,
+  events: MatchEventLike[] = [],
+  now = new Date()
 ): string {
-  const period = (match.matchPeriod as string) || inferPeriodFromEvents(events) || match.status;
+  const period = resolveMatchPeriodForDisplay(match, events);
+  const label = PERIOD_LABELS[period] ?? period;
   if (period === "HALFTIME" || match.status === "HALFTIME") return "Intervalo";
   if (period === "PENALTY_SHOOTOUT") return "Disputa de Pênaltis";
-  if (period === "FIRST_HALF") {
-    const elapsed = resolveElapsedSeconds(match);
-    return `1º Tempo · ${formatElapsedClock(elapsed)}`;
+  if (
+    period === "FIRST_HALF" ||
+    period === "SECOND_HALF" ||
+    period === "THIRD_HALF"
+  ) {
+    const remaining = getPeriodRemainingSeconds(match, now);
+    return `${label} · ${formatElapsedClock(remaining)}`;
   }
-  if (period === "SECOND_HALF") {
-    const elapsed = resolveElapsedSeconds(match);
-    return `2º Tempo · ${formatElapsedClock(elapsed)}`;
-  }
-  if (period === "THIRD_HALF") {
-    const elapsed = resolveElapsedSeconds(match);
-    return `3º Tempo · ${formatElapsedClock(elapsed)}`;
-  }
-  if (match.status === "LIVE" && match.minute != null) {
-    return `Ao vivo · ${match.minute}'`;
-  }
-  return "Ao vivo";
+  return label;
 }

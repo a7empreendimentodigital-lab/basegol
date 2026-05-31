@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Play, Trophy } from "lucide-react";
 import type { MatchWithTeams } from "@/types";
-import { LiveClockLabel } from "@/components/matches/LiveClockLabel";
+import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { formatMatchDateTime, matchProgressPercent } from "@/lib/match-display";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 
@@ -34,10 +34,9 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
             {formatMatchDateTime(match.scheduledAt)}
           </p>
         </div>
-        <LiveClockLabel
-          match={match}
-          className="shrink-0 whitespace-nowrap text-right text-[11px] font-medium text-red-400"
-        />
+        <div className="shrink-0 text-right">
+          <LiveMatchClockDisplay match={match} size="sm" />
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2">

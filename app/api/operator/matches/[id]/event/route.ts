@@ -1,5 +1,9 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
-import { pauseClockData, resumeClockData } from "@/lib/match-live";
+import {
+  pauseClockData,
+  resumeNewPeriodClock,
+  startNewPeriodClock,
+} from "@/lib/match-live";
 import { prisma } from "@/lib/prisma";
 import { operatorActionSchema } from "@/utils/zod-schemas/operator.schemas";
 import { canOperateMatch } from "@/services/operator.service";
@@ -67,7 +71,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const teamIdFromSide = (side?: "home" | "away") =>
       side === "home" ? match.homeTeamId : side === "away" ? match.awayTeamId : undefined;
 
-    if (payload.action === "START_MATCH") {
+    if (payload.action === "SET_CLOCK") {
+      await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          ...(payload.periodLengthMin != null
+            ? { periodLengthMin: payload.periodLengthMin }
+            : {}),
+          ...(payload.periodCount != null ? { periodCount: payload.periodCount } : {}),
+        },
+      });
+    } else if (payload.action === "START_MATCH") {
       const now = new Date();
       await prisma.match.update({
         where: { id: matchId },
@@ -75,9 +89,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           status: "LIVE",
           matchPeriod: "FIRST_HALF",
           elapsedSeconds: 0,
+          accumulatedPeriodSeconds: 0,
           clockRunning: true,
           clockStartedAt: now,
           minute: 0,
+          ...(payload.periodLengthMin != null
+            ? { periodLengthMin: payload.periodLengthMin }
+            : {}),
+          ...(payload.periodCount != null ? { periodCount: payload.periodCount } : {}),
         },
       });
       await prisma.matchEvent.create({
@@ -105,41 +124,49 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         },
       });
     } else if (payload.action === "SECOND_HALF") {
-      const paused = pauseClockData(match);
+      const now = new Date();
+      const clock =
+        match.matchPeriod === "HALFTIME"
+          ? resumeNewPeriodClock(match, now)
+          : startNewPeriodClock(match, now);
       await prisma.match.update({
         where: { id: matchId },
         data: {
           status: "LIVE",
           matchPeriod: "SECOND_HALF",
-          elapsedSeconds: paused.elapsedSeconds,
-          ...resumeClockData({ ...match, elapsedSeconds: paused.elapsedSeconds }),
+          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
+          ...clock,
         },
       });
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "KICKOFF",
-          minute: paused.minute,
+          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
           extraMinute,
           description: payload.description ?? "Segundo tempo",
         },
       });
     } else if (payload.action === "THIRD_HALF") {
-      const paused = pauseClockData(match);
+      const now = new Date();
+      const clock =
+        match.matchPeriod === "HALFTIME"
+          ? resumeNewPeriodClock(match, now)
+          : startNewPeriodClock(match, now);
       await prisma.match.update({
         where: { id: matchId },
         data: {
           status: "LIVE",
           matchPeriod: "THIRD_HALF",
-          elapsedSeconds: paused.elapsedSeconds,
-          ...resumeClockData({ ...match, elapsedSeconds: paused.elapsedSeconds }),
+          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
+          ...clock,
         },
       });
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "KICKOFF",
-          minute: paused.minute,
+          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
           extraMinute,
           description: payload.description ?? "Terceiro tempo",
         },

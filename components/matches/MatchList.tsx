@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { CalendarClock, CalendarOff, Hash, Radio, Tag, Trophy } from "lucide-react";
+import { CalendarClock, CalendarOff, Hash, History, Radio, Tag, Trophy } from "lucide-react";
 import type { MatchWithTeams } from "@/types";
 import { formatTime } from "@/lib/utils";
 import {
@@ -44,16 +44,33 @@ type MatchListRowProps = {
 function MatchStatusColumn({
   match,
   isLive,
+  isFinished,
   showFullDate,
   clockLabel,
   showClockSubline,
 }: {
   match: MatchWithTeams;
   isLive: boolean;
+  isFinished: boolean;
   showFullDate: boolean;
   clockLabel: string | null;
   showClockSubline: boolean;
 }) {
+  if (isFinished) {
+    return (
+      <div className="flex flex-col gap-1 tabular-nums">
+        {showFullDate ? (
+          <span className="whitespace-nowrap text-[11px] leading-none text-muted-foreground">
+            {formatMatchDateShort(match.scheduledAt)}
+          </span>
+        ) : null}
+        <span className="whitespace-nowrap text-xs font-semibold text-muted-foreground">
+          Finalizado
+        </span>
+      </div>
+    );
+  }
+
   if (isLive) {
     return (
       <div className="flex flex-col gap-1 tabular-nums">
@@ -86,22 +103,37 @@ function MatchStatusColumn({
 }
 
 function MatchScore({ match, isLive }: { match: MatchWithTeams; isLive: boolean }) {
-  if (isLive) {
-    return (
+  const isFinished = match.status === "FINISHED";
+  const showScore = isLive || isFinished;
+  const homePen = match.homePenaltyScore ?? 0;
+  const awayPen = match.awayPenaltyScore ?? 0;
+  const hasPenalties = homePen + awayPen > 0;
+
+  if (!showScore) {
+    return <span className="text-sm font-medium text-muted-foreground">x</span>;
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-1">
       <span className="whitespace-nowrap font-display text-xl tabular-nums text-foreground sm:text-2xl">
         {match.homeScore}
-        <span className="mx-1 font-sans text-base text-muted-foreground">-</span>
+        <span className="mx-1 font-sans text-base text-muted-foreground">:</span>
         {match.awayScore}
       </span>
-    );
-  }
-  return <span className="text-sm font-medium text-muted-foreground">x</span>;
+      {hasPenalties && isFinished ? (
+        <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+          Pen. {homePen}:{awayPen}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 export function MatchListRow({ match, showFullDate = false }: MatchListRowProps) {
   const homeName = match.homeTeam.club.shortName ?? match.homeTeam.club.name;
   const awayName = match.awayTeam.club.shortName ?? match.awayTeam.club.name;
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
+  const isFinished = match.status === "FINISHED";
   const clockLabel = isLive ? formatLiveClock(match.status, match.minute, match) : null;
   const showClockSubline = clockLabel != null && clockLabel !== "Ao vivo";
 
@@ -109,7 +141,8 @@ export function MatchListRow({ match, showFullDate = false }: MatchListRowProps)
     <MatchStatusColumn
       match={match}
       isLive={isLive}
-      showFullDate={showFullDate}
+      isFinished={isFinished}
+      showFullDate={showFullDate || isFinished}
       clockLabel={clockLabel}
       showClockSubline={showClockSubline}
     />
@@ -181,7 +214,7 @@ type MatchListProps = {
   matches: MatchWithTeams[];
   showFullDate?: boolean;
   emptyMessage?: string;
-  variant?: "live" | "upcoming" | "today";
+  variant?: "live" | "upcoming" | "today" | "finished";
 };
 
 export function MatchList({
@@ -192,7 +225,13 @@ export function MatchList({
 }: MatchListProps) {
   if (matches.length === 0) {
     const emptyIcon =
-      variant === "live" ? Radio : variant === "upcoming" ? CalendarClock : CalendarOff;
+      variant === "live"
+        ? Radio
+        : variant === "upcoming"
+          ? CalendarClock
+          : variant === "finished"
+            ? History
+            : CalendarOff;
     return <MatchListEmpty icon={emptyIcon} message={emptyMessage} />;
   }
 

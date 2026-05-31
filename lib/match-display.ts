@@ -1,8 +1,5 @@
-import {
-  getPeriodElapsedSeconds,
-  resolveElapsedSeconds,
-  resolveMatchPeriodForDisplay,
-} from "@/lib/match-live";
+import { formatLiveClockCompact } from "@/lib/match-clock-display";
+import { getPeriodElapsedSeconds } from "@/lib/match-live";
 import { formatDate, formatTime } from "@/lib/utils";
 
 export function formatRoundLabel(round: number): string {
@@ -25,35 +22,25 @@ type LiveClockMatch = {
   periodEvents?: { type: string; description?: string | null }[];
   minute?: number | null;
   elapsedSeconds?: number;
+  accumulatedPeriodSeconds?: number;
   clockRunning?: boolean;
   clockStartedAt?: Date | string | null;
   periodLengthMin?: number;
   periodCount?: number;
 };
 
-function formatPeriodClock(
-  match: LiveClockMatch,
-  period: string,
-  now = new Date()
-): string {
-  const clockMatch = {
-    status: match.status ?? "LIVE",
-    matchPeriod: period,
+function toClockFields(match: LiveClockMatch, status: string) {
+  return {
+    status,
+    matchPeriod: match.matchPeriod ?? "SCHEDULED",
     minute: match.minute ?? null,
     elapsedSeconds: match.elapsedSeconds ?? 0,
+    accumulatedPeriodSeconds: match.accumulatedPeriodSeconds ?? 0,
     clockRunning: match.clockRunning ?? false,
     clockStartedAt: match.clockStartedAt ?? null,
     periodLengthMin: match.periodLengthMin ?? 17,
     periodCount: match.periodCount ?? 3,
   };
-  const sec = getPeriodElapsedSeconds(clockMatch, period, now);
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  const clock = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  if (period === "FIRST_HALF") return `1º Tempo · ${clock}`;
-  if (period === "SECOND_HALF") return `2º Tempo · ${clock}`;
-  if (period === "THIRD_HALF") return `3º Tempo · ${clock}`;
-  return clock;
 }
 
 export function formatLiveClock(
@@ -67,55 +54,11 @@ export function formatLiveClock(
     if (minute == null) return "Ao vivo";
     return `Ao vivo · ${minute}'`;
   }
-
-  const period = resolveMatchPeriodForDisplay(
-    {
-      status,
-      matchPeriod: match.matchPeriod ?? "SCHEDULED",
-      minute: match.minute ?? null,
-      elapsedSeconds: match.elapsedSeconds ?? 0,
-      clockRunning: match.clockRunning ?? false,
-      clockStartedAt: match.clockStartedAt ?? null,
-      periodLengthMin: match.periodLengthMin ?? 17,
-      periodCount: match.periodCount ?? 3,
-    },
-    match.periodEvents ?? []
-  );
-
-  if (period === "PENALTY_SHOOTOUT") return "Disputa de Pênaltis";
-  if (period === "HALFTIME" || status === "HALFTIME") return "Intervalo";
-  if (
-    period === "FIRST_HALF" ||
-    period === "SECOND_HALF" ||
-    period === "THIRD_HALF"
-  ) {
-    return formatPeriodClock({ ...match, status }, period, now);
-  }
-  if (status === "HALFTIME") return "Intervalo";
-  if (minute == null) return "Ao vivo";
-
-  const len = match.periodLengthMin ?? 17;
-  const elapsed = resolveElapsedSeconds(
-    {
-      status,
-      matchPeriod: match.matchPeriod ?? "SCHEDULED",
-      minute,
-      elapsedSeconds: match.elapsedSeconds ?? 0,
-      clockRunning: match.clockRunning ?? false,
-      clockStartedAt: match.clockStartedAt ?? null,
-      periodLengthMin: len,
-      periodCount: match.periodCount ?? 3,
-    },
+  return formatLiveClockCompact(
+    toClockFields(match, status),
+    match.periodEvents ?? [],
     now
   );
-  const periodSec = len * 60;
-  const fallbackPeriod =
-    elapsed >= periodSec * 2
-      ? "THIRD_HALF"
-      : elapsed > periodSec
-        ? "SECOND_HALF"
-        : "FIRST_HALF";
-  return formatPeriodClock({ ...match, status }, fallbackPeriod, now);
 }
 
 export function matchProgressPercent(
@@ -130,22 +73,10 @@ export function matchProgressPercent(
     return Math.round(((len * 60) / total) * 100);
   }
   const len = match?.periodLengthMin ?? 17;
-  const count = match?.periodCount ?? 3;
-  const totalSec = len * count * 60;
-  const elapsed = match
-    ? resolveElapsedSeconds(
-        {
-          status,
-          matchPeriod: match.matchPeriod ?? "SCHEDULED",
-          minute,
-          elapsedSeconds: match.elapsedSeconds ?? 0,
-          clockRunning: match.clockRunning ?? false,
-          clockStartedAt: match.clockStartedAt ?? null,
-          periodLengthMin: len,
-          periodCount: count,
-        },
-        now
-      )
+  const periodSec = len * 60;
+  const fields = match ? toClockFields(match, status) : null;
+  const periodElapsed = fields
+    ? getPeriodElapsedSeconds(fields, undefined, now)
     : (minute ?? 0) * 60;
-  return Math.min(100, Math.round((elapsed / totalSec) * 100));
+  return Math.min(100, Math.round((periodElapsed / periodSec) * 100));
 }

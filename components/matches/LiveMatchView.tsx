@@ -21,7 +21,7 @@ import { StandingTable } from "@/components/matches/StandingTable";
 import { normalizeImageSrc } from "@/lib/image-url";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
-import { LiveClockLabel } from "@/components/matches/LiveClockLabel";
+import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
 import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
 import { formatTime } from "@/lib/utils";
@@ -122,10 +122,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
           {isLive ? (
             <>
               <LiveBadge />
-              <LiveClockLabel
-                match={match}
-                className="font-mono text-sm text-red-400 tabular-nums"
-              />
+              <LiveMatchClockDisplay match={match} size="lg" />
             </>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">

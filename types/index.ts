@@ -1,5 +1,11 @@
 export type PenaltyKicks = boolean[];
 
+export type ClubPublicMatches = {
+  live: MatchWithTeams[];
+  upcoming: MatchWithTeams[];
+  finished: MatchWithTeams[];
+};
+
 export type MatchWithTeams = {
   id: string;
   status: string;
@@ -10,6 +16,7 @@ export type MatchWithTeams = {
   matchPeriod?: string | null;
   minute: number | null;
   elapsedSeconds?: number;
+  accumulatedPeriodSeconds?: number;
   clockRunning?: boolean;
   clockStartedAt?: string | null;
   periodLengthMin?: number;
