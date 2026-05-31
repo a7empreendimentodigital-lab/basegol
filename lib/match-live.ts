@@ -213,12 +213,28 @@ export function shouldMatchClockBeRunning(
   return status === "LIVE" && !!matchPeriod && ACTIVE_CLOCK_PERIODS.has(matchPeriod);
 }
 
+function isPenaltyShootoutKickoff(e: MatchEventLike): boolean {
+  const desc = (e.description ?? "").toLowerCase();
+  return (
+    e.type === "KICKOFF" &&
+    (desc.includes("pênalt") || desc.includes("penalt") || desc.includes("disputa"))
+  );
+}
+
+function indexOfFirstPenaltyShootoutEvent(events: MatchEventLike[]): number {
+  return events.findIndex(
+    (e) =>
+      e.type === "PENALTY_GOAL" ||
+      e.type === "PENALTY_MISS" ||
+      isPenaltyShootoutKickoff(e)
+  );
+}
+
 export function rebuildScoresFromEvents(
   events: MatchEventLike[],
   homeTeamId: string,
   awayTeamId: string
 ) {
-  let penaltyPhase = false;
   let homeScore = 0;
   let awayScore = 0;
   let homePenaltyScore = 0;
@@ -226,33 +242,44 @@ export function rebuildScoresFromEvents(
   const homePenaltyKicks: PenaltyKickDisplay[] = [];
   const awayPenaltyKicks: PenaltyKickDisplay[] = [];
 
-  for (const e of events) {
-    const desc = (e.description ?? "").toLowerCase();
-    if (e.type === "KICKOFF" && (desc.includes("pênalt") || desc.includes("penalt"))) {
-      penaltyPhase = true;
-      continue;
-    }
+  const firstPenaltyIdx = indexOfFirstPenaltyShootoutEvent(events);
+
+  for (let i = 0; i < events.length; i++) {
+    const e = events[i];
+    const inPenaltyShootout = firstPenaltyIdx >= 0 && i >= firstPenaltyIdx;
+
+    if (isPenaltyShootoutKickoff(e)) continue;
 
     const isHome = e.teamId === homeTeamId;
     const isAway = e.teamId === awayTeamId;
 
-    if (e.type === "GOAL" && !penaltyPhase) {
-      if (isHome) homeScore += 1;
-      if (isAway) awayScore += 1;
+    if (e.type === "GOAL") {
+      if (inPenaltyShootout) {
+        if (isHome) {
+          homePenaltyScore += 1;
+          homePenaltyKicks.push(true);
+        }
+        if (isAway) {
+          awayPenaltyScore += 1;
+          awayPenaltyKicks.push(true);
+        }
+      } else {
+        if (isHome) homeScore += 1;
+        if (isAway) awayScore += 1;
+      }
     }
     if (e.type === "PENALTY_GOAL") {
       if (isHome) {
         homePenaltyScore += 1;
         homePenaltyKicks.push(true);
-      }
-      if (isAway) {
+      } else if (isAway) {
         awayPenaltyScore += 1;
         awayPenaltyKicks.push(true);
       }
     }
     if (e.type === "PENALTY_MISS") {
       if (isHome) homePenaltyKicks.push(false);
-      if (isAway) awayPenaltyKicks.push(false);
+      else if (isAway) awayPenaltyKicks.push(false);
     }
   }
 
@@ -263,7 +290,8 @@ export function rebuildScoresFromEvents(
     awayPenaltyScore,
     homePenaltyKicks,
     awayPenaltyKicks,
-    inPenaltyShootout: penaltyPhase || homePenaltyScore + awayPenaltyScore > 0,
+    inPenaltyShootout:
+      firstPenaltyIdx >= 0 || homePenaltyScore + awayPenaltyScore > 0,
   };
 }
 

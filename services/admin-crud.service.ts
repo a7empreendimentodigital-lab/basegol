@@ -76,7 +76,7 @@ export async function listMatchesAdmin(
           where: {
             type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] },
           },
-          orderBy: [{ createdAt: "asc" }],
+          orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
           select: { type: true, teamId: true, description: true },
         },
       },
