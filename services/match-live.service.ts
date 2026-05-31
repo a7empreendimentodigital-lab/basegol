@@ -7,6 +7,7 @@ import {
   type MatchPhaseFields,
 } from "@/lib/match-phase";
 import {
+  rebuildScoresFromEvents,
   resolveElapsedSeconds,
   resolveMatchPeriodForDisplay,
   shouldMatchClockBeRunning,
@@ -15,7 +16,6 @@ import {
 import {
   attemptsToBooleans,
   penaltyShootoutWinner,
-  resolvePenaltyShootoutData,
 } from "@/lib/match-penalties";
 import {
   buildSyncPhaseClockData,
@@ -211,36 +211,34 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
       ? resolvePhaseElapsed(match as MatchPhaseFields)
       : resolveElapsedSeconds(match);
 
-  const homeScore = match.homeScore;
-  const awayScore = match.awayScore;
-
-  const penaltyData = resolvePenaltyShootoutData(
+  const scores = rebuildScoresFromEvents(
     events,
     match.homeTeamId,
     match.awayTeamId,
-    match.homePenaltyAttempts,
-    match.awayPenaltyAttempts
+    {
+      storedHomePenaltyAttempts: match.homePenaltyAttempts,
+      storedAwayPenaltyAttempts: match.awayPenaltyAttempts,
+    }
   );
-  const homeAttempts = penaltyData.homeAttempts;
-  const awayAttempts = penaltyData.awayAttempts;
-  const homePenaltyScore = penaltyData.inPenaltyShootout
-    ? penaltyData.homeScore
-    : match.homePenaltyScore;
-  const awayPenaltyScore = penaltyData.inPenaltyShootout
-    ? penaltyData.awayScore
-    : match.awayPenaltyScore;
+
+  const homeScore = scores.homeScore;
+  const awayScore = scores.awayScore;
+  const homeAttempts = scores.homePenaltyAttempts;
+  const awayAttempts = scores.awayPenaltyAttempts;
+  const homePenaltyScore = scores.homePenaltyScore;
+  const awayPenaltyScore = scores.awayPenaltyScore;
 
   const running = match.isClockRunning ?? match.clockRunning;
+  const hasPenaltyAttempts =
+    homeAttempts.length > 0 || awayAttempts.length > 0;
   const inPenaltyShootout =
     phase === "PENALTIES" ||
     match.hasPenaltyShootout === true ||
-    homePenaltyScore + awayPenaltyScore > 0 ||
-    homeAttempts.length > 0 ||
-    awayAttempts.length > 0;
+    hasPenaltyAttempts;
 
   const shootoutResult = penaltyShootoutWinner(homePenaltyScore, awayPenaltyScore);
   const penaltyWinner =
-    inPenaltyShootout && shootoutResult !== "draw" ? shootoutResult : null;
+    hasPenaltyAttempts && shootoutResult !== "draw" ? shootoutResult : null;
 
   const displayMinute = Math.max(
     1,

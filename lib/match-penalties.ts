@@ -63,12 +63,42 @@ function isPenaltyShootoutKickoff(e: MatchEventLike): boolean {
   );
 }
 
-function indexOfFirstPenaltyShootoutEvent(events: MatchEventLike[]): number {
-  return events.findIndex(
-    (e) =>
+export function eventCreatedAtMs(e: MatchEventLike): number {
+  if (e.createdAt instanceof Date) return e.createdAt.getTime();
+  if (e.createdAt) {
+    const t = new Date(e.createdAt).getTime();
+    return Number.isNaN(t) ? 0 : t;
+  }
+  return 0;
+}
+
+/** Início da disputa de pênaltis pela ordem real (createdAt), não pelo minuto do evento. */
+export function getPenaltyShootoutStartMs(events: MatchEventLike[]): number | null {
+  let start: number | null = null;
+  for (const e of events) {
+    const isStart =
       e.type === "PENALTY_GOAL" ||
       e.type === "PENALTY_MISS" ||
-      isPenaltyShootoutKickoff(e)
+      isPenaltyShootoutKickoff(e);
+    if (!isStart) continue;
+    const t = eventCreatedAtMs(e);
+    if (start === null || t < start) start = t;
+  }
+  return start;
+}
+
+/** Gol de campo antes do apito da disputa; cobranças usam o mesmo limite com tipos PENALTY_*. */
+export function isEventInPenaltyShootout(
+  e: MatchEventLike,
+  shootoutStartMs: number | null
+): boolean {
+  if (shootoutStartMs === null) return false;
+  if (e.type === "GOAL") {
+    return eventCreatedAtMs(e) >= shootoutStartMs;
+  }
+  return (
+    (e.type === "PENALTY_GOAL" || e.type === "PENALTY_MISS") &&
+    eventCreatedAtMs(e) >= shootoutStartMs
   );
 }
 
@@ -109,38 +139,26 @@ export function rebuildPenaltyShootoutFromEvents(
   homeTeamId: string,
   awayTeamId: string
 ): PenaltyShootoutScore {
-  const sorted = sortEventsForScoring(events);
-  const firstIdx = indexOfFirstPenaltyShootoutEvent(sorted);
-  const homeAttempts: PenaltyAttemptChar[] = [];
-  const awayAttempts: PenaltyAttemptChar[] = [];
-
-  if (firstIdx < 0) {
+  const shootoutStartMs = getPenaltyShootoutStartMs(events);
+  if (shootoutStartMs === null) {
     return emptyPenaltyScore();
   }
 
-  let shootoutStarted = false;
+  const homeAttempts: PenaltyAttemptChar[] = [];
+  const awayAttempts: PenaltyAttemptChar[] = [];
 
-  for (let i = firstIdx; i < sorted.length; i++) {
-    const e = sorted[i];
-    if (isPenaltyShootoutKickoff(e)) {
-      shootoutStarted = true;
-      continue;
-    }
+  const chronological = [...events].sort(
+    (a, b) => eventCreatedAtMs(a) - eventCreatedAtMs(b)
+  );
+
+  for (const e of chronological) {
+    if (!isEventInPenaltyShootout(e, shootoutStartMs)) continue;
+    if (e.type !== "PENALTY_GOAL" && e.type !== "PENALTY_MISS") continue;
 
     const side = resolveSide(e, homeTeamId, awayTeamId);
     if (!side) continue;
 
-    const isPenaltyEvent =
-      e.type === "PENALTY_GOAL" || e.type === "PENALTY_MISS";
-    const isGoalInShootout = e.type === "GOAL" && shootoutStarted;
-
-    if (!isPenaltyEvent && !isGoalInShootout) continue;
-
-    if (!shootoutStarted && isPenaltyEvent) {
-      shootoutStarted = true;
-    }
-
-    if (e.type === "PENALTY_GOAL" || (e.type === "GOAL" && shootoutStarted)) {
+    if (e.type === "PENALTY_GOAL") {
       if (side === "home") homeAttempts.push("O");
       else awayAttempts.push("O");
     } else if (e.type === "PENALTY_MISS") {

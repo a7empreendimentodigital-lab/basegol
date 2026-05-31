@@ -1,5 +1,7 @@
 import type { MatchPeriod } from "@prisma/client";
 import {
+  getPenaltyShootoutStartMs,
+  isEventInPenaltyShootout,
   rebuildPenaltyShootoutFromEvents,
   resolvePenaltyShootoutData,
   sortEventsForScoring,
@@ -226,15 +228,6 @@ function isPenaltyShootoutKickoff(e: MatchEventLike): boolean {
   );
 }
 
-function indexOfFirstPenaltyShootoutEvent(events: MatchEventLike[]): number {
-  return events.findIndex(
-    (e) =>
-      e.type === "PENALTY_GOAL" ||
-      e.type === "PENALTY_MISS" ||
-      isPenaltyShootoutKickoff(e)
-  );
-}
-
 export type RebuildScoresOptions = {
   storedHomePenaltyAttempts?: unknown;
   storedAwayPenaltyAttempts?: unknown;
@@ -254,23 +247,20 @@ export function rebuildScoresFromEvents(
     options?.storedHomePenaltyAttempts,
     options?.storedAwayPenaltyAttempts
   );
-  const firstPenaltyIdx = indexOfFirstPenaltyShootoutEvent(sorted);
+  const shootoutStartMs = getPenaltyShootoutStartMs(sorted);
 
   let homeScore = 0;
   let awayScore = 0;
 
-  for (let i = 0; i < sorted.length; i++) {
-    const e = sorted[i];
-    const inPenaltyShootout = firstPenaltyIdx >= 0 && i >= firstPenaltyIdx;
-    if (isPenaltyShootoutKickoff(e)) continue;
+  for (const e of sorted) {
+    if (e.type !== "GOAL") continue;
+    if (isEventInPenaltyShootout(e, shootoutStartMs)) continue;
 
     const isHome = e.teamId === homeTeamId;
     const isAway = e.teamId === awayTeamId;
 
-    if (e.type === "GOAL" && !inPenaltyShootout) {
-      if (isHome) homeScore += 1;
-      if (isAway) awayScore += 1;
-    }
+    if (isHome) homeScore += 1;
+    if (isAway) awayScore += 1;
   }
 
   return {
