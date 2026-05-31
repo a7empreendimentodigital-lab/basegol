@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { SafeImage } from "@/components/ui/SafeImage";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Calendar, ChevronRight, Radio, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ type MatchItem = {
   awayScore: number;
   homePenaltyScore?: number;
   awayPenaltyScore?: number;
+  hasPenaltyShootout?: boolean;
   scheduledAt: string;
   homeTeam: { club: { name: string; crestUrl?: string | null } };
   awayTeam: { club: { name: string; crestUrl?: string | null } };
@@ -44,16 +45,27 @@ export default function AdminPlacarAoVivoPage() {
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
+  const loadMatches = useCallback(() => {
     setLoading(true);
-    void fetch("/api/admin/crud/matches?page=1&pageSize=100")
+    return fetch("/api/admin/crud/matches?page=1&pageSize=100", { cache: "no-store" })
       .then(async (r) => {
-        if (!r.ok) return { items: [] };
+        if (!r.ok) return { items: [] as MatchItem[] };
         return parseApiResponse<{ items: MatchItem[] }>(r);
       })
       .then((d) => setMatches(d.items ?? []))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    void loadMatches();
+    const interval = setInterval(() => void loadMatches(), 8000);
+    const onFocus = () => void loadMatches();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [loadMatches]);
 
   const filtered = useMemo(() => {
     let list = matches;

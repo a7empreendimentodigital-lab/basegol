@@ -233,6 +233,46 @@ export type RebuildScoresOptions = {
   storedAwayPenaltyAttempts?: unknown;
 };
 
+/** Placar exibido em listagens/API: tempo normal dos eventos; pênaltis do banco se não houver cobranças. */
+export function resolveMatchScoresForDisplay(
+  match: {
+    homeTeamId: string;
+    awayTeamId: string;
+    homeScore: number;
+    awayScore: number;
+    homePenaltyScore: number;
+    awayPenaltyScore: number;
+    homePenaltyAttempts?: unknown;
+    awayPenaltyAttempts?: unknown;
+  },
+  events: MatchEventLike[]
+) {
+  const hasKickEvents = events.some(
+    (e) => e.type === "PENALTY_GOAL" || e.type === "PENALTY_MISS"
+  );
+  const rebuilt = rebuildScoresFromEvents(
+    events,
+    match.homeTeamId,
+    match.awayTeamId,
+    {
+      storedHomePenaltyAttempts: match.homePenaltyAttempts,
+      storedAwayPenaltyAttempts: match.awayPenaltyAttempts,
+    }
+  );
+  return {
+    homeScore: rebuilt.homeScore,
+    awayScore: rebuilt.awayScore,
+    homePenaltyScore: hasKickEvents
+      ? rebuilt.homePenaltyScore
+      : match.homePenaltyScore,
+    awayPenaltyScore: hasKickEvents
+      ? rebuilt.awayPenaltyScore
+      : match.awayPenaltyScore,
+    homePenaltyAttempts: hasKickEvents ? rebuilt.homePenaltyAttempts : [],
+    awayPenaltyAttempts: hasKickEvents ? rebuilt.awayPenaltyAttempts : [],
+  };
+}
+
 export function rebuildScoresFromEvents(
   events: MatchEventLike[],
   homeTeamId: string,

@@ -108,6 +108,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
   const hasStats = stats != null;
   const showPenalties =
     match.inPenaltyShootout ||
+    match.hasPenaltyShootout === true ||
     match.currentPhase === "PENALTIES" ||
     match.matchPeriod === "PENALTY_SHOOTOUT" ||
     (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0;

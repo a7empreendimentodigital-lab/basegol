@@ -1,4 +1,4 @@
-import { rebuildScoresFromEvents } from "@/lib/match-live";
+import { resolveMatchScoresForDisplay } from "@/lib/match-live";
 import { prisma } from "@/lib/prisma";
 import { prismaContains } from "@/lib/prisma-search";
 
@@ -94,10 +94,7 @@ export async function listMatchesAdmin(
   ]);
 
   const items = rows.map((m) => {
-    const scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId, {
-      storedHomePenaltyAttempts: m.homePenaltyAttempts,
-      storedAwayPenaltyAttempts: m.awayPenaltyAttempts,
-    });
+    const scores = resolveMatchScoresForDisplay(m, m.events);
     return {
       ...m,
       homeScore: scores.homeScore,

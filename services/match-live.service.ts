@@ -8,6 +8,7 @@ import {
 } from "@/lib/match-phase";
 import {
   rebuildScoresFromEvents,
+  resolveMatchScoresForDisplay,
   resolveElapsedSeconds,
   resolveMatchPeriodForDisplay,
   shouldMatchClockBeRunning,
@@ -231,30 +232,17 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
       ? resolvePhaseElapsed(match as MatchPhaseFields)
       : resolveElapsedSeconds(match);
 
-  const scores = rebuildScoresFromEvents(
-    events,
-    match.homeTeamId,
-    match.awayTeamId,
-    {
-      storedHomePenaltyAttempts: match.homePenaltyAttempts,
-      storedAwayPenaltyAttempts: match.awayPenaltyAttempts,
-    }
-  );
-
+  const scores = resolveMatchScoresForDisplay(match, events);
   const hasKickEvents = events.some(
     (e) => e.type === "PENALTY_GOAL" || e.type === "PENALTY_MISS"
   );
 
   const homeScore = scores.homeScore;
   const awayScore = scores.awayScore;
-  const homeAttempts = hasKickEvents ? scores.homePenaltyAttempts : [];
-  const awayAttempts = hasKickEvents ? scores.awayPenaltyAttempts : [];
-  const homePenaltyScore = hasKickEvents
-    ? scores.homePenaltyScore
-    : (match.homePenaltyScore ?? 0);
-  const awayPenaltyScore = hasKickEvents
-    ? scores.awayPenaltyScore
-    : (match.awayPenaltyScore ?? 0);
+  const homeAttempts = scores.homePenaltyAttempts;
+  const awayAttempts = scores.awayPenaltyAttempts;
+  const homePenaltyScore = scores.homePenaltyScore;
+  const awayPenaltyScore = scores.awayPenaltyScore;
 
   const running = match.isClockRunning ?? match.clockRunning;
   const hasPenaltyAttempts =

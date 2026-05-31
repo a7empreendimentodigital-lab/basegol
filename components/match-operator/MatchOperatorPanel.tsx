@@ -325,6 +325,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                 penaltyKicks={match.penaltyKicks}
                 showPenalties={
                   !!match.inPenaltyShootout ||
+                  match.hasPenaltyShootout === true ||
                   (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0
                 }
                 penaltyWinner={match.penaltyWinner}
