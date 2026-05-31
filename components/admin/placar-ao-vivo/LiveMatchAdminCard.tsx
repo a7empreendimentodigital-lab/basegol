@@ -57,20 +57,20 @@ function TeamBlock({
       )}
       title={name}
     >
-      <div className="relative h-14 w-14 sm:h-12 sm:w-12 shrink-0">
+      <div className="relative h-10 w-10 sm:h-12 sm:w-12 shrink-0">
         {crestUrl ? (
-          <SafeImage src={crestUrl} alt={sigla} fill className="object-contain" sizes="56px" />
+          <SafeImage src={crestUrl} alt={sigla} fill className="object-contain" sizes="48px" />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
+          <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-muted-foreground">
             {sigla.slice(0, 3)}
           </span>
         )}
       </div>
       <div className="min-w-0 w-full sm:flex-1">
-        <p className="font-display text-base sm:text-xl font-bold tracking-wide text-foreground leading-tight">
+        <p className="font-display text-xs sm:text-xl font-bold tracking-wide text-foreground leading-tight line-clamp-2">
           {sigla}
         </p>
-        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 sm:line-clamp-1">{name}</p>
+        <p className="hidden sm:block text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{name}</p>
       </div>
     </div>
   );
@@ -156,29 +156,36 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-5 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-6">
-          <div className="flex flex-col items-center justify-center px-1 sm:px-3 order-first sm:order-none sm:col-start-2 sm:row-start-1">
-            <div className="rounded-xl bg-pitch/50 px-4 py-3 sm:px-6 sm:py-4 text-center min-w-[7.5rem] sm:min-w-[9rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-6">
+          <TeamBlock
+            crestUrl={match.homeTeam.club.crestUrl}
+            name={match.homeTeam.club.name}
+            shortName={match.homeTeam.club.shortName}
+            align="left"
+          />
+
+          <div className="flex flex-col items-center justify-center px-0.5 sm:px-3 shrink-0">
+            <div className="rounded-lg sm:rounded-xl bg-pitch/50 px-2 py-2 sm:px-6 sm:py-4 text-center">
               {hasPenalties ? (
-                <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-                  Regulamentar
+                <p className="text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                  Reg.
                 </p>
               ) : null}
-              <p className="font-display text-3xl sm:text-4xl tabular-nums text-neon leading-none">
+              <p className="font-display text-xl sm:text-4xl tabular-nums text-neon leading-none whitespace-nowrap">
                 {match.homeScore}
-                <span className="mx-1 sm:mx-1.5 text-muted-foreground font-sans font-normal text-2xl sm:text-3xl">
+                <span className="mx-0.5 sm:mx-1.5 text-muted-foreground font-sans font-normal text-base sm:text-3xl">
                   :
                 </span>
                 {match.awayScore}
               </p>
               {hasPenalties ? (
-                <div className="mt-2 pt-2 border-t border-line/60">
-                  <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
-                    Pênaltis
+                <div className="mt-1 pt-1 sm:mt-2 sm:pt-2 border-t border-line/60">
+                  <p className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                    Pen.
                   </p>
-                  <p className="font-display text-lg sm:text-xl tabular-nums text-foreground leading-none">
+                  <p className="font-display text-sm sm:text-xl tabular-nums text-foreground leading-none whitespace-nowrap">
                     {homePen}
-                    <span className="mx-1 text-muted-foreground">:</span>
+                    <span className="mx-0.5 text-muted-foreground">:</span>
                     {awayPen}
                   </p>
                 </div>
@@ -186,24 +193,12 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 sm:contents">
-            <div className="sm:col-start-1 sm:row-start-1">
-              <TeamBlock
-                crestUrl={match.homeTeam.club.crestUrl}
-                name={match.homeTeam.club.name}
-                shortName={match.homeTeam.club.shortName}
-                align="left"
-              />
-            </div>
-            <div className="sm:col-start-3 sm:row-start-1">
-              <TeamBlock
-                crestUrl={match.awayTeam.club.crestUrl}
-                name={match.awayTeam.club.name}
-                shortName={match.awayTeam.club.shortName}
-                align="right"
-              />
-            </div>
-          </div>
+          <TeamBlock
+            crestUrl={match.awayTeam.club.crestUrl}
+            name={match.awayTeam.club.name}
+            shortName={match.awayTeam.club.shortName}
+            align="right"
+          />
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap pt-1 border-t border-line/80">
