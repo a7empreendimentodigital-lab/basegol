@@ -39,21 +39,29 @@ export default function AdminPlacarAoVivoPage() {
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
 
-  const loadMatches = useCallback(() => {
-    setLoading(true);
-    return fetch("/api/admin/crud/matches?page=1&pageSize=100", { cache: "no-store" })
-      .then(async (r) => {
-        if (!r.ok) return { items: [] as LiveMatchAdminCardData[] };
-        return parseApiResponse<{ items: LiveMatchAdminCardData[] }>(r);
-      })
-      .then((d) => setMatches(d.items ?? []))
-      .finally(() => setLoading(false));
+  const loadMatches = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const res = await fetch("/api/admin/crud/matches?page=1&pageSize=100", {
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        if (!silent) setMatches([]);
+        return;
+      }
+      const data = await parseApiResponse<{ items: LiveMatchAdminCardData[] }>(res);
+      setMatches(data.items ?? []);
+    } catch {
+      if (!silent) setMatches([]);
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    void loadMatches();
-    const interval = setInterval(() => void loadMatches(), 8000);
-    const onFocus = () => void loadMatches();
+    void loadMatches(false);
+    const interval = setInterval(() => void loadMatches(true), 15000);
+    const onFocus = () => void loadMatches(true);
     window.addEventListener("focus", onFocus);
     return () => {
       clearInterval(interval);
