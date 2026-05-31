@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNavClient } from "@/components/layout/BottomNavClient";
 import { PublicTopBar } from "@/components/layout/PublicTopBar";
 import { InstallPwaPrompt } from "@/components/pwa/InstallPwaPrompt";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteFooterClient } from "@/components/layout/SiteFooterClient";
 import { isAuthRoute, isPublicAppRoute } from "@/lib/public-routes";
 import type { PublicBannerDto } from "@/services/banner.service";
 
@@ -17,16 +17,10 @@ type Props = {
   userImage?: string | null;
   isLoggedIn?: boolean;
   mobileLogoUrl?: string | null;
+  systemName?: string;
 };
 
-type PublicChromeProps = {
-  children: React.ReactNode;
-  leftSidebarBanner?: PublicBannerDto | null;
-  userName?: string | null;
-  userImage?: string | null;
-  isLoggedIn?: boolean;
-  mobileLogoUrl?: string | null;
-};
+type PublicChromeProps = Props;
 
 const PublicAppChrome = memo(function PublicAppChrome({
   children,
@@ -35,6 +29,7 @@ const PublicAppChrome = memo(function PublicAppChrome({
   userImage,
   isLoggedIn,
   mobileLogoUrl,
+  systemName = "BASEGOL",
 }: PublicChromeProps) {
   return (
     <>
@@ -46,7 +41,10 @@ const PublicAppChrome = memo(function PublicAppChrome({
           isLoggedIn={isLoggedIn}
           mobileLogoUrl={mobileLogoUrl}
         />
-        {children}
+        <div className="flex flex-1 flex-col w-full min-h-0">
+          {children}
+          <SiteFooterClient systemName={systemName} />
+        </div>
       </div>
       <BottomNavClient />
       <InstallPwaPrompt />
@@ -61,14 +59,16 @@ export function AppShellWrapper({
   userImage,
   isLoggedIn,
   mobileLogoUrl,
+  systemName = "BASEGOL",
 }: Props) {
   const pathname = usePathname() ?? "/";
+  const footer = <SiteFooterClient systemName={systemName} />;
 
   if (isAuthRoute(pathname)) {
     return (
       <div className="flex min-h-screen flex-col bg-pitch">
         <div className="flex-1">{children}</div>
-        <SiteFooter className="border-line/50 bg-pitch/80" />
+        <SiteFooterClient systemName={systemName} className="border-line/50 bg-pitch/80" />
       </div>
     );
   }
@@ -81,7 +81,12 @@ export function AppShellWrapper({
   const showOperadorHeader = pathname.startsWith("/operador");
 
   if (!showPublicChrome && !showOperadorHeader) {
-    return <div className="flex min-h-screen flex-col">{children}</div>;
+    return (
+      <div className="flex min-h-screen flex-col">
+        <div className="flex-1">{children}</div>
+        {footer}
+      </div>
+    );
   }
 
   if (showOperadorHeader && !showPublicChrome) {
@@ -93,7 +98,10 @@ export function AppShellWrapper({
           isLoggedIn={isLoggedIn}
           mobileLogoUrl={mobileLogoUrl}
         />
-        {children}
+        <div className="flex flex-1 flex-col">
+          {children}
+          {footer}
+        </div>
       </div>
     );
   }
@@ -105,6 +113,7 @@ export function AppShellWrapper({
       userImage={userImage}
       isLoggedIn={isLoggedIn}
       mobileLogoUrl={mobileLogoUrl}
+      systemName={systemName}
     >
       {children}
     </PublicAppChrome>
