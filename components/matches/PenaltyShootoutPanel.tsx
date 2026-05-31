@@ -7,59 +7,46 @@ import {
 } from "@/lib/match-penalties";
 import { cn } from "@/lib/utils";
 
-function KickDots({ attempts }: { attempts: PenaltyAttemptChar[] }) {
-  if (attempts.length === 0) {
-    return (
-      <div className="flex justify-center gap-1.5 min-h-[14px]">
-        <span className="h-3.5 w-3.5 rounded-full bg-muted-foreground/20" aria-hidden />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="flex flex-wrap justify-center gap-1.5 max-w-[11rem]"
-      role="list"
-      aria-label={`${attempts.filter((a) => a === "O").length} convertidos de ${attempts.length} cobranças`}
-    >
-      {attempts.map((kick, i) => (
-        <span
-          key={i}
-          role="listitem"
-          title={kick === "O" ? "Convertido" : "Perdido"}
-          className={cn(
-            "h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border-2 shrink-0",
-            kick === "O"
-              ? "border-emerald-500 bg-emerald-500"
-              : "border-red-500 bg-transparent"
-          )}
-          aria-label={kick === "O" ? "Pênalti convertido" : "Pênalti perdido"}
-        />
-      ))}
-    </div>
-  );
-}
-
-function SideKicks({
+function KickDots({
   attempts,
-  label,
-  align,
+  align = "center",
 }: {
   attempts: PenaltyAttemptChar[];
-  label: string;
-  align: "left" | "right";
+  align?: "start" | "center" | "end";
 }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 min-w-0 flex-1",
-        align === "right" ? "items-end" : "items-start"
+        "flex flex-nowrap items-center gap-1 sm:gap-1.5 min-w-0",
+        align === "end" && "justify-end",
+        align === "start" && "justify-start",
+        align === "center" && "justify-center"
       )}
+      role="list"
+      aria-label={
+        attempts.length > 0
+          ? `${countConvertedAttempts(attempts)} convertidos de ${attempts.length} cobranças`
+          : "Sem cobranças"
+      }
     >
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate max-w-full">
-        {label}
-      </p>
-      <KickDots attempts={attempts} />
+      {attempts.length === 0 ? (
+        <span
+          className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-muted-foreground/20 shrink-0"
+          aria-hidden
+        />
+      ) : (
+        attempts.map((kick, i) => (
+          <span
+            key={i}
+            role="listitem"
+            className={cn(
+              "h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full shrink-0",
+              kick === "O" ? "bg-emerald-500" : "bg-red-500"
+            )}
+            aria-label={kick === "O" ? "Convertido" : "Perdido"}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -73,6 +60,7 @@ export function PenaltyShootoutPanel({
   awayAttempts,
   homeKicks = [],
   awayKicks = [],
+  showTeamLabels = false,
   className,
 }: {
   homeScore: number;
@@ -83,6 +71,8 @@ export function PenaltyShootoutPanel({
   awayAttempts?: PenaltyAttemptChar[] | unknown;
   homeKicks?: boolean[];
   awayKicks?: boolean[];
+  /** Exibe nome do clube acima das bolinhas (ex.: painel do operador) */
+  showTeamLabels?: boolean;
   className?: string;
 }) {
   const homeSeq: PenaltyAttemptChar[] = (() => {
@@ -105,23 +95,49 @@ export function PenaltyShootoutPanel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-line bg-pitch/60 px-4 py-4 sm:px-6 sm:py-5 space-y-3",
+        "w-full rounded-2xl border border-line bg-pitch/80 px-3 py-4 sm:px-5 sm:py-5",
         className
       )}
     >
-      <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Disputa de pênaltis
-      </p>
-      <div className="flex items-center justify-center gap-3 sm:gap-5">
-        <SideKicks attempts={homeSeq} label={homeLabel ?? "Mandante"} align="right" />
-        <div className="shrink-0 text-center px-1 sm:px-2">
-          <p className="font-display text-3xl tabular-nums tracking-wide text-foreground sm:text-4xl">
+      <div className="flex items-center justify-between gap-2 sm:gap-4 max-w-md mx-auto">
+        <div
+          className={cn(
+            "flex flex-col min-w-0 flex-1",
+            showTeamLabels ? "items-start gap-1.5" : "items-end justify-center"
+          )}
+        >
+          {showTeamLabels && homeLabel ? (
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate max-w-full">
+              {homeLabel}
+            </p>
+          ) : null}
+          <KickDots attempts={homeSeq} align="end" />
+        </div>
+
+        <div className="shrink-0 px-2 sm:px-4 text-center">
+          <p className="font-display text-2xl sm:text-3xl tabular-nums tracking-wide text-foreground leading-none">
             {displayHome}
-            <span className="mx-1.5 text-muted-foreground">:</span>
+            <span className="mx-1 sm:mx-1.5 text-muted-foreground font-sans">:</span>
             {displayAway}
           </p>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Pen.
+          </p>
         </div>
-        <SideKicks attempts={awaySeq} label={awayLabel ?? "Visitante"} align="left" />
+
+        <div
+          className={cn(
+            "flex flex-col min-w-0 flex-1",
+            showTeamLabels ? "items-end gap-1.5" : "items-start justify-center"
+          )}
+        >
+          {showTeamLabels && awayLabel ? (
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate max-w-full text-right">
+              {awayLabel}
+            </p>
+          ) : null}
+          <KickDots attempts={awaySeq} align="start" />
+        </div>
       </div>
     </div>
   );
