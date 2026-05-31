@@ -59,8 +59,8 @@ export type MatchData = {
   inPenaltyShootout?: boolean;
   homeTeamId?: string;
   awayTeamId?: string;
-  homeTeam?: { id?: string; club: { name: string } };
-  awayTeam?: { id?: string; club: { name: string } };
+  homeTeam?: { id?: string; club: { name: string; shortName?: string | null } };
+  awayTeam?: { id?: string; club: { name: string; shortName?: string | null } };
   events: {
     id: string;
     minute: number;
@@ -220,6 +220,8 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const stats = match?.statistics;
   const homeName = match?.homeTeam?.club.name ?? "Mandante";
   const awayName = match?.awayTeam?.club.name ?? "Visitante";
+  const homeShortName = match?.homeTeam?.club.shortName ?? null;
+  const awayShortName = match?.awayTeam?.club.shortName ?? null;
   const isLivePhase =
     match?.status === "LIVE" || match?.status === "HALFTIME";
 
@@ -500,6 +502,8 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
         <MatchOperatorEventsSection
           homeName={homeName}
           awayName={awayName}
+          homeShortName={homeShortName}
+          awayShortName={awayShortName}
           events={match.events}
           eventSide={eventSide}
           onEventSideChange={setEventSide}
