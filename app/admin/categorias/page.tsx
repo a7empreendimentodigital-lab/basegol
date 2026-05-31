@@ -7,9 +7,14 @@ import { Thumb } from "@/components/admin/shared/AdminDataTable";
 type Row = {
   id: string;
   name: string;
+  championshipId: string;
   ageGroup?: string | null;
   imageUrl?: string | null;
-  championship?: { name: string };
+  status?: string;
+  gender?: string | null;
+  minAge?: number | null;
+  maxAge?: number | null;
+  championship?: { id: string; name: string };
 };
 
 export default function AdminCategoriasPage() {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { FormField } from "@/components/admin/forms/FormField";
+import { AdminRelationSelect } from "@/components/admin/forms/AdminRelationSelect";
 import { groupSchema } from "@/utils/zod-schemas/admin-entities";
 import { GROUP_STATUS_LABELS } from "@/lib/admin-labels";
+import { relationIdFromInitial } from "@/lib/admin-form-relations";
 import { submitEntity } from "@/components/admin/forms/submit-entity";
 import { useAdminOptions } from "@/hooks/use-admin-options";
 import { type AdminFormProps, str } from "@/components/admin/forms/types";
@@ -17,18 +19,28 @@ import { GroupTeamsField } from "@/components/admin/forms/GroupTeamsField";
 
 type FormData = z.infer<typeof groupSchema>;
 
+function buildDefaults(initial?: Record<string, unknown> | null): FormData {
+  return {
+    categoryId: relationIdFromInitial(initial, "categoryId", "category"),
+    name: str(initial?.name),
+    status: (str(initial?.status, "ACTIVE") as "ACTIVE" | "INACTIVE") ?? "ACTIVE",
+  };
+}
+
 export function GroupForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
-  const { options: categories } = useAdminOptions("categories");
+  const { options: categories, loading: categoriesLoading } = useAdminOptions("categories");
   const [saving, setSaving] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+
+  const defaultValues = useMemo(() => buildDefaults(initial), [initial]);
+
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(groupSchema),
-    defaultValues: {
-      categoryId: str(initial?.categoryId),
-      name: str(initial?.name),
-      status: (str(initial?.status, "ACTIVE") as "ACTIVE" | "INACTIVE") ?? "ACTIVE",
-    },
+    defaultValues,
   });
+
+  const getValuesForReset = useCallback(() => buildDefaults(initial), [initial]);
+  const categoryId = watch("categoryId") ?? "";
 
   return (
     <form
@@ -46,14 +58,17 @@ export function GroupForm({ initial, onSuccess, onCancel }: AdminFormProps) {
       className="space-y-4"
     >
       <FormField label="Categoria" error={errors.categoryId?.message}>
-        <Select {...register("categoryId")}>
-          <option value="">Selecione...</option>
-          {categories.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
+        <AdminRelationSelect
+          name="categoryId"
+          value={categoryId}
+          options={categories}
+          optionsLoading={categoriesLoading}
+          setValue={setValue}
+          reset={reset}
+          syncWhenReady={!!id}
+          getValuesForReset={getValuesForReset}
+          placeholder="Selecione a categoria..."
+        />
       </FormField>
       <FormField label="Nome do grupo" error={errors.name?.message}>
         <Input {...register("name")} placeholder="Grupo A" />

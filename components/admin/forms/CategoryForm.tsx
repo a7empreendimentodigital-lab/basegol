@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,32 +8,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { FormField } from "@/components/admin/forms/FormField";
+import { AdminRelationSelect } from "@/components/admin/forms/AdminRelationSelect";
 import { ImageUpload } from "@/components/admin/shared/ImageUpload";
 import { categorySchema } from "@/utils/zod-schemas/admin-entities";
 import { CATEGORY_STATUS_LABELS } from "@/lib/admin-labels";
+import { relationIdFromInitial } from "@/lib/admin-form-relations";
 import { submitEntity } from "@/components/admin/forms/submit-entity";
 import { useAdminOptions } from "@/hooks/use-admin-options";
 import { type AdminFormProps, str } from "@/components/admin/forms/types";
 
 type FormData = z.infer<typeof categorySchema>;
 
+function buildDefaults(initial?: Record<string, unknown> | null): FormData {
+  return {
+    championshipId: relationIdFromInitial(initial, "championshipId", "championship"),
+    name: str(initial?.name),
+    ageGroup: str(initial?.ageGroup),
+    minAge: initial?.minAge != null ? Number(initial.minAge) : null,
+    maxAge: initial?.maxAge != null ? Number(initial.maxAge) : null,
+    gender: str(initial?.gender, "M"),
+    status: (str(initial?.status, "ACTIVE") as "ACTIVE" | "INACTIVE") ?? "ACTIVE",
+    imageUrl: (initial?.imageUrl as string | null) ?? null,
+  };
+}
+
 export function CategoryForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
-  const { options: championships } = useAdminOptions("championships");
+  const { options: championships, loading: championshipsLoading } = useAdminOptions("championships");
   const [saving, setSaving] = useState(false);
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
+
+  const defaultValues = useMemo(() => buildDefaults(initial), [initial?.id, initial]);
+
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(categorySchema),
-    defaultValues: {
-      championshipId: str(initial?.championshipId),
-      name: str(initial?.name),
-      ageGroup: str(initial?.ageGroup),
-      minAge: initial?.minAge != null ? Number(initial.minAge) : null,
-      maxAge: initial?.maxAge != null ? Number(initial.maxAge) : null,
-      gender: str(initial?.gender, "M"),
-      status: (str(initial?.status, "ACTIVE") as "ACTIVE" | "INACTIVE") ?? "ACTIVE",
-      imageUrl: (initial?.imageUrl as string | null) ?? null,
-    },
+    defaultValues,
   });
+
+  const getValuesForReset = useCallback(() => buildDefaults(initial), [initial]);
+
+  const championshipId = watch("championshipId") ?? "";
 
   return (
     <form
@@ -51,14 +64,17 @@ export function CategoryForm({ initial, onSuccess, onCancel }: AdminFormProps) {
       className="space-y-4"
     >
       <FormField label="Campeonato" error={errors.championshipId?.message}>
-        <Select {...register("championshipId")}>
-          <option value="">Selecione...</option>
-          {championships.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
+        <AdminRelationSelect
+          name="championshipId"
+          value={championshipId}
+          options={championships}
+          optionsLoading={championshipsLoading}
+          setValue={setValue}
+          reset={reset}
+          syncWhenReady={!!id}
+          getValuesForReset={getValuesForReset}
+          placeholder="Selecione o campeonato..."
+        />
       </FormField>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label="Nome da categoria" error={errors.name?.message}>
@@ -90,7 +106,12 @@ export function CategoryForm({ initial, onSuccess, onCancel }: AdminFormProps) {
           </Select>
         </FormField>
       </div>
-      <ImageUpload label="Imagem da categoria" category="category" value={watch("imageUrl")} onChange={(v) => setValue("imageUrl", v)} />
+      <ImageUpload
+        label="Imagem da categoria"
+        category="category"
+        value={watch("imageUrl") || null}
+        onChange={(v) => setValue("imageUrl", v)}
+      />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
