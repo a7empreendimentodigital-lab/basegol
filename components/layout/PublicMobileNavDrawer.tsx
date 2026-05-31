@@ -116,7 +116,7 @@ export function PublicMobileNavDrawer({
             <Link
               href="/configuracoes/perfil"
               onClick={onClose}
-              className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-graphite-light/80 px-4 py-3.5 transition-colors hover:bg-graphite-light"
+              className="flex items-center gap-3 border-b border-line/60 pb-4 transition-colors hover:opacity-90"
             >
               <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-pitch text-sm font-semibold">
                 {userImage ? (
@@ -131,7 +131,7 @@ export function PublicMobileNavDrawer({
               </div>
             </Link>
           ) : (
-            <div className="rounded-2xl border border-white/[0.08] bg-graphite-light/60 px-4 py-4">
+            <div className="border-b border-line/60 pb-4">
               <p className="text-sm text-muted-foreground">
                 Acesse sua conta para favoritos e perfil.
               </p>

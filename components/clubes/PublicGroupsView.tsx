@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
 import { TeamCrest } from "@/components/matches/TeamCrest";
+import { publicEmptyShell, publicSectionDivider } from "@/lib/public-ui-classes";
 import type { PublicCategoryGroups } from "@/services/public.service";
 
 type Props = {
@@ -10,17 +11,17 @@ type Props = {
 export function PublicGroupsView({ categories }: Props) {
   if (categories.length === 0) {
     return (
-      <p className="rounded-2xl border border-line bg-graphite-light py-10 text-center text-sm text-muted-foreground">
+      <p className={publicEmptyShell}>
         Nenhum grupo cadastrado nas categorias ativas.
       </p>
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="divide-y divide-line/60">
       {categories.map((cat) => (
-        <section key={cat.id} className="rounded-2xl border border-line bg-graphite-light/90 overflow-hidden">
-          <header className="border-b border-line bg-pitch/40 px-4 py-3 sm:px-5">
+        <section key={cat.id} className={publicSectionDivider}>
+          <header className="border-b border-line/60 py-3 sm:py-4">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {cat.championshipName} · {cat.season}
             </p>
@@ -29,7 +30,7 @@ export function PublicGroupsView({ categories }: Props) {
 
           <div className="divide-y divide-line/40">
             {cat.groups.map((group) => (
-              <div key={group.id} className="px-4 py-4 sm:px-5">
+              <div key={group.id} className="py-4">
                 <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                   <Layers className="h-4 w-4 text-muted-foreground" aria-hidden />
                   {group.name}

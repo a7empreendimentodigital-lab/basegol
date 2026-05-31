@@ -1,14 +1,17 @@
 import type { LucideIcon } from "lucide-react";
+import { publicEmptyShell } from "@/lib/public-ui-classes";
+import { cn } from "@/lib/utils";
 
 type Props = {
   icon: LucideIcon;
   title: string;
   description?: string;
+  className?: string;
 };
 
-export function ChampionshipEmptyPanel({ icon: Icon, title, description }: Props) {
+export function ChampionshipEmptyPanel({ icon: Icon, title, description, className }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-line bg-pitch/30 px-4 py-8 text-center sm:px-5">
+    <div className={cn(publicEmptyShell, className)}>
       <Icon className="mb-2 h-7 w-7 text-muted-foreground/45" strokeWidth={1.25} aria-hidden />
       <p className="text-sm font-medium text-foreground">{title}</p>
       {description ? (

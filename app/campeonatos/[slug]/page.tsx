@@ -38,7 +38,7 @@ export default async function ChampionshipPage({ params }: PageProps) {
       />
 
       {championship.categories.length === 0 ? (
-        <p className="rounded-2xl border border-line bg-graphite-light py-10 text-center text-sm text-muted-foreground">
+        <p className="border-t border-line/60 py-10 text-center text-sm text-muted-foreground">
           Nenhuma categoria cadastrada para este campeonato.
         </p>
       ) : (

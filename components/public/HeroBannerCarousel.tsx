@@ -55,7 +55,7 @@ export function HeroBannerCarousel({
     return (
       <section
         className={cn(
-          "relative overflow-hidden rounded-2xl border border-line",
+          "relative overflow-hidden rounded-2xl",
           HERO_HEIGHT_CLASS,
           !bg && "bg-graphite-light/50"
         )}
@@ -162,7 +162,7 @@ export function HeroBannerCarousel({
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-line group",
+        "relative overflow-hidden rounded-2xl group",
         HERO_HEIGHT_CLASS
       )}
     >

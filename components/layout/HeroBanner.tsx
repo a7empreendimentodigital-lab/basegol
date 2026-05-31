@@ -17,7 +17,7 @@ export function HeroBanner({
   ctaHref = "/jogos?status=LIVE",
 }: HeroBannerProps) {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-line min-h-[220px] md:min-h-[280px] bg-graphite-light/50">
+    <section className="relative overflow-hidden rounded-2xl min-h-[220px] md:min-h-[280px] bg-graphite-light/50">
       <div className="relative z-10 max-w-xl space-y-4 p-6 md:p-10">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neon">
           Temporada 2026

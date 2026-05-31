@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Users } from "lucide-react";
 import { groupAthletesByCategory, type SquadAthlete } from "@/lib/athlete-category";
-import { categoryPillActive, categoryPillBaseMd } from "@/lib/public-ui-classes";
+import { categoryPillActive, categoryPillBaseMd, publicEmptyShell, publicSectionDivider } from "@/lib/public-ui-classes";
 import { cn } from "@/lib/utils";
 import { SquadAthleteCard } from "@/components/clubes/SquadAthleteCard";
 
@@ -28,9 +28,7 @@ export function ClubSquadSection({ athletes, categoryOrder = [] }: Props) {
 
   if (athletes.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-line bg-pitch/20 px-4 py-10 text-center text-sm text-muted-foreground">
-        Nenhum atleta cadastrado neste clube.
-      </p>
+      <p className={publicEmptyShell}>Nenhum atleta cadastrado neste clube.</p>
     );
   }
 
@@ -78,14 +76,14 @@ export function ClubSquadSection({ athletes, categoryOrder = [] }: Props) {
         </div>
       ) : null}
 
-      <div className="space-y-5 sm:space-y-7">
+      <div className="divide-y divide-line/60">
         {visibleGroups.map((group) => (
           <section
             key={group.category}
-            className="rounded-2xl border border-line/80 bg-pitch/20 overflow-hidden"
+            className={publicSectionDivider}
             aria-labelledby={`squad-${group.category}`}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-line/60 bg-graphite-light/50 px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="flex items-center justify-between gap-3 border-b border-line/60 py-2.5 sm:py-3">
               <h3
                 id={`squad-${group.category}`}
                 className="flex min-w-0 items-center gap-2 font-display text-base sm:text-xl tracking-wide text-foreground"

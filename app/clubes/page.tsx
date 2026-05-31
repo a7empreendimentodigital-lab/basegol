@@ -30,7 +30,7 @@ export default async function ClubesPage({
         {showGroups ? (
           <PublicGroupsView categories={groupsData} />
         ) : clubs.length === 0 ? (
-          <p className="rounded-2xl border border-line bg-graphite-light py-8 text-center text-sm text-muted-foreground">
+          <p className="py-10 text-center text-sm text-muted-foreground border-t border-line/60">
             Nenhum clube cadastrado.
           </p>
         ) : (

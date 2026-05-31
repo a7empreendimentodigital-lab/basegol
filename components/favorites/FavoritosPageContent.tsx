@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { ChampionshipEmptyPanel } from "@/components/campeonatos/ChampionshipEmptyPanel";
 import { FavoriteClubCard } from "@/components/favorites/FavoriteClubCard";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
+import { publicListShell } from "@/lib/public-ui-classes";
 import { useClubFavorites } from "@/hooks/use-club-favorites";
 
 export function FavoritosPageContent() {
@@ -29,7 +30,7 @@ export function FavoritosPageContent() {
 
       <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         {!session?.user ? (
-          <p className="rounded-2xl border border-line bg-graphite-light py-10 text-center text-sm text-muted-foreground">
+          <p className="py-10 text-center text-sm text-muted-foreground border-t border-line/60">
             <Link
               href="/login"
               className="font-medium text-foreground underline-offset-4 hover:underline"
@@ -46,7 +47,7 @@ export function FavoritosPageContent() {
         ) : items.length === 0 ? (
           <ChampionshipEmptyPanel icon={Heart} title="Nenhum clube favorito" />
         ) : (
-          <ul className="grid w-full gap-3 sm:grid-cols-2 lg:gap-4">
+          <ul className={publicListShell}>
             {items.map((club) => (
               <li key={club.id}>
                 <FavoriteClubCard

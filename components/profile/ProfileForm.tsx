@@ -125,7 +125,7 @@ export function ProfileForm() {
 
       <form
         onSubmit={(e) => void handleSubmit(e)}
-        className="space-y-6 rounded-2xl border border-line bg-graphite-light p-5 sm:p-6"
+        className="space-y-6 border-t border-line/60 pt-5 sm:pt-6"
       >
         <ProfileAvatarUpload
           name={name || email}

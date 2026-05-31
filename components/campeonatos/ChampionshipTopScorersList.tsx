@@ -2,6 +2,7 @@ import { Award } from "lucide-react";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { normalizeImageSrc } from "@/lib/image-url";
 import type { TopScorer } from "@/services/statistics.service";
+import { publicListShell } from "@/lib/public-ui-classes";
 import { ChampionshipEmptyPanel } from "./ChampionshipEmptyPanel";
 
 export function ChampionshipTopScorersList({ scorers }: { scorers: TopScorer[] }) {
@@ -12,7 +13,7 @@ export function ChampionshipTopScorersList({ scorers }: { scorers: TopScorer[] }
   }
 
   return (
-    <ul className="divide-y divide-[#a1a1aa17] overflow-hidden rounded-2xl border border-line bg-pitch/20">
+    <ul className={publicListShell}>
       {scorers.map((s, i) => (
         <li key={s.athleteId} className="flex items-center gap-3 px-4 py-3 sm:px-5">
           <span

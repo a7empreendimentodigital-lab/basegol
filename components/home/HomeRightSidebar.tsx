@@ -54,7 +54,7 @@ export function HomeRightSidebar({
   if (categories.length === 0) {
     return (
       <div className="max-xl:divide-y max-xl:divide-line xl:space-y-4">
-        <p className="py-4 text-sm text-muted-foreground xl:rounded-2xl xl:border xl:border-line xl:bg-graphite-light xl:p-4 xl:py-4">
+        <p className="py-4 text-sm text-muted-foreground">
           Nenhuma competição ativa no momento.
         </p>
         <RightSidebarPatrocinio rightBanner={rightBanner} />
@@ -67,7 +67,7 @@ export function HomeRightSidebar({
 
   return (
     <div className="max-xl:divide-y max-xl:divide-line xl:space-y-4">
-      <section className="py-4 xl:rounded-2xl xl:border xl:border-line xl:bg-graphite-light xl:p-4 xl:py-4">
+      <section className="py-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Trophy className="h-4 w-4 text-muted-foreground" aria-hidden />

@@ -1,6 +1,7 @@
 import { searchPublic } from "@/services/search.service";
 import Link from "next/link";
 import { TeamCrest } from "@/components/matches/TeamCrest";
+import { publicListShell } from "@/lib/public-ui-classes";
 
 export const metadata = { title: "Busca" };
 
@@ -36,7 +37,7 @@ export default async function BuscaPage({
         ) : results.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum resultado para &quot;{query}&quot;.</p>
         ) : (
-          <ul className="rounded-2xl border border-line bg-graphite-light divide-y divide-[#a1a1aa17]">
+          <ul className={publicListShell}>
             {results.map((r) => (
               <li key={`${r.type}-${r.id}`}>
                 <Link

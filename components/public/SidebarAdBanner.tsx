@@ -23,7 +23,7 @@ export function SidebarAdBanner({ banner, variant, className }: SidebarAdBannerP
   const inner = (
     <div
       className={cn(
-        "relative w-full overflow-hidden rounded-xl border border-line bg-graphite-light",
+        "relative w-full overflow-hidden rounded-xl",
         /* Mobile: largura total e mais alto */
         isLeft ? "aspect-[264/320] min-h-[240px]" : "aspect-[268/250] min-h-[260px] sm:min-h-[300px]",
         "max-md:max-w-none",

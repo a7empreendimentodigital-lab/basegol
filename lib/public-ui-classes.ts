@@ -23,3 +23,13 @@ export const categoryPillBaseMd =
 
 export const categoryPillActive =
   "border-foreground bg-foreground text-background hover:bg-foreground hover:text-background";
+
+/** Lista / bloco público sem caixa com borda — só divisores */
+export const publicListShell = "flex w-full flex-col divide-y divide-line/60";
+
+export const publicEmptyShell =
+  "flex w-full flex-col items-center justify-center py-10 text-center sm:py-12";
+
+export const publicSectionDivider = "border-b border-line/60";
+
+export const publicSectionBlock = "py-4 sm:py-5";

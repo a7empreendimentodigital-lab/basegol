@@ -14,7 +14,7 @@ type Props = {
 
 export function FavoriteClubCard({ club, onRemove, removing }: Props) {
   return (
-    <article className="flex items-center gap-3 rounded-2xl border border-line bg-graphite-light p-4 sm:gap-4 sm:p-5">
+    <article className="flex items-center gap-3 py-4 sm:gap-4 sm:py-5">
       <Link
         href={`/clubes/${club.slug}`}
         className="group flex min-w-0 flex-1 items-center gap-3 sm:gap-4"

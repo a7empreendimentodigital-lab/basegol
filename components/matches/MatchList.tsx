@@ -9,6 +9,7 @@ import {
   formatRoundLabel,
 } from "@/lib/match-display";
 import { TeamCrest } from "@/components/matches/TeamCrest";
+import { publicEmptyShell, publicListShell } from "@/lib/public-ui-classes";
 import { cn } from "@/lib/utils";
 
 function MatchMeta({ match }: { match: MatchWithTeams }) {
@@ -202,7 +203,7 @@ function MatchListEmpty({
   message: string;
 }) {
   return (
-    <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-graphite-light/80 px-4 py-8 text-center sm:px-5">
+    <div className={publicEmptyShell}>
       <Icon className="mb-2 h-7 w-7 text-muted-foreground/45" strokeWidth={1.25} aria-hidden />
       <p className="text-sm text-muted-foreground">{message}</p>
     </div>
@@ -235,14 +236,9 @@ export function MatchList({
   }
 
   return (
-    <div className="flex w-full flex-col gap-2 overflow-hidden rounded-2xl border border-line bg-graphite-light/90 p-2 sm:gap-0 sm:p-0 sm:divide-y sm:divide-line/50">
+    <div className={publicListShell}>
       {matches.map((m) => (
-        <div
-          key={m.id}
-          className="overflow-hidden rounded-xl border border-line/30 bg-pitch/20 sm:rounded-none sm:border-0 sm:bg-transparent"
-        >
-          <MatchListRow match={m} showFullDate={showFullDate} />
-        </div>
+        <MatchListRow key={m.id} match={m} showFullDate={showFullDate} />
       ))}
     </div>
   );

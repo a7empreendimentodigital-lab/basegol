@@ -25,8 +25,8 @@ export function TablesCategoryPanel({ category }: Props) {
         : "geral";
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
-      <div className="space-y-1 border-b border-line px-4 py-3 sm:px-5">
+    <section className="overflow-hidden border-b border-line/60 last:border-b-0">
+      <div className="space-y-1 border-b border-line/60 px-0 py-3 sm:py-4">
         <Link
           href={`/campeonatos/${category.championshipSlug}`}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -42,7 +42,7 @@ export function TablesCategoryPanel({ category }: Props) {
         </h2>
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="py-4 sm:py-5">
         {!hasGeneral && !hasAnyGroup && category.groups.length === 0 ? (
           <ChampionshipEmptyPanel
             icon={ListOrdered}

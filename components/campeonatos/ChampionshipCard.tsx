@@ -27,7 +27,7 @@ export function ChampionshipCard({
   return (
     <Link
       href={`/campeonatos/${slug}`}
-      className="group flex w-full items-center gap-4 sm:gap-5 rounded-2xl border border-line bg-graphite-light p-4 sm:p-5 hover:bg-graphite/90 transition-colors"
+      className="group flex w-full items-center gap-4 py-4 sm:gap-5 sm:py-5 transition-colors hover:bg-graphite/40"
     >
       <div className="flex h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 items-center justify-center">
         {logoSrc ? (

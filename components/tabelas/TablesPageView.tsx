@@ -5,7 +5,12 @@ import { ListOrdered, Trophy } from "lucide-react";
 import { ChampionshipEmptyPanel } from "@/components/campeonatos/ChampionshipEmptyPanel";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 import { TablesCategoryPanel } from "@/components/tabelas/TablesCategoryPanel";
-import { categoryPillActive, categoryPillBaseMd } from "@/lib/public-ui-classes";
+import {
+  categoryPillActive,
+  categoryPillBaseMd,
+  publicSectionBlock,
+  publicSectionDivider,
+} from "@/lib/public-ui-classes";
 import { cn } from "@/lib/utils";
 import type { TablesCategoryPublic } from "@/services/tables-public.service";
 
@@ -31,8 +36,8 @@ export function TablesPageView({ categories }: Props) {
   }
 
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <section className="rounded-2xl border border-line bg-graphite-light p-4 sm:p-5">
+    <div className="divide-y divide-line/60">
+      <section className={cn(publicSectionBlock, publicSectionDivider)}>
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Trophy className="h-4 w-4 text-muted-foreground" aria-hidden />

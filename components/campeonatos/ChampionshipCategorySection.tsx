@@ -29,13 +29,13 @@ export function ChampionshipCategorySection({
   scorers,
 }: Props) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
-      <div className="flex items-center gap-2.5 border-b border-line px-4 py-3.5 sm:px-5">
+    <section className="overflow-hidden border-b border-line/60 last:border-b-0">
+      <div className="flex items-center gap-2.5 border-b border-line/60 py-3.5 sm:py-4">
         <Layers className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <h2 className="text-base font-semibold text-foreground sm:text-lg">{categoryName}</h2>
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="py-4 sm:py-5">
         <Tabs defaultValue="geral" className="w-full">
           <TabsList className="mb-4 flex h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0">
             <TabsTrigger value="geral" className={publicTabTriggerClass}>

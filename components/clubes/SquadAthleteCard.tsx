@@ -25,7 +25,7 @@ export function SquadAthleteCard({
   return (
     <article
       className={cn(
-        "flex flex-col items-center rounded-xl border border-line/80 bg-graphite-light/90 p-2.5 text-center",
+        "flex flex-col items-center p-2.5 text-center",
         "sm:flex-row sm:items-center sm:gap-3 sm:p-3 sm:text-left",
         className
       )}

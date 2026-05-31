@@ -2,6 +2,7 @@ import { Award } from "lucide-react";
 import { normalizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
+import { publicListShell, publicSectionBlock, publicSectionDivider } from "@/lib/public-ui-classes";
 
 export type TopScorerRow = {
   name: string;
@@ -29,15 +30,13 @@ export function HomeTopScorersCard({
     <section
       className={cn(
         "overflow-hidden",
-        isSidebar
-          ? "py-4 xl:rounded-2xl xl:border xl:border-line xl:bg-graphite-light"
-          : "rounded-2xl border border-line bg-graphite-light"
+        isSidebar ? "py-4" : cn(publicSectionBlock, publicSectionDivider)
       )}
     >
       <div
         className={cn(
           "flex items-center justify-between gap-2 pb-3",
-          isSidebar ? "pt-0 xl:px-4 xl:pt-4" : "px-4 pt-4"
+          isSidebar ? "pt-0" : "px-4 pt-4"
         )}
       >
         <h2 className="flex min-w-0 flex-1 items-center gap-2 text-base font-semibold text-foreground">
@@ -51,7 +50,7 @@ export function HomeTopScorersCard({
         </h2>
         <HomeSectionLink href="/campeonatos">Ver campeonatos</HomeSectionLink>
       </div>
-      <ul className="divide-y divide-[#a1a1aa17]">
+      <ul className={isSidebar ? "divide-y divide-line/60" : publicListShell}>
         {scorers.map((s, i) => (
           <li key={`${s.name}-${i}`} className="flex items-center gap-3 px-4 py-3">
             <span

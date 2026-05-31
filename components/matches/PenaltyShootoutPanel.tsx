@@ -98,7 +98,7 @@ export function PenaltyShootoutPanel({
   return (
     <div
       className={cn(
-        "w-full rounded-2xl border border-line bg-pitch/80 px-3 py-4 sm:px-5 sm:py-5",
+        "w-full border-t border-line/60 py-4 sm:py-5",
         className
       )}
     >

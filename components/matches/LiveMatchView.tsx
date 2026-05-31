@@ -30,7 +30,8 @@ import {
   formatTimelineMinute,
   timelineEventTitle,
 } from "@/lib/match-timeline";
-import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
+import { publicListShell, publicSectionBlock, publicSectionDivider, publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
+import { cn } from "@/lib/utils";
 import type { MatchWithTeams, StandingRowDisplay } from "@/types";
 
 type EventItem = {
@@ -132,7 +133,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
         Voltar aos jogos
       </Link>
 
-      <div className="space-y-4 rounded-2xl border border-line bg-graphite-light p-4 text-center sm:p-5">
+      <div className={cn("space-y-4 text-center", publicSectionBlock, publicSectionDivider)}>
         {isLive ? (
           <div className="flex flex-col items-center gap-2">
             <LiveBadge />
@@ -224,7 +225,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
 
         <TabsContent value="eventos" className="mt-0 space-y-5 focus-visible:ring-0">
           {hasStats && (
-            <section className="space-y-3 rounded-2xl border border-line bg-graphite-light p-4 sm:p-5">
+            <section className={cn("space-y-3", publicSectionBlock, publicSectionDivider)}>
               <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <BarChart3 className="h-4 w-4 text-muted-foreground" aria-hidden />
                 Estatísticas
@@ -251,7 +252,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
             {timelineEvents.length === 0 ? (
               <ChampionshipEmptyPanel icon={ClipboardList} title="Nenhum evento ainda" />
             ) : (
-              <div className="divide-y divide-[#a1a1aa17] overflow-hidden rounded-2xl border border-line bg-graphite-light">
+              <div className={publicListShell}>
                 {timelineEvents.map((ev) => (
                   <div key={ev.id} className="flex items-center gap-3 px-4 py-3 text-sm sm:px-5">
                     <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">

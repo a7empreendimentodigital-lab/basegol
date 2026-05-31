@@ -37,8 +37,10 @@ export default async function JogosPage({
     <PublicRightSidebarLayout>
       <PublicPageBanner title={bannerTitle} />
 
-      <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
-        <JogosFilterTabs isLive={isLive} isUpcoming={isUpcoming} />
+      <main className="w-full px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+        <div className="border-b border-line/60 pb-4 mb-0">
+          <JogosFilterTabs isLive={isLive} isUpcoming={isUpcoming} />
+        </div>
 
         <MatchList
           matches={matches}

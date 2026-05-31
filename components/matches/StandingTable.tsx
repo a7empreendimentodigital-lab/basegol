@@ -3,7 +3,7 @@ import { TeamCrest } from "@/components/matches/TeamCrest";
 
 export function StandingTable({ rows }: { rows: StandingRowDisplay[] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-graphite-light">
+    <div className="overflow-x-auto border-t border-line/60">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#a1a1aa17] text-muted-foreground text-xs uppercase tracking-wider">

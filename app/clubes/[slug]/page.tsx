@@ -54,7 +54,7 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
           Voltar aos clubes
         </Link>
 
-        <header className="flex flex-wrap items-start gap-4 rounded-2xl border border-line bg-graphite-light p-5 sm:p-6">
+        <header className="flex flex-wrap items-start gap-4 border-b border-line/60 pb-5 sm:pb-6">
           <TeamCrest url={club.crestUrl} name={club.name} size="xl" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -79,17 +79,14 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
         </header>
 
         {groupEntries.length > 0 ? (
-          <section className="rounded-2xl border border-line bg-graphite-light p-4 sm:p-5">
+          <section className="border-b border-line/60 pb-5 sm:pb-6">
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
               <Layers className="h-4 w-4 text-muted-foreground" aria-hidden />
               Grupos e categorias
             </h2>
-            <ul className="space-y-2">
+            <ul className="divide-y divide-line/60">
               {groupEntries.map((g) => (
-                <li
-                  key={g.groupId}
-                  className="rounded-xl border border-line bg-pitch/40 px-3 py-2.5 text-sm"
-                >
+                <li key={g.groupId} className="py-2.5 text-sm first:pt-0">
                   <p className="font-medium text-foreground">{g.groupName}</p>
                   <p className="text-xs text-muted-foreground">
                     {g.categoryName} · {g.championshipName} ({g.season})

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, LogOut, User } from "lucide-react";
 import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
+import { publicListShell } from "@/lib/public-ui-classes";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -18,14 +19,14 @@ export default function ConfiguracoesPage() {
           <p className="mt-1 text-sm text-muted-foreground">Gerencie sua conta e preferências</p>
         </div>
 
-        <nav className="space-y-2">
+        <nav className={publicListShell}>
           {items.map(({ href, label, description, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-4 rounded-2xl border border-line bg-graphite-light p-4 transition-colors",
-                "hover:bg-graphite/80"
+                "flex items-center gap-4 py-4 transition-colors",
+                "hover:bg-graphite/40"
               )}
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-pitch/40">
@@ -42,8 +43,8 @@ export default function ConfiguracoesPage() {
           <Link
             href="/api/auth/signout"
             className={cn(
-              "flex items-center gap-4 rounded-2xl border border-line bg-graphite-light p-4 transition-colors",
-              "hover:bg-graphite/80"
+              "flex items-center gap-4 py-4 transition-colors",
+              "hover:bg-graphite/40"
             )}
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-pitch/40">

@@ -15,8 +15,8 @@ export function ClubCrestCard({ slug, name, city, crestUrl, className }: Props) 
     <Link
       href={`/clubes/${slug}`}
       className={cn(
-        "group flex flex-col items-center gap-2 rounded-2xl border border-line bg-graphite-light p-4 transition-colors",
-        "hover:border-foreground/25 hover:bg-graphite/80",
+        "group flex flex-col items-center gap-2 p-3 transition-colors",
+        "hover:bg-graphite/50",
         className
       )}
     >

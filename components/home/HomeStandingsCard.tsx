@@ -2,6 +2,7 @@ import type { StandingRowDisplay } from "@/types";
 import { cn } from "@/lib/utils";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
+import { publicSectionBlock, publicSectionDivider } from "@/lib/public-ui-classes";
 
 type Props = {
   title: string;
@@ -25,15 +26,13 @@ export function HomeStandingsCard({
     <section
       className={cn(
         "overflow-hidden",
-        isSidebar
-          ? "py-4 xl:rounded-2xl xl:border xl:border-line xl:bg-graphite-light"
-          : "rounded-2xl border border-line bg-graphite-light"
+        isSidebar ? "py-4" : cn(publicSectionBlock, publicSectionDivider)
       )}
     >
       <div
         className={cn(
           "flex items-center justify-between gap-2 pb-3",
-          isSidebar ? "pt-0 xl:px-4 xl:pt-4" : "px-4 pt-4"
+          isSidebar ? "pt-0" : "px-4 pt-4"
         )}
       >
         <h2 className="flex min-w-0 flex-1 items-baseline gap-2 text-base font-semibold text-foreground">
