@@ -1,48 +1,90 @@
 /**
- * Corrige a disputa de pênaltis Bebedouro x LG Futebol (5x6).
+ * Corrige pênaltis Bebedouro x LG Futebol somente na categoria Sub-12 (5x6).
+ * Restaura Sub-11 se tiver recebido a sequência 5x6 por engano.
+ *
  * Uso: npx tsx scripts/fix-bebedouro-lg-penalties.ts
  */
+import { rebuildScoresFromEvents } from "@/lib/match-live";
 import {
   BEBEDOURO_LG_PENALTY_REFERENCE,
   buildPenaltyScoreFromAttempts,
   countConvertedAttempts,
   formatAttemptsSequence,
+  parsePenaltyAttempts,
 } from "@/lib/match-penalties";
-import { rebuildScoresFromEvents } from "@/lib/match-live";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-async function findTargetMatch() {
+const SUB12_SLUG = "sub-12";
+const SUB11_SLUG = "sub-11";
+
+function isBebedouroLgClubs(homeClub: string, awayClub: string): boolean {
+  const home = homeClub.toLowerCase();
+  const away = awayClub.toLowerCase();
+  const hasLg = home.includes("lg futebol") || away.includes("lg futebol");
+  const hasBebedouro =
+    home.includes("bebedouro") ||
+    away.includes("bebedouro") ||
+    home.includes("internacional") ||
+    away.includes("internacional");
+  return hasLg && hasBebedouro;
+}
+
+function hasWrongBebedouroReference(storedHome: unknown, storedAway: unknown): boolean {
+  const home = parsePenaltyAttempts(storedHome).join("");
+  const away = parsePenaltyAttempts(storedAway).join("");
+  const refHome = BEBEDOURO_LG_PENALTY_REFERENCE.homeAttempts.join("");
+  const refAway = BEBEDOURO_LG_PENALTY_REFERENCE.awayAttempts.join("");
+  return home === refHome && away === refAway;
+}
+
+async function findBebedouroLgByCategory(categorySlug: string) {
   const matches = await prisma.match.findMany({
+    where: {
+      group: { category: { slug: categorySlug } },
+    },
     include: {
       homeTeam: { include: { club: true } },
       awayTeam: { include: { club: true } },
+      group: { include: { category: true } },
     },
   });
 
-  return matches.find((m) => {
-    const home = m.homeTeam.club.name.toLowerCase();
-    const away = m.awayTeam.club.name.toLowerCase();
-    const hasLg = away.includes("lg futebol") || home.includes("lg futebol");
-    const hasBebedouro =
-      home.includes("bebedouro") ||
-      away.includes("bebedouro") ||
-      home.includes("internacional") ||
-      away.includes("internacional");
-    return hasLg && hasBebedouro;
+  return matches.find((m) =>
+    isBebedouroLgClubs(m.homeTeam.club.name, m.awayTeam.club.name)
+  );
+}
+
+async function loadScoreEvents(matchId: string) {
+  return prisma.matchEvent.findMany({
+    where: {
+      matchId,
+      type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] },
+    },
+    orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
+    select: {
+      type: true,
+      teamId: true,
+      description: true,
+      minute: true,
+      createdAt: true,
+    },
   });
 }
 
-async function main() {
-  const match = await findTargetMatch();
+async function fixSub12() {
+  const match = await findBebedouroLgByCategory(SUB12_SLUG);
   if (!match) {
-    console.error("Partida Bebedouro/Internacional x LG não encontrada.");
+    console.error(`Partida Bebedouro x LG não encontrada na categoria ${SUB12_SLUG}.`);
     process.exit(1);
   }
 
   const { homeAttempts, awayAttempts } = BEBEDOURO_LG_PENALTY_REFERENCE;
   const built = buildPenaltyScoreFromAttempts(homeAttempts, awayAttempts);
 
-  console.log("Partida:", match.id);
+  console.log("\n=== Sub-12 (corrigir para 5x6) ===");
+  console.log("id:", match.id);
+  console.log("categoria:", match.group?.category?.name);
   console.log(match.homeTeam.club.name, "x", match.awayTeam.club.name);
   console.log(
     "Pênaltis:",
@@ -71,19 +113,114 @@ async function main() {
     },
   });
 
-  const events = await prisma.matchEvent.findMany({
-    where: { matchId: match.id },
-    orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
-    select: { type: true, teamId: true, description: true, minute: true, createdAt: true },
+  console.log("OK — Sub-12: 0x0 (reg), pênaltis 5x6");
+  return match.id;
+}
+
+async function restoreSub11IfNeeded() {
+  const match = await findBebedouroLgByCategory(SUB11_SLUG);
+  if (!match) {
+    console.log("\n(Sub-11 Bebedouro x LG não encontrada — nada a restaurar)");
+    return;
+  }
+
+  const events = await loadScoreEvents(match.id);
+  const fromEventsOnly = rebuildScoresFromEvents(
+    events,
+    match.homeTeamId,
+    match.awayTeamId
+  );
+
+  const wronglyPatched = hasWrongBebedouroReference(
+    match.homePenaltyAttempts,
+    match.awayPenaltyAttempts
+  );
+
+  const needsRestore =
+    wronglyPatched ||
+    (match.homePenaltyScore === 5 &&
+      match.awayPenaltyScore === 6 &&
+      events.length > 0 &&
+      (fromEventsOnly.homePenaltyScore !== 5 ||
+        fromEventsOnly.awayPenaltyScore !== 6));
+
+  if (!wronglyPatched && !needsRestore) {
+    console.log("\n=== Sub-11 ===");
+    console.log("id:", match.id, "— sem alteração (não usa sequência Sub-12)");
+    console.log(
+      "Placar atual:",
+      match.homeScore,
+      "x",
+      match.awayScore,
+      "· Pen",
+      match.homePenaltyScore,
+      "x",
+      match.awayPenaltyScore
+    );
+    return;
+  }
+
+  console.log("\n=== Sub-11 (restaurar valores dos eventos) ===");
+  console.log("id:", match.id);
+  console.log(
+    "Antes:",
+    match.homeScore,
+    "x",
+    match.awayScore,
+    "· Pen",
+    match.homePenaltyScore,
+    "x",
+    match.awayPenaltyScore
+  );
+
+  const hasPen =
+    fromEventsOnly.homePenaltyScore + fromEventsOnly.awayPenaltyScore > 0 ||
+    fromEventsOnly.homePenaltyAttempts.length > 0;
+
+  await prisma.match.update({
+    where: { id: match.id },
+    data: {
+      homeScore: fromEventsOnly.homeScore,
+      awayScore: fromEventsOnly.awayScore,
+      homePenaltyScore: fromEventsOnly.homePenaltyScore,
+      awayPenaltyScore: fromEventsOnly.awayPenaltyScore,
+      homePenaltyAttempts:
+        fromEventsOnly.homePenaltyAttempts.length > 0
+          ? fromEventsOnly.homePenaltyAttempts
+          : Prisma.DbNull,
+      awayPenaltyAttempts:
+        fromEventsOnly.awayPenaltyAttempts.length > 0
+          ? fromEventsOnly.awayPenaltyAttempts
+          : Prisma.DbNull,
+      hasPenaltyShootout: hasPen,
+      ...(hasPen
+        ? { matchPeriod: "PENALTY_SHOOTOUT", currentPhase: "PENALTIES" }
+        : {
+            matchPeriod: "FINISHED",
+            currentPhase: "FINISHED",
+          }),
+    },
   });
 
-  const recalc = rebuildScoresFromEvents(events, match.homeTeamId, match.awayTeamId, {
-    storedHomePenaltyAttempts: homeAttempts,
-    storedAwayPenaltyAttempts: awayAttempts,
-  });
+  console.log(
+    "Depois:",
+    fromEventsOnly.homeScore,
+    "x",
+    fromEventsOnly.awayScore,
+    "· Pen",
+    fromEventsOnly.homePenaltyScore,
+    "x",
+    fromEventsOnly.awayPenaltyScore,
+    fromEventsOnly.homePenaltyAttempts.length > 0
+      ? `[${formatAttemptsSequence(fromEventsOnly.homePenaltyAttempts)} / ${formatAttemptsSequence(fromEventsOnly.awayPenaltyAttempts)}]`
+      : "(sem pênaltis nos eventos)"
+  );
+  console.log("OK — Sub-11 restaurado a partir dos eventos (sem sequência 5x6 do Sub-12)");
+}
 
-  console.log("Recálculo após salvar:", recalc.homePenaltyScore, "x", recalc.awayPenaltyScore);
-  console.log("OK — placar regulamentar 0x0, pênaltis 5x6");
+async function main() {
+  await restoreSub11IfNeeded();
+  await fixSub12();
 }
 
 main()

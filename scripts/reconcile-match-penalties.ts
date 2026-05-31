@@ -34,6 +34,7 @@ async function main() {
       awayPenaltyScore: true,
       homePenaltyAttempts: true,
       awayPenaltyAttempts: true,
+      group: { select: { category: { select: { slug: true } } } },
       homeTeam: { select: { club: { select: { name: true } } } },
       awayTeam: { select: { club: { select: { name: true } } } },
       events: {
@@ -63,7 +64,13 @@ async function main() {
       storedAwayPenaltyAttempts: m.awayPenaltyAttempts,
     });
 
-    if (isBebedouroLgMatch(homeClub, awayClub)) {
+    const categorySlug = m.group?.category?.slug;
+
+    // Referência 5x6 só para Sub-12 Bebedouro x LG — nunca em lote para outras categorias.
+    if (
+      categorySlug === "sub-12" &&
+      isBebedouroLgMatch(homeClub, awayClub)
+    ) {
       const pen = buildPenaltyScoreFromAttempts(
         BEBEDOURO_LG_PENALTY_REFERENCE.homeAttempts,
         BEBEDOURO_LG_PENALTY_REFERENCE.awayAttempts
