@@ -55,25 +55,21 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
         </Link>
 
         <header className="border-b border-line/60 pb-6 sm:pb-8">
-          <div className="flex items-start gap-4">
-            <div className="shrink-0">
-              <TeamCrest url={club.crestUrl} name={club.name} size="xl" />
-            </div>
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <h1 className="font-display text-xl leading-tight tracking-wide text-foreground sm:text-4xl">
-                    {club.name}
-                  </h1>
-                  {club.city ? (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {club.city}
-                      {club.state ? ` / ${club.state}` : ""}
-                    </p>
-                  ) : null}
-                </div>
-                <ClubFavoriteAction clubId={club.id} />
+          <div className="flex flex-col gap-4">
+            <TeamCrest url={club.crestUrl} name={club.name} size="xl" />
+            <div className="min-w-0 space-y-3">
+              <div>
+                <h1 className="font-display text-xl leading-tight tracking-wide text-foreground sm:text-4xl">
+                  {club.name}
+                </h1>
+                {club.city ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {club.city}
+                    {club.state ? ` / ${club.state}` : ""}
+                  </p>
+                ) : null}
               </div>
+              <ClubFavoriteAction clubId={club.id} />
               <p className="text-sm text-muted-foreground">
                 <span className="font-semibold text-foreground">{club._count.athletes}</span> atletas
                 cadastrados
@@ -83,24 +79,29 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
         </header>
 
         {groupEntries.length > 0 ? (
-          <section className="border-b border-line/60 pb-5 sm:pb-6">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Layers className="h-4 w-4 text-muted-foreground" aria-hidden />
+          <section className="border-b border-line/60 pb-6 sm:pb-8">
+            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <Layers className="h-4 w-4" aria-hidden />
               Grupos e categorias
             </h2>
             <ul className="divide-y divide-line/60">
               {groupEntries.map((g) => (
-                <li key={g.groupId} className="py-2.5 text-sm first:pt-0">
+                <li key={g.groupId} className="py-4 text-sm first:pt-0 last:pb-0">
                   <p className="font-medium text-foreground">{g.groupName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {g.categoryName} · {g.championshipName} ({g.season})
-                  </p>
+                  <div className="mt-3 space-y-2">
+                    <span className="inline-flex rounded-full border border-line/70 bg-pitch/40 px-2.5 py-1 font-display text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      {g.categoryName}
+                    </span>
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      {g.championshipName} ({g.season})
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
             <Link
               href="/clubes?tab=grupos"
-              className="mt-3 inline-block text-xs font-medium text-muted-foreground hover:text-foreground"
+              className="mt-4 inline-block text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               Ver todos os grupos →
             </Link>

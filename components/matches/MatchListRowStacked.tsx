@@ -47,30 +47,12 @@ function MatchScoreBlock({ match, isLive }: { match: MatchWithTeams; isLive: boo
   );
 }
 
-function TeamSide({
-  name,
-  crestUrl,
-  side,
-}: {
-  name: string;
-  crestUrl?: string | null;
-  side: "home" | "away";
-}) {
+function TeamSide({ name, crestUrl }: { name: string; crestUrl?: string | null }) {
   return (
-    <div
-      className={cn(
-        "flex min-w-0 items-center gap-2",
-        side === "home" ? "flex-row justify-end" : "flex-row justify-start"
-      )}
-    >
-      <div className="shrink-0">
-        <TeamCrest url={crestUrl ?? null} name={name} size="md" />
-      </div>
+    <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+      <TeamCrest url={crestUrl ?? null} name={name} size="md" />
       <span
-        className={cn(
-          "min-w-0 text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:text-base",
-          side === "home" ? "text-right" : "text-left"
-        )}
+        className="max-w-[7.5rem] text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:max-w-[9rem] sm:text-base"
         title={name}
       >
         {name}
@@ -146,9 +128,9 @@ export function MatchListRowStacked({ match, showFullDate = false }: Props) {
         </div>
 
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-1 sm:gap-8 sm:px-2">
-          <TeamSide name={homeName} crestUrl={match.homeTeam.club.crestUrl} side="home" />
+          <TeamSide name={homeName} crestUrl={match.homeTeam.club.crestUrl} />
           <MatchScoreBlock match={match} isLive={isLive} />
-          <TeamSide name={awayName} crestUrl={match.awayTeam.club.crestUrl} side="away" />
+          <TeamSide name={awayName} crestUrl={match.awayTeam.club.crestUrl} />
         </div>
 
         {competitionParts.length > 0 ? (

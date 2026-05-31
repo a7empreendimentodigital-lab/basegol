@@ -6,7 +6,13 @@ import { useState } from "react";
 import { useClubFavorites } from "@/hooks/use-club-favorites";
 import { cn } from "@/lib/utils";
 
-export function ClubFavoriteAction({ clubId }: { clubId: string }) {
+export function ClubFavoriteAction({
+  clubId,
+  className,
+}: {
+  clubId: string;
+  className?: string;
+}) {
   const { data: session } = useSession();
   const { isFavorite, toggleFavorite } = useClubFavorites();
   const [busy, setBusy] = useState(false);
@@ -27,10 +33,11 @@ export function ClubFavoriteAction({ clubId }: { clubId: string }) {
         }
       }}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+        "inline-flex w-fit max-w-full items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
         active
           ? "border-line bg-graphite text-muted-foreground hover:text-foreground"
-          : "border-foreground bg-foreground text-background hover:opacity-90"
+          : "border-foreground bg-foreground text-background hover:opacity-90",
+        className
       )}
     >
       {busy ? (
