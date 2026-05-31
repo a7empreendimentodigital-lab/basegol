@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { CalendarClock, CalendarOff, Hash, History, Radio, Tag, Trophy } from "lucide-react";
+import { CalendarClock, CalendarOff, Hash, History, Radio, Trophy } from "lucide-react";
 import type { MatchWithTeams } from "@/types";
 import { formatTime } from "@/lib/utils";
 import {
@@ -13,19 +13,18 @@ import { cn } from "@/lib/utils";
 
 function MatchMeta({ match }: { match: MatchWithTeams }) {
   return (
-    <div className="min-w-0 space-y-1.5 text-xs leading-snug">
+    <div className="min-w-0 space-y-2 text-xs leading-snug">
+      {match.categoryName ? (
+        <p className="sm:text-right">
+          <span className="font-display text-base sm:text-lg font-bold uppercase tracking-wide text-foreground">
+            {match.categoryName}
+          </span>
+        </p>
+      ) : null}
       {match.championshipName ? (
         <p className="flex items-center gap-1.5 text-muted-foreground sm:justify-end">
           <Trophy className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
           <span className="sm:line-clamp-2">{match.championshipName}</span>
-        </p>
-      ) : null}
-      {match.categoryName ? (
-        <p className="flex items-center gap-1.5 sm:justify-end">
-          <Tag className="h-3 w-3 shrink-0 text-muted-foreground/60 sm:hidden" aria-hidden />
-          <span className="inline-flex items-center rounded-md border border-line bg-pitch/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-            {match.categoryName}
-          </span>
         </p>
       ) : null}
       <p className="flex items-center gap-1.5 text-muted-foreground/90 sm:justify-end">

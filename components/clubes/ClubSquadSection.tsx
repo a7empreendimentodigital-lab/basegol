@@ -87,7 +87,6 @@ export function ClubSquadSection({ athletes, categoryOrder = [] }: Props) {
               {group.athletes.map((a) => (
                 <SquadAthleteCard
                   key={a.id}
-                  slug={a.slug}
                   name={`${a.firstName} ${a.lastName}`}
                   position={a.position}
                   photoUrl={a.photoUrl}

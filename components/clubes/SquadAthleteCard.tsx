@@ -1,11 +1,8 @@
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { PLAYER_POSITION_LABELS } from "@/lib/admin-labels";
 import { normalizeImageSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  slug: string;
   name: string;
   position: string;
   photoUrl?: string | null;
@@ -14,7 +11,6 @@ type Props = {
 };
 
 export function SquadAthleteCard({
-  slug,
   name,
   position,
   photoUrl,
@@ -24,11 +20,9 @@ export function SquadAthleteCard({
   const positionLabel = PLAYER_POSITION_LABELS[position] ?? position;
 
   return (
-    <Link
-      href={`/atletas/${slug}`}
+    <article
       className={cn(
-        "group flex items-center gap-3 rounded-xl border border-line bg-pitch/40 p-3 transition-colors",
-        "hover:border-foreground/30 hover:bg-graphite-light",
+        "flex items-center gap-3 rounded-xl border border-line bg-pitch/40 p-3",
         className
       )}
     >
@@ -49,16 +43,9 @@ export function SquadAthleteCard({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-neon transition-colors">
-          {name}
-        </p>
+        <p className="font-semibold leading-snug text-foreground line-clamp-2">{name}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">{positionLabel}</p>
       </div>
-
-      <ChevronRight
-        className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-        aria-hidden
-      />
-    </Link>
+    </article>
   );
 }

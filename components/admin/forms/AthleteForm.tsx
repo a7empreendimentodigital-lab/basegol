@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,36 +9,49 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { FormField } from "@/components/admin/forms/FormField";
+import { AdminRelationSelect } from "@/components/admin/forms/AdminRelationSelect";
 import { ImageUpload } from "@/components/admin/shared/ImageUpload";
 import { athleteSchema } from "@/utils/zod-schemas/admin-entities";
 import { submitEntity } from "@/components/admin/forms/submit-entity";
 import { useAdminOptions } from "@/hooks/use-admin-options";
 import { ATHLETE_STATUS_LABELS, PLAYER_POSITION_LABELS } from "@/lib/admin-labels";
+import { relationIdFromInitial } from "@/lib/admin-form-relations";
 import { type AdminFormProps, num, str } from "@/components/admin/forms/types";
 
 type FormData = z.infer<typeof athleteSchema>;
 
+function buildDefaults(initial?: Record<string, unknown> | null): FormData {
+  return {
+    clubId: relationIdFromInitial(initial, "clubId", "club"),
+    firstName: str(initial?.firstName),
+    lastName: str(initial?.lastName),
+    birthDate: initial?.birthDate ? String(initial.birthDate).slice(0, 10) : "",
+    position: (str(initial?.position, "CM") as FormData["position"]) ?? "CM",
+    shirtNumber: num(initial?.shirtNumber),
+    category: str(initial?.category, "Sub-15"),
+    status: (str(initial?.status, "ACTIVE") as FormData["status"]) ?? "ACTIVE",
+    heightCm: num(initial?.heightCm),
+    weightKg: num(initial?.weightKg),
+    photoUrl: (initial?.photoUrl as string | null) ?? null,
+    bio: str(initial?.bio),
+  };
+}
+
 export function AthleteForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
-  const { options: clubs } = useAdminOptions("clubs");
+  const { options: clubs, loading: clubsLoading } = useAdminOptions("clubs");
   const [saving, setSaving] = useState(false);
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
+
+  const defaultValues = useMemo(() => buildDefaults(initial), [initial?.id, initial]);
+
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(athleteSchema),
-    defaultValues: {
-      clubId: str(initial?.clubId),
-      firstName: str(initial?.firstName),
-      lastName: str(initial?.lastName),
-      birthDate: initial?.birthDate ? String(initial.birthDate).slice(0, 10) : "",
-      position: (str(initial?.position, "CM") as FormData["position"]) ?? "CM",
-      shirtNumber: num(initial?.shirtNumber),
-      category: str(initial?.category, "Sub-15"),
-      status: (str(initial?.status, "ACTIVE") as FormData["status"]) ?? "ACTIVE",
-      heightCm: num(initial?.heightCm),
-      weightKg: num(initial?.weightKg),
-      photoUrl: (initial?.photoUrl as string | null) ?? null,
-      bio: str(initial?.bio),
-    },
+    defaultValues,
   });
+
+  const getValuesForReset = useCallback(() => buildDefaults(initial), [initial]);
+
+  const clubId = watch("clubId") ?? "";
 
   return (
     <form
@@ -56,14 +69,17 @@ export function AthleteForm({ initial, onSuccess, onCancel }: AdminFormProps) {
       className="space-y-4"
     >
       <FormField label="Clube" error={errors.clubId?.message}>
-        <Select {...register("clubId")}>
-          <option value="">Selecione...</option>
-          {clubs.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
+        <AdminRelationSelect
+          name="clubId"
+          value={clubId}
+          options={clubs}
+          optionsLoading={clubsLoading}
+          setValue={setValue}
+          reset={reset}
+          syncWhenReady={!!id}
+          getValuesForReset={getValuesForReset}
+          placeholder="Selecione o clube..."
+        />
       </FormField>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label="Nome" error={errors.firstName?.message}>
