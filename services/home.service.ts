@@ -10,6 +10,7 @@ export type HomeCategoryCircle = {
   subtitle: string;
   championshipSlug: string;
   categoryId: string;
+  imageUrl: string | null;
 };
 
 export async function getHomeCategoryCircles(): Promise<HomeCategoryCircle[]> {
@@ -28,6 +29,7 @@ export async function getHomeCategoryCircles(): Promise<HomeCategoryCircle[]> {
       subtitle: c.championship.season,
       championshipSlug: c.championship.slug,
       categoryId: c.id,
+      imageUrl: c.imageUrl,
     }));
   } catch {
     return [];

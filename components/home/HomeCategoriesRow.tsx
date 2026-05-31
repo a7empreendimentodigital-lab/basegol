@@ -1,7 +1,35 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
-import type { HomeCategoryCircle } from "@/services/home.service";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
+import { normalizeImageSrc } from "@/lib/image-url";
+import type { HomeCategoryCircle } from "@/services/home.service";
+
+function CategoryCircle({
+  label,
+  imageUrl,
+}: {
+  label: string;
+  imageUrl: string | null;
+}) {
+  const src = normalizeImageSrc(imageUrl);
+
+  return (
+    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-graphite-light transition-colors group-hover:border-foreground/30 group-hover:bg-graphite/80">
+      {src ? (
+        <SafeImage
+          src={src}
+          alt={label}
+          fill
+          className="object-cover"
+          sizes="64px"
+        />
+      ) : (
+        <Layers className="h-6 w-6 text-muted-foreground opacity-80" aria-hidden />
+      )}
+    </div>
+  );
+}
 
 export function HomeCategoriesRow({ categories }: { categories: HomeCategoryCircle[] }) {
   if (categories.length === 0) return null;
@@ -22,9 +50,7 @@ export function HomeCategoriesRow({ categories }: { categories: HomeCategoryCirc
             href={`/campeonatos/${cat.championshipSlug}`}
             className="group flex min-w-[80px] shrink-0 flex-col items-center gap-2"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-line bg-graphite-light transition-colors group-hover:border-foreground/30 group-hover:bg-graphite/80">
-              <Layers className="h-6 w-6 text-muted-foreground opacity-80" aria-hidden />
-            </div>
+            <CategoryCircle label={cat.label} imageUrl={cat.imageUrl} />
             <span className="max-w-[88px] truncate text-center text-xs font-semibold leading-tight text-foreground">
               {cat.label}
             </span>
