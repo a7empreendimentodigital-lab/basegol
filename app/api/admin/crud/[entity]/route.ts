@@ -144,11 +144,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       return ok({ items, total });
     }
     if (entity === "matches") {
-      const data = await listMatchesAdmin(parsed.page, pageSize, {
-        categoryId: parsed.categoryId,
-        q: parsed.q,
-      });
-      return ok(data);
+      try {
+        const data = await listMatchesAdmin(parsed.page, pageSize, {
+          categoryId: parsed.categoryId,
+          q: parsed.q,
+        });
+        return ok(data);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : "";
+        if (msg.includes("currentPhase") || msg.includes("does not exist")) {
+          return fail(
+            "Banco desatualizado: execute npx prisma db push no Railway (variável DATABASE_URL).",
+            503
+          );
+        }
+        throw error;
+      }
     }
     if (entity === "news") {
       const [items, total] = await Promise.all([
