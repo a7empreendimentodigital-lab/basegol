@@ -15,6 +15,14 @@ type Props = {
     | "status"
     | "minute"
     | "matchPeriod"
+    | "currentPhase"
+    | "phaseDurationSeconds"
+    | "phaseElapsedSeconds"
+    | "phaseStartedAt"
+    | "isClockRunning"
+    | "periodsConfigured"
+    | "matchPeriodLabel"
+    | "showTotalGameTime"
     | "elapsedSeconds"
     | "accumulatedPeriodSeconds"
     | "clockRunning"
@@ -29,21 +37,31 @@ type Props = {
 export function LiveMatchClockDisplay({ match, size = "sm", className }: Props) {
   const [now, setNow] = useState(() => new Date());
 
+  const running = match.isClockRunning ?? match.clockRunning ?? false;
+
   useEffect(() => {
-    if (!match.clockRunning) return;
+    if (!running) return;
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
-  }, [match.clockRunning, match.clockStartedAt, match.elapsedSeconds]);
+  }, [running, match.clockStartedAt, match.phaseStartedAt, match.elapsedSeconds]);
 
   const display = useMemo(() => {
     const fields = {
       status: match.status,
+      currentPhase: match.currentPhase ?? undefined,
       matchPeriod: match.matchPeriod ?? "SCHEDULED",
       minute: match.minute ?? null,
-      elapsedSeconds: match.elapsedSeconds ?? 0,
+      phaseDurationSeconds: match.phaseDurationSeconds,
+      phaseElapsedSeconds: match.phaseElapsedSeconds,
+      phaseStartedAt: match.phaseStartedAt ?? null,
+      isClockRunning: running,
+      periodsConfigured: match.periodsConfigured,
+      matchPeriodLabel: match.matchPeriodLabel,
+      showTotalGameTime: match.showTotalGameTime,
+      elapsedSeconds: match.elapsedSeconds ?? match.phaseElapsedSeconds ?? 0,
       accumulatedPeriodSeconds: match.accumulatedPeriodSeconds ?? 0,
-      clockRunning: match.clockRunning ?? false,
-      clockStartedAt: match.clockStartedAt ?? null,
+      clockRunning: running,
+      clockStartedAt: match.phaseStartedAt ?? match.clockStartedAt ?? null,
       periodLengthMin: match.periodLengthMin ?? 17,
       periodCount: match.periodCount ?? 3,
     };

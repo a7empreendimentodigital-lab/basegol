@@ -1,9 +1,5 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
-import {
-  pauseClockData,
-  resumeNewPeriodClock,
-  startNewPeriodClock,
-} from "@/lib/match-live";
+import type { MatchGamePhase } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { operatorActionSchema } from "@/utils/zod-schemas/operator.schemas";
 import { canOperateMatch } from "@/services/operator.service";
@@ -11,6 +7,13 @@ import {
   enrichMatchForApi,
   reconcileAndPersistScores,
 } from "@/services/match-live.service";
+import {
+  buildConfigUpdateData,
+  buildPauseClockData,
+  buildPhaseUpdateData,
+  buildResumeClockData,
+} from "@/services/match-phase.service";
+import { pausePhaseClock } from "@/lib/match-phase";
 import { fail, ok } from "@/utils/api-response";
 import { writeAuditLog } from "@/lib/audit";
 import { AUDIT_ACTIONS } from "@/utils/audit-actions";
@@ -37,6 +40,51 @@ async function descriptionWithAthlete(
   });
   if (!athlete) return fallback;
   return `${athlete.firstName} ${athlete.lastName}`;
+}
+
+function phaseEventForTransition(
+  target: MatchGamePhase
+): { type: MatchEventType; description: string } | null {
+  switch (target) {
+    case "PERIOD_1":
+      return { type: "KICKOFF", description: "Início do 1º tempo" };
+    case "PERIOD_2":
+      return { type: "KICKOFF", description: "Início do 2º tempo" };
+    case "PERIOD_3":
+      return { type: "KICKOFF", description: "Início do 3º tempo" };
+    case "INTERVAL_1":
+    case "INTERVAL_2":
+      return { type: "HALFTIME", description: "Intervalo" };
+    case "PENALTIES":
+      return { type: "KICKOFF", description: "Disputa de pênaltis" };
+    case "FINISHED":
+      return { type: "FULLTIME", description: "Encerramento" };
+    default:
+      return null;
+  }
+}
+
+function legacyGoTo(
+  action: string,
+  match: Awaited<ReturnType<typeof prisma.match.findUnique>>
+): { targetPhase: MatchGamePhase; startClock?: boolean } | null {
+  if (!match) return null;
+  switch (action) {
+    case "START_MATCH":
+      return { targetPhase: "PERIOD_1", startClock: true };
+    case "HALFTIME":
+      return { targetPhase: "INTERVAL_1", startClock: false };
+    case "SECOND_HALF":
+      return { targetPhase: "PERIOD_2", startClock: true };
+    case "THIRD_HALF":
+      return { targetPhase: "PERIOD_3", startClock: true };
+    case "PENALTY_SHOOTOUT":
+      return { targetPhase: "PENALTIES", startClock: false };
+    case "END_MATCH":
+      return { targetPhase: "FINISHED", startClock: false };
+    default:
+      return null;
+  }
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -71,140 +119,90 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const teamIdFromSide = (side?: "home" | "away") =>
       side === "home" ? match.homeTeamId : side === "away" ? match.awayTeamId : undefined;
 
-    if (payload.action === "SET_CLOCK") {
+    const now = new Date();
+
+    if (payload.action === "SET_MATCH_CONFIG" || payload.action === "SET_CLOCK") {
       await prisma.match.update({
         where: { id: matchId },
-        data: {
-          ...(payload.periodLengthMin != null
-            ? { periodLengthMin: payload.periodLengthMin }
-            : {}),
-          ...(payload.periodCount != null ? { periodCount: payload.periodCount } : {}),
-        },
+        data: buildConfigUpdateData(match, {
+          totalPeriods: payload.totalPeriods ?? payload.periodCount,
+          hasIntervals: payload.hasIntervals,
+          hasPenaltyShootout: payload.hasPenaltyShootout,
+          penaltyBonusPointsEnabled: payload.penaltyBonusPointsEnabled,
+          phaseDurationSeconds: payload.phaseDurationSeconds,
+          periodLengthMin: payload.periodLengthMin,
+          showTotalGameTime: payload.showTotalGameTime,
+        }),
       });
-    } else if (payload.action === "START_MATCH") {
-      const now = new Date();
+    } else if (payload.action === "PAUSE_CLOCK") {
       await prisma.match.update({
         where: { id: matchId },
-        data: {
-          status: "LIVE",
-          matchPeriod: "FIRST_HALF",
-          elapsedSeconds: 0,
-          accumulatedPeriodSeconds: 0,
-          clockRunning: true,
-          clockStartedAt: now,
-          minute: 0,
-          ...(payload.periodLengthMin != null
-            ? { periodLengthMin: payload.periodLengthMin }
-            : {}),
-          ...(payload.periodCount != null ? { periodCount: payload.periodCount } : {}),
-        },
+        data: buildPauseClockData(match, now),
       });
-      await prisma.matchEvent.create({
-        data: {
-          matchId,
-          type: "KICKOFF",
-          minute,
-          extraMinute,
-          description: payload.description ?? "Início de jogo",
-        },
-      });
-    } else if (payload.action === "HALFTIME") {
-      const paused = pauseClockData(match);
+    } else if (payload.action === "RESUME_CLOCK") {
       await prisma.match.update({
         where: { id: matchId },
-        data: { status: "HALFTIME", matchPeriod: "HALFTIME", ...paused },
+        data: buildResumeClockData(match, now),
       });
-      await prisma.matchEvent.create({
-        data: {
-          matchId,
-          type: "HALFTIME",
-          minute: paused.minute,
-          extraMinute,
-          description: payload.description ?? "Intervalo",
-        },
+    } else if (
+      payload.action === "GO_TO_PHASE" ||
+      payload.action === "START_MATCH" ||
+      payload.action === "HALFTIME" ||
+      payload.action === "SECOND_HALF" ||
+      payload.action === "THIRD_HALF" ||
+      payload.action === "PENALTY_SHOOTOUT" ||
+      payload.action === "END_MATCH"
+    ) {
+      const legacy = legacyGoTo(payload.action, match);
+      const targetPhase =
+        payload.targetPhase ?? legacy?.targetPhase ?? ("FINISHED" as MatchGamePhase);
+      const startClock =
+        payload.startClock ?? legacy?.startClock ?? false;
+
+      if (payload.action === "START_MATCH" || payload.action === "GO_TO_PHASE") {
+        if (payload.periodLengthMin != null || payload.periodCount != null) {
+          await prisma.match.update({
+            where: { id: matchId },
+            data: buildConfigUpdateData(match, {
+              totalPeriods: payload.periodCount ?? payload.totalPeriods,
+              periodLengthMin: payload.periodLengthMin,
+              phaseDurationSeconds:
+                payload.phaseDurationSeconds ??
+                (payload.periodLengthMin != null
+                  ? payload.periodLengthMin * 60
+                  : undefined),
+            }),
+          });
+        }
+      }
+
+      const fresh = await prisma.match.findUnique({ where: { id: matchId } });
+      if (!fresh) return fail("Partida não encontrada", 404);
+
+      const phaseUpdate = buildPhaseUpdateData(fresh, {
+        targetPhase,
+        startClock,
+        phaseDurationSeconds: payload.phaseDurationSeconds,
       });
-    } else if (payload.action === "SECOND_HALF") {
-      const now = new Date();
-      const clock =
-        match.matchPeriod === "HALFTIME"
-          ? resumeNewPeriodClock(match, now)
-          : startNewPeriodClock(match, now);
+
       await prisma.match.update({
         where: { id: matchId },
-        data: {
-          status: "LIVE",
-          matchPeriod: "SECOND_HALF",
-          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
-          ...clock,
-        },
+        data: phaseUpdate,
       });
-      await prisma.matchEvent.create({
-        data: {
-          matchId,
-          type: "KICKOFF",
-          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
-          extraMinute,
-          description: payload.description ?? "Segundo tempo",
-        },
-      });
-    } else if (payload.action === "THIRD_HALF") {
-      const now = new Date();
-      const clock =
-        match.matchPeriod === "HALFTIME"
-          ? resumeNewPeriodClock(match, now)
-          : startNewPeriodClock(match, now);
-      await prisma.match.update({
-        where: { id: matchId },
-        data: {
-          status: "LIVE",
-          matchPeriod: "THIRD_HALF",
-          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
-          ...clock,
-        },
-      });
-      await prisma.matchEvent.create({
-        data: {
-          matchId,
-          type: "KICKOFF",
-          minute: Math.max(1, Math.ceil(clock.accumulatedPeriodSeconds / 60) || 1),
-          extraMinute,
-          description: payload.description ?? "Terceiro tempo",
-        },
-      });
-    } else if (payload.action === "PENALTY_SHOOTOUT") {
-      const paused = pauseClockData(match);
-      await prisma.match.update({
-        where: { id: matchId },
-        data: {
-          status: "LIVE",
-          matchPeriod: "PENALTY_SHOOTOUT",
-          ...paused,
-        },
-      });
-      await prisma.matchEvent.create({
-        data: {
-          matchId,
-          type: "KICKOFF",
-          minute: paused.minute,
-          extraMinute,
-          description: payload.description ?? "Disputa de pênaltis",
-        },
-      });
-    } else if (payload.action === "END_MATCH") {
-      const paused = pauseClockData(match);
-      await prisma.match.update({
-        where: { id: matchId },
-        data: { status: "FINISHED", matchPeriod: "FINISHED", ...paused },
-      });
-      await prisma.matchEvent.create({
-        data: {
-          matchId,
-          type: "FULLTIME",
-          minute,
-          extraMinute,
-          description: payload.description ?? "Encerramento",
-        },
-      });
+
+      const ev = phaseEventForTransition(targetPhase);
+      if (ev) {
+        const paused = pausePhaseClock(fresh, now);
+        await prisma.matchEvent.create({
+          data: {
+            matchId,
+            type: ev.type,
+            minute: paused.minute,
+            extraMinute,
+            description: payload.description ?? ev.description,
+          },
+        });
+      }
     } else if (
       payload.action === "GOAL_HOME" ||
       payload.action === "GOAL_AWAY" ||
@@ -326,7 +324,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
 
     return ok(updated ? enrichMatchForApi(updated) : null);
-  } catch {
+  } catch (e) {
+    console.error(e);
     return fail("Falha operacional", 400);
   }
 }

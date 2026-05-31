@@ -13,6 +13,14 @@ type MatchPayload = {
   homePenaltyScore?: number;
   awayPenaltyScore?: number;
   matchPeriod?: string | null;
+  currentPhase?: string | null;
+  phaseDurationSeconds?: number;
+  phaseElapsedSeconds?: number;
+  phaseStartedAt?: string | null;
+  isClockRunning?: boolean;
+  periodsConfigured?: boolean;
+  matchPeriodLabel?: string | null;
+  showTotalGameTime?: boolean;
   minute: number | null;
   elapsedSeconds?: number;
   accumulatedPeriodSeconds?: number;
@@ -66,11 +74,19 @@ function toMatchView(m: MatchPayload): MatchWithTeams {
     homePenaltyScore: m.homePenaltyScore,
     awayPenaltyScore: m.awayPenaltyScore,
     matchPeriod: m.matchPeriod,
+    currentPhase: m.currentPhase,
+    phaseDurationSeconds: m.phaseDurationSeconds,
+    phaseElapsedSeconds: m.phaseElapsedSeconds,
+    phaseStartedAt: m.phaseStartedAt,
+    isClockRunning: m.isClockRunning,
+    periodsConfigured: m.periodsConfigured,
+    matchPeriodLabel: m.matchPeriodLabel,
+    showTotalGameTime: m.showTotalGameTime,
     minute: m.minute,
     elapsedSeconds: m.elapsedSeconds,
     accumulatedPeriodSeconds: m.accumulatedPeriodSeconds,
-    clockRunning: m.clockRunning,
-    clockStartedAt: m.clockStartedAt,
+    clockRunning: m.isClockRunning ?? m.clockRunning,
+    clockStartedAt: m.phaseStartedAt ?? m.clockStartedAt,
     inPenaltyShootout: m.inPenaltyShootout,
     penaltyKicks: m.penaltyKicks,
     scheduledAt: new Date(m.scheduledAt),

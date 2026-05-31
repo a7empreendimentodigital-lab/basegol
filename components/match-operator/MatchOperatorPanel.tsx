@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
+import { getOperatorPhaseActions, resolveCurrentPhase } from "@/lib/match-phase";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,17 @@ export type MatchData = {
   id: string;
   status: string;
   matchPeriod?: string | null;
+  currentPhase?: string | null;
+  phaseDurationSeconds?: number;
+  phaseElapsedSeconds?: number;
+  phaseStartedAt?: string | null;
+  isClockRunning?: boolean;
+  periodsConfigured?: boolean;
+  totalPeriods?: number;
+  hasIntervals?: boolean;
+  hasPenaltyShootout?: boolean;
+  penaltyBonusPointsEnabled?: boolean;
+  showTotalGameTime?: boolean;
   minute: number | null;
   elapsedSeconds?: number;
   accumulatedPeriodSeconds?: number;
@@ -98,7 +110,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const [athleteId, setAthleteId] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const [periodLengthMin, setPeriodLengthMin] = useState(17);
-  const [periodCount, setPeriodCount] = useState(3);
+  const [totalPeriods, setTotalPeriods] = useState(2);
+  const [hasIntervals, setHasIntervals] = useState(true);
+  const [hasPenaltyShootout, setHasPenaltyShootout] = useState(false);
+  const [penaltyBonusPointsEnabled, setPenaltyBonusPointsEnabled] = useState(false);
 
   const loadAthletes = useCallback(
     async (side: "home" | "away") => {
@@ -122,15 +137,21 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
     setMatch(data);
     if (data?.minute != null) setMinute(data.minute);
     if (data?.periodLengthMin != null) setPeriodLengthMin(data.periodLengthMin);
-    if (data?.periodCount != null) setPeriodCount(data.periodCount);
+    if (data?.totalPeriods != null) setTotalPeriods(data.totalPeriods);
+    else if (data?.periodCount != null) setTotalPeriods(data.periodCount);
+    if (data?.hasIntervals != null) setHasIntervals(data.hasIntervals);
+    if (data?.hasPenaltyShootout != null) setHasPenaltyShootout(data.hasPenaltyShootout);
+    if (data?.penaltyBonusPointsEnabled != null) {
+      setPenaltyBonusPointsEnabled(data.penaltyBonusPointsEnabled);
+    }
   }, [matchId]);
 
   useEffect(() => {
     void refresh();
-    const ms = match?.clockRunning ? 1000 : 5000;
+    const ms = match?.isClockRunning || match?.clockRunning ? 1000 : 5000;
     const t = setInterval(() => void refresh(), ms);
     return () => clearInterval(t);
-  }, [refresh, match?.clockRunning]);
+  }, [refresh, match?.isClockRunning, match?.clockRunning]);
 
   useEffect(() => {
     void loadAthletes(eventSide);
@@ -172,12 +193,70 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const isLivePhase =
     match?.status === "LIVE" || match?.status === "HALFTIME";
 
+  const phaseDurationSeconds = periodLengthMin * 60;
+
+  const configPayload = {
+    totalPeriods,
+    hasIntervals,
+    hasPenaltyShootout,
+    penaltyBonusPointsEnabled,
+    phaseDurationSeconds,
+    periodLengthMin,
+  };
+
+  const phaseActions = (match
+    ? getOperatorPhaseActions({
+        status: match.status,
+        currentPhase: resolveCurrentPhase({
+          status: match.status,
+          currentPhase: match.currentPhase ?? "PRE_MATCH",
+          phaseDurationSeconds: match.phaseDurationSeconds ?? phaseDurationSeconds,
+          phaseElapsedSeconds: match.phaseElapsedSeconds ?? 0,
+          phaseStartedAt: match.phaseStartedAt ?? null,
+          isClockRunning: match.isClockRunning ?? match.clockRunning ?? false,
+          periodsConfigured: match.periodsConfigured ?? false,
+          totalPeriods: match.totalPeriods ?? totalPeriods,
+          hasIntervals: match.hasIntervals ?? hasIntervals,
+          hasPenaltyShootout: match.hasPenaltyShootout ?? hasPenaltyShootout,
+          penaltyBonusPointsEnabled:
+            match.penaltyBonusPointsEnabled ?? penaltyBonusPointsEnabled,
+          matchPeriod: match.matchPeriod,
+          periodLengthMin: match.periodLengthMin,
+          periodCount: match.periodCount,
+        }),
+        phaseDurationSeconds: match.phaseDurationSeconds ?? phaseDurationSeconds,
+        phaseElapsedSeconds: match.phaseElapsedSeconds ?? 0,
+        phaseStartedAt: match.phaseStartedAt ?? null,
+        isClockRunning: match.isClockRunning ?? match.clockRunning ?? false,
+        periodsConfigured: match.periodsConfigured ?? false,
+        totalPeriods: match.totalPeriods ?? totalPeriods,
+        hasIntervals: match.hasIntervals ?? hasIntervals,
+        hasPenaltyShootout: match.hasPenaltyShootout ?? hasPenaltyShootout,
+        penaltyBonusPointsEnabled:
+          match.penaltyBonusPointsEnabled ?? penaltyBonusPointsEnabled,
+        matchPeriod: match.matchPeriod,
+        periodLengthMin: match.periodLengthMin,
+        periodCount: match.periodCount,
+      })
+    : []
+  ).filter((a) => a.action !== "SET_MATCH_CONFIG");
+
+  async function phaseAction(
+    actionName: string,
+    extra?: Record<string, unknown>
+  ) {
+    await action(actionName, {
+      ...configPayload,
+      ...extra,
+    });
+  }
+
   return (
     <div className="space-y-4">
       {(mode === "all" || mode === "placar") && (
         <SectionCard
           title="Controle da partida"
-          description="Defina os minutos de cada tempo. Ao iniciar, o público vê o período, o cronômetro regressivo e o tempo total de jogo."
+          description="Configure tempos e intervalos. Cada fase é iniciada e encerrada manualmente; o público vê só a fase atual e o cronômetro dela."
         >
           {match && isLivePhase ? (
             <div className="mb-5 flex justify-center">
@@ -191,9 +270,9 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             </p>
           ) : null}
 
-          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Duração dos tempos
+          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Configuração da partida
             </p>
             <div className="flex flex-wrap items-end justify-center gap-4">
               <div className="text-center">
@@ -209,30 +288,57 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
               </div>
               <div className="text-center">
                 <Label className="text-muted-foreground">Quantidade de tempos</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={5}
-                  className="w-24 text-center text-lg font-semibold mt-1 tabular-nums"
-                  value={periodCount}
-                  onChange={(e) => setPeriodCount(Number(e.target.value))}
-                />
+                <Select
+                  className="w-28 mt-1 text-center font-semibold"
+                  value={String(totalPeriods)}
+                  onChange={(e) => setTotalPeriods(Number(e.target.value))}
+                >
+                  <option value="2">2 tempos</option>
+                  <option value="3">3 tempos</option>
+                </Select>
               </div>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasIntervals}
+                  onChange={(e) => setHasIntervals(e.target.checked)}
+                  className="rounded border-line"
+                />
+                Intervalo entre tempos
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasPenaltyShootout}
+                  onChange={(e) => setHasPenaltyShootout(e.target.checked)}
+                  className="rounded border-line"
+                />
+                Disputa de pênaltis
+              </label>
+              {hasPenaltyShootout ? (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={penaltyBonusPointsEnabled}
+                    onChange={(e) => setPenaltyBonusPointsEnabled(e.target.checked)}
+                    className="rounded border-line"
+                  />
+                  Ponto bônus nos pênaltis
+                </label>
+              ) : null}
+            </div>
+            <div className="flex justify-center">
               <Button
                 type="button"
                 variant="outline"
                 disabled={loading}
-                className="h-10"
-                onClick={() =>
-                  action("SET_CLOCK", { periodLengthMin, periodCount })
-                }
+                onClick={() => phaseAction("SET_MATCH_CONFIG")}
               >
-                Salvar duração
+                Salvar configuração
               </Button>
             </div>
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Total regulamentar: {periodLengthMin * periodCount} min
-            </p>
           </div>
 
           <div className="flex flex-wrap items-end justify-center gap-6 mb-6">
@@ -261,37 +367,41 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-            Fluxo do jogo
+            Fases do jogo (controle manual)
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <Button
-              disabled={loading}
-              onClick={() => action("START_MATCH", { periodLengthMin, periodCount })}
-              className="h-11"
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Iniciar
-            </Button>
-            <Button disabled={loading} variant="outline" onClick={() => action("HALFTIME")} className="h-11">
-              <Pause className="h-4 w-4 mr-2" />
-              Intervalo
-            </Button>
-            <Button disabled={loading} variant="outline" onClick={() => action("SECOND_HALF")} className="h-11">
-              <Timer className="h-4 w-4 mr-2" />
-              2º tempo
-            </Button>
-            <Button disabled={loading} variant="outline" onClick={() => action("THIRD_HALF")} className="h-11">
-              <Timer className="h-4 w-4 mr-2" />
-              3º tempo
-            </Button>
-            <Button disabled={loading} variant="outline" onClick={() => action("PENALTY_SHOOTOUT")} className="h-11">
-              <CircleDot className="h-4 w-4 mr-2" />
-              Pênaltis
-            </Button>
-            <Button disabled={loading} variant="destructive" onClick={() => action("END_MATCH")} className="h-11">
-              <Square className="h-4 w-4 mr-2" />
-              Encerrar
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {phaseActions.map((pa) => (
+              <Button
+                key={`${pa.action}-${pa.label}`}
+                disabled={loading}
+                variant={pa.variant ?? "default"}
+                className="h-11 justify-start"
+                onClick={() =>
+                  phaseAction(pa.action, {
+                    targetPhase: pa.payload?.targetPhase,
+                    startClock: pa.payload?.startClock,
+                    phaseDurationSeconds:
+                      (pa.payload?.phaseDurationSeconds as number | undefined) ??
+                      phaseDurationSeconds,
+                  })
+                }
+              >
+                {pa.action === "GO_TO_PHASE" && pa.payload?.startClock ? (
+                  <Play className="h-4 w-4 mr-2 shrink-0" />
+                ) : pa.action === "PAUSE_CLOCK" ? (
+                  <Pause className="h-4 w-4 mr-2 shrink-0" />
+                ) : pa.action === "END_MATCH" ? (
+                  <Square className="h-4 w-4 mr-2 shrink-0" />
+                ) : pa.label.includes("pênalt") ? (
+                  <CircleDot className="h-4 w-4 mr-2 shrink-0" />
+                ) : pa.action === "RESUME_CLOCK" ? (
+                  <Play className="h-4 w-4 mr-2 shrink-0" />
+                ) : (
+                  <Timer className="h-4 w-4 mr-2 shrink-0" />
+                )}
+                {pa.label}
+              </Button>
+            ))}
           </div>
         </SectionCard>
       )}

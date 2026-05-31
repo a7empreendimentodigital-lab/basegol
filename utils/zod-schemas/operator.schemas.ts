@@ -19,8 +19,23 @@ const statsSchema = z
   })
   .optional();
 
+const matchGamePhaseSchema = z.enum([
+  "PRE_MATCH",
+  "PERIOD_1",
+  "INTERVAL_1",
+  "PERIOD_2",
+  "INTERVAL_2",
+  "PERIOD_3",
+  "PENALTIES",
+  "FINISHED",
+]);
+
 export const operatorActionSchema = z.object({
   action: z.enum([
+    "SET_MATCH_CONFIG",
+    "GO_TO_PHASE",
+    "PAUSE_CLOCK",
+    "RESUME_CLOCK",
     "SET_CLOCK",
     "START_MATCH",
     "HALFTIME",
@@ -45,6 +60,14 @@ export const operatorActionSchema = z.object({
   teamId: z.string().optional(),
   side: z.enum(["home", "away"]).optional(),
   stats: statsSchema,
+  targetPhase: matchGamePhaseSchema.optional(),
+  startClock: z.boolean().optional(),
+  phaseDurationSeconds: z.number().int().min(60).max(7200).optional(),
+  totalPeriods: z.number().int().min(2).max(3).optional(),
+  hasIntervals: z.boolean().optional(),
+  hasPenaltyShootout: z.boolean().optional(),
+  penaltyBonusPointsEnabled: z.boolean().optional(),
+  showTotalGameTime: z.boolean().optional(),
   periodLengthMin: z.number().int().min(1).max(60).optional(),
-  periodCount: z.number().int().min(1).max(5).optional(),
+  periodCount: z.number().int().min(2).max(3).optional(),
 });

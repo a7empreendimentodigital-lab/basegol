@@ -507,6 +507,17 @@ enum MatchPeriod {
   FINISHED
 }
 
+enum MatchGamePhase {
+  PRE_MATCH
+  PERIOD_1
+  INTERVAL_1
+  PERIOD_2
+  INTERVAL_2
+  PERIOD_3
+  PENALTIES
+  FINISHED
+}
+
 model Match {
   id                 String            @id @default(cuid())
   championshipId     String?
@@ -527,6 +538,19 @@ model Match {
   sumulaMeta         Json?
   status             MatchStatus       @default(SCHEDULED)
   matchPeriod        MatchPeriod       @default(SCHEDULED)
+  currentPhase       MatchGamePhase      @default(PRE_MATCH)
+  currentPhaseIndex  Int                 @default(0)
+  phaseDurationSeconds Int               @default(1020)
+  phaseElapsedSeconds  Int               @default(0)
+  phaseStartedAt     DateTime?
+  isClockRunning     Boolean             @default(false)
+  periodsConfigured  Boolean             @default(false)
+  totalPeriods       Int                 @default(2)
+  hasIntervals       Boolean             @default(true)
+  hasPenaltyShootout Boolean             @default(false)
+  penaltyBonusPointsEnabled Boolean      @default(false)
+  matchPeriodLabel   String?
+  showTotalGameTime  Boolean             @default(false)
   homeScore          Int               @default(0)
   awayScore          Int               @default(0)
   homePenaltyScore   Int               @default(0)

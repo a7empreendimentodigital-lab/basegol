@@ -19,6 +19,14 @@ export function formatMatchDateShort(scheduledAt: Date | string): string {
 type LiveClockMatch = {
   status?: string;
   matchPeriod?: string | null;
+  currentPhase?: string | null;
+  phaseDurationSeconds?: number;
+  phaseElapsedSeconds?: number;
+  phaseStartedAt?: Date | string | null;
+  isClockRunning?: boolean;
+  periodsConfigured?: boolean;
+  matchPeriodLabel?: string | null;
+  showTotalGameTime?: boolean;
   periodEvents?: { type: string; description?: string | null }[];
   minute?: number | null;
   elapsedSeconds?: number;
@@ -30,14 +38,23 @@ type LiveClockMatch = {
 };
 
 function toClockFields(match: LiveClockMatch, status: string) {
+  const running = match.isClockRunning ?? match.clockRunning ?? false;
   return {
     status,
+    currentPhase: match.currentPhase ?? undefined,
     matchPeriod: match.matchPeriod ?? "SCHEDULED",
     minute: match.minute ?? null,
-    elapsedSeconds: match.elapsedSeconds ?? 0,
+    phaseDurationSeconds: match.phaseDurationSeconds,
+    phaseElapsedSeconds: match.phaseElapsedSeconds,
+    phaseStartedAt: match.phaseStartedAt ?? null,
+    isClockRunning: running,
+    periodsConfigured: match.periodsConfigured,
+    matchPeriodLabel: match.matchPeriodLabel,
+    showTotalGameTime: match.showTotalGameTime,
+    elapsedSeconds: match.elapsedSeconds ?? match.phaseElapsedSeconds ?? 0,
     accumulatedPeriodSeconds: match.accumulatedPeriodSeconds ?? 0,
-    clockRunning: match.clockRunning ?? false,
-    clockStartedAt: match.clockStartedAt ?? null,
+    clockRunning: running,
+    clockStartedAt: match.phaseStartedAt ?? match.clockStartedAt ?? null,
     periodLengthMin: match.periodLengthMin ?? 17,
     periodCount: match.periodCount ?? 3,
   };

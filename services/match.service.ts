@@ -78,13 +78,26 @@ function mapMatch(
     homePenaltyScore: m.homePenaltyScore,
     awayPenaltyScore: m.awayPenaltyScore,
     matchPeriod: period,
-    minute: m.clockRunning
+    currentPhase: m.currentPhase,
+    currentPhaseIndex: m.currentPhaseIndex,
+    phaseDurationSeconds: m.phaseDurationSeconds,
+    phaseElapsedSeconds: m.phaseElapsedSeconds,
+    phaseStartedAt: m.phaseStartedAt?.toISOString() ?? null,
+    isClockRunning: m.isClockRunning,
+    periodsConfigured: m.periodsConfigured,
+    totalPeriods: m.totalPeriods,
+    hasIntervals: m.hasIntervals,
+    hasPenaltyShootout: m.hasPenaltyShootout,
+    penaltyBonusPointsEnabled: m.penaltyBonusPointsEnabled,
+    matchPeriodLabel: m.matchPeriodLabel,
+    showTotalGameTime: m.showTotalGameTime,
+    minute: (m.isClockRunning || m.clockRunning)
       ? Math.max(1, Math.ceil(elapsed / 60) || (m.minute ?? 1))
       : m.minute,
     elapsedSeconds: elapsed,
     accumulatedPeriodSeconds: m.accumulatedPeriodSeconds,
-    clockRunning: m.clockRunning,
-    clockStartedAt: m.clockStartedAt?.toISOString() ?? null,
+    clockRunning: m.isClockRunning || m.clockRunning,
+    clockStartedAt: (m.phaseStartedAt ?? m.clockStartedAt)?.toISOString() ?? null,
     periodLengthMin: m.periodLengthMin,
     periodCount: m.periodCount,
     inPenaltyShootout: inPenalties,
@@ -270,10 +283,25 @@ export function toMatchWithTeams(
     homePenaltyScore: m.homePenaltyScore,
     awayPenaltyScore: m.awayPenaltyScore,
     matchPeriod: m.matchPeriod,
+    currentPhase: m.currentPhase,
+    phaseDurationSeconds: m.phaseDurationSeconds,
+    phaseElapsedSeconds: m.phaseElapsedSeconds,
+    phaseStartedAt:
+      m.phaseStartedAt instanceof Date
+        ? m.phaseStartedAt.toISOString()
+        : (m.phaseStartedAt as string | null | undefined) ?? null,
+    isClockRunning: m.isClockRunning,
+    periodsConfigured: m.periodsConfigured,
+    totalPeriods: m.totalPeriods,
+    hasIntervals: m.hasIntervals,
+    hasPenaltyShootout: m.hasPenaltyShootout,
+    penaltyBonusPointsEnabled: m.penaltyBonusPointsEnabled,
+    matchPeriodLabel: m.matchPeriodLabel,
+    showTotalGameTime: m.showTotalGameTime,
     minute: m.minute,
     elapsedSeconds: m.elapsedSeconds,
     accumulatedPeriodSeconds: m.accumulatedPeriodSeconds,
-    clockRunning: m.clockRunning,
+    clockRunning: m.isClockRunning ?? m.clockRunning,
     clockStartedAt:
       m.clockStartedAt instanceof Date
         ? m.clockStartedAt.toISOString()

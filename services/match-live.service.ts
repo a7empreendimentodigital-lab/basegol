@@ -1,17 +1,39 @@
 import { prisma } from "@/lib/prisma";
 import {
+  resolveCurrentPhase,
+  resolvePhaseElapsed,
+  isTimedPhase,
+  type MatchPhaseFields,
+} from "@/lib/match-phase";
+import {
   rebuildScoresFromEvents,
   resolveElapsedSeconds,
   resolveMatchPeriodForDisplay,
   shouldMatchClockBeRunning,
   type MatchEventLike,
 } from "@/lib/match-live";
+import {
+  buildSyncPhaseClockData,
+  enrichMatchPhaseFields,
+} from "@/services/match-phase.service";
 import type { MatchPeriod } from "@prisma/client";
 
 type MatchWithRelations = {
   id: string;
   status: string;
   matchPeriod: string;
+  currentPhase?: string;
+  isClockRunning?: boolean;
+  phaseElapsedSeconds?: number;
+  phaseDurationSeconds?: number;
+  phaseStartedAt?: Date | null;
+  periodsConfigured?: boolean;
+  totalPeriods?: number;
+  hasIntervals?: boolean;
+  hasPenaltyShootout?: boolean;
+  penaltyBonusPointsEnabled?: boolean;
+  matchPeriodLabel?: string | null;
+  showTotalGameTime?: boolean;
   homeScore: number;
   awayScore: number;
   homePenaltyScore: number;
@@ -31,7 +53,20 @@ type MatchWithRelations = {
 
 export async function syncMatchClockToNow(matchId: string) {
   const match = await prisma.match.findUnique({ where: { id: matchId } });
-  if (!match?.clockRunning) return match;
+  if (!match) return match;
+
+  const phase = resolveCurrentPhase(match as MatchPhaseFields);
+  if (match.isClockRunning && isTimedPhase(phase)) {
+    const data = buildSyncPhaseClockData(match, new Date());
+    if (data) {
+      return prisma.match.update({
+        where: { id: matchId },
+        data: { ...data, clockRunning: true, clockStartedAt: data.phaseStartedAt },
+      });
+    }
+  }
+
+  if (!match.clockRunning && !match.isClockRunning) return match;
 
   const now = new Date();
   const elapsed = resolveElapsedSeconds(match, now);
@@ -47,10 +82,15 @@ export async function syncMatchClockToNow(matchId: string) {
   });
 }
 
-/** Relógio parado indevidamente durante um tempo — retoma a contagem. */
 export async function repairLiveClockIfNeeded(
   match: MatchWithRelations & { events?: MatchEventLike[] }
 ) {
+  const phase = resolveCurrentPhase(match as MatchPhaseFields);
+  if (match.periodsConfigured || phase !== "PRE_MATCH") {
+    if (!isTimedPhase(phase) || match.isClockRunning) return;
+    return;
+  }
+
   const events = match.events ?? [];
   const period = resolveMatchPeriodForDisplay(match, events);
   if (!shouldMatchClockBeRunning(match.status, period) || match.clockRunning) return;
@@ -60,7 +100,9 @@ export async function repairLiveClockIfNeeded(
     where: { id: match.id },
     data: {
       clockRunning: true,
+      isClockRunning: true,
       clockStartedAt: now,
+      phaseStartedAt: now,
     },
   });
 }
@@ -84,10 +126,11 @@ export async function reconcileAndPersistScores(
   return scores;
 }
 
-/** Corrige `matchPeriod` no banco quando eventos indicam período mais avançado. */
+/** Não altera fase manual — apenas legado quando partida antiga sem fases. */
 export async function repairMatchPeriodIfNeeded(
   match: MatchWithRelations & { events?: MatchEventLike[] }
 ) {
+  if (match.periodsConfigured) return;
   const events = match.events ?? [];
   const resolved = resolveMatchPeriodForDisplay(match, events);
   const stored = match.matchPeriod;
@@ -104,41 +147,77 @@ export async function repairMatchPeriodIfNeeded(
   }
 }
 
-export function enrichMatchForApi<T extends MatchWithRelations>(match: T) {
+export function enrichMatchForApi<T extends MatchWithRelations>(
+  match: T
+): T & {
+  inPenaltyShootout: boolean;
+  penaltyKicks: { home: boolean[]; away: boolean[] };
+  currentPhase: string;
+} {
   const events = (match.events ?? []) as MatchEventLike[];
-  const period = resolveMatchPeriodForDisplay(match, events);
+  const phase = resolveCurrentPhase(match as MatchPhaseFields);
+  const period =
+    phase === "PERIOD_1"
+      ? "FIRST_HALF"
+      : phase === "INTERVAL_1" || phase === "INTERVAL_2"
+        ? "HALFTIME"
+        : phase === "PERIOD_2"
+          ? "SECOND_HALF"
+          : phase === "PERIOD_3"
+            ? "THIRD_HALF"
+            : phase === "PENALTIES"
+              ? "PENALTY_SHOOTOUT"
+              : phase === "FINISHED"
+                ? "FINISHED"
+                : resolveMatchPeriodForDisplay(match, events);
 
-  const elapsed = resolveElapsedSeconds(match);
+  const elapsed =
+    match.periodsConfigured || phase !== "PRE_MATCH"
+      ? resolvePhaseElapsed(match as MatchPhaseFields)
+      : resolveElapsedSeconds(match);
+
   const scores = rebuildScoresFromEvents(events, match.homeTeamId, match.awayTeamId);
+  const running = match.isClockRunning ?? match.clockRunning;
 
   const displayMinute = Math.max(
     1,
-    Math.min(
-      match.periodLengthMin * match.periodCount,
-      Math.ceil(elapsed / 60) || (match.minute ?? 1)
-    )
+    Math.ceil(elapsed / 60) || (match.minute ?? 1)
   );
 
-  return {
+  const enriched = enrichMatchPhaseFields({
     ...match,
-    matchPeriod: period,
+    matchPeriod: period as MatchPeriod,
+    currentPhase: phase,
     homeScore: scores.homeScore,
     awayScore: scores.awayScore,
     homePenaltyScore: scores.homePenaltyScore,
     awayPenaltyScore: scores.awayPenaltyScore,
-    minute: match.clockRunning ? displayMinute : match.minute ?? displayMinute,
+    minute: running ? displayMinute : match.minute ?? displayMinute,
     elapsedSeconds: elapsed,
+    phaseElapsedSeconds: match.phaseElapsedSeconds ?? elapsed,
+    clockRunning: running,
+    isClockRunning: running,
     clockStartedAt:
       match.clockStartedAt instanceof Date
         ? match.clockStartedAt.toISOString()
         : match.clockStartedAt,
+    phaseStartedAt:
+      match.phaseStartedAt instanceof Date
+        ? match.phaseStartedAt.toISOString()
+        : match.phaseStartedAt ?? null,
     penaltyKicks: {
       home: scores.homePenaltyKicks,
       away: scores.awayPenaltyKicks,
     },
     inPenaltyShootout:
-      period === "PENALTY_SHOOTOUT" ||
+      phase === "PENALTIES" ||
       scores.inPenaltyShootout ||
       scores.homePenaltyScore + scores.awayPenaltyScore > 0,
+  });
+
+  return enriched as T & {
+    inPenaltyShootout: boolean;
+    penaltyKicks: { home: boolean[]; away: boolean[] };
+    currentPhase: string;
   };
 }
