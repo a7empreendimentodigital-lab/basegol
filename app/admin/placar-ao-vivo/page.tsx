@@ -26,9 +26,37 @@ type MatchItem = {
   homeTeam: { club: { name: string; crestUrl?: string | null } };
   awayTeam: { club: { name: string; crestUrl?: string | null } };
   group?: {
-    category?: { name: string; championship?: { name: string } | null } | null;
+    category?: {
+      name: string;
+      imageUrl?: string | null;
+      championship?: { name: string } | null;
+    } | null;
   } | null;
 };
+
+function MatchCategoryCornerBadge({
+  name,
+  imageUrl,
+}: {
+  name: string;
+  imageUrl?: string | null;
+}) {
+  return (
+    <div
+      className="absolute left-0 top-0 z-10 flex items-center gap-2.5 rounded-br-2xl bg-white pl-3 pr-4 py-2.5 sm:pl-4 sm:pr-5 sm:py-3 shadow-md border-b border-r border-black/10"
+      aria-label={`Categoria ${name}`}
+    >
+      {imageUrl ? (
+        <span className="relative block h-9 w-9 sm:h-10 sm:w-10 shrink-0 overflow-hidden rounded-lg border border-black/10">
+          <SafeImage src={imageUrl} alt="" fill className="object-cover" sizes="40px" />
+        </span>
+      ) : null}
+      <span className="font-display text-base sm:text-lg font-bold text-pitch leading-tight tracking-tight">
+        {name}
+      </span>
+    </div>
+  );
+}
 
 type FilterKey = "all" | "live" | "scheduled" | "finished";
 
@@ -145,6 +173,7 @@ export default function AdminPlacarAoVivoPage() {
           {filtered.map((m) => {
             const isLive = m.status === "LIVE" || m.status === "HALFTIME";
             const categoryName = m.group?.category?.name ?? null;
+            const categoryImageUrl = m.group?.category?.imageUrl ?? null;
             const homePen = m.homePenaltyScore ?? 0;
             const awayPen = m.awayPenaltyScore ?? 0;
             const hasPenalties = homePen + awayPen > 0;
@@ -152,22 +181,23 @@ export default function AdminPlacarAoVivoPage() {
               <article
                 key={m.id}
                 className={cn(
-                  "rounded-2xl border bg-graphite-light overflow-hidden transition-colors",
+                  "relative rounded-2xl border bg-graphite-light overflow-hidden transition-colors",
                   isLive ? "border-neon/40 shadow-[0_0_0_1px_rgba(34,197,94,0.15)]" : "border-line"
                 )}
               >
-                <div className="p-4 sm:p-5">
+                {categoryName ? (
+                  <MatchCategoryCornerBadge name={categoryName} imageUrl={categoryImageUrl} />
+                ) : null}
+                <div
+                  className={cn(
+                    "p-4 sm:p-5",
+                    categoryName ? "pt-14 sm:pt-16" : undefined
+                  )}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <div className="flex flex-wrap items-center gap-2 min-w-0">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5 shrink-0" />
-                        {formatDate(m.scheduledAt)} · {formatTime(m.scheduledAt)}
-                      </div>
-                      {categoryName ? (
-                        <span className="inline-flex items-center rounded-md border border-line bg-pitch/50 px-2 py-0.5 text-[11px] font-medium text-foreground">
-                          {categoryName}
-                        </span>
-                      ) : null}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+                      <Calendar className="h-3.5 w-3.5 shrink-0" />
+                      {formatDate(m.scheduledAt)} · {formatTime(m.scheduledAt)}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <StatusBadge
