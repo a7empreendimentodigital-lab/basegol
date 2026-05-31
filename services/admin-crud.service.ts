@@ -1,3 +1,4 @@
+import { rebuildScoresFromEvents } from "@/lib/match-live";
 import { prisma } from "@/lib/prisma";
 import { prismaContains } from "@/lib/prisma-search";
 
@@ -64,13 +65,20 @@ export async function listMatchesAdmin(
       : {}),
   };
 
-  const [items, total] = await Promise.all([
+  const [rows, total] = await Promise.all([
     prisma.match.findMany({
       where,
       include: {
         homeTeam: { include: { club: true } },
         awayTeam: { include: { club: true } },
-        group: { include: { category: true } },
+        group: { include: { category: { include: { championship: true } } } },
+        events: {
+          where: {
+            type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] },
+          },
+          orderBy: [{ createdAt: "asc" }],
+          select: { type: true, teamId: true, description: true },
+        },
       },
       orderBy: { scheduledAt: "desc" },
       skip,
@@ -78,5 +86,17 @@ export async function listMatchesAdmin(
     }),
     prisma.match.count({ where }),
   ]);
+
+  const items = rows.map((m) => {
+    const scores = rebuildScoresFromEvents(m.events, m.homeTeamId, m.awayTeamId);
+    return {
+      ...m,
+      homeScore: scores.homeScore,
+      awayScore: scores.awayScore,
+      homePenaltyScore: scores.homePenaltyScore,
+      awayPenaltyScore: scores.awayPenaltyScore,
+    };
+  });
+
   return { items, total };
 }

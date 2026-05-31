@@ -19,9 +19,14 @@ type MatchItem = {
   minute: number | null;
   homeScore: number;
   awayScore: number;
+  homePenaltyScore?: number;
+  awayPenaltyScore?: number;
   scheduledAt: string;
   homeTeam: { club: { name: string; crestUrl?: string | null } };
   awayTeam: { club: { name: string; crestUrl?: string | null } };
+  group?: {
+    category?: { name: string; championship?: { name: string } | null } | null;
+  } | null;
 };
 
 type FilterKey = "all" | "live" | "scheduled" | "finished";
@@ -41,7 +46,7 @@ export default function AdminPlacarAoVivoPage() {
 
   useEffect(() => {
     setLoading(true);
-    void fetch("/api/admin/crud/matches?page=1&pageSize=50")
+    void fetch("/api/admin/crud/matches?page=1&pageSize=100")
       .then(async (r) => {
         if (!r.ok) return { items: [] };
         return parseApiResponse<{ items: MatchItem[] }>(r);
@@ -127,6 +132,10 @@ export default function AdminPlacarAoVivoPage() {
         <div className="space-y-3">
           {filtered.map((m) => {
             const isLive = m.status === "LIVE" || m.status === "HALFTIME";
+            const categoryName = m.group?.category?.name ?? null;
+            const homePen = m.homePenaltyScore ?? 0;
+            const awayPen = m.awayPenaltyScore ?? 0;
+            const hasPenalties = homePen + awayPen > 0;
             return (
               <article
                 key={m.id}
@@ -137,11 +146,18 @@ export default function AdminPlacarAoVivoPage() {
               >
                 <div className="p-4 sm:p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {formatDate(m.scheduledAt)} · {formatTime(m.scheduledAt)}
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        {formatDate(m.scheduledAt)} · {formatTime(m.scheduledAt)}
+                      </div>
+                      {categoryName ? (
+                        <span className="inline-flex items-center rounded-md border border-line bg-pitch/50 px-2 py-0.5 text-[11px] font-medium text-foreground">
+                          {categoryName}
+                        </span>
+                      ) : null}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <StatusBadge
                         status={m.status}
                         label={MATCH_STATUS_LABELS[m.status] ?? m.status}
@@ -174,12 +190,31 @@ export default function AdminPlacarAoVivoPage() {
                       </p>
                     </div>
 
-                    <div className="shrink-0 text-center px-2">
-                      <p className="font-display text-4xl sm:text-5xl tabular-nums text-neon leading-none">
-                        {m.homeScore}
-                        <span className="text-muted-foreground mx-1">:</span>
-                        {m.awayScore}
-                      </p>
+                    <div className="shrink-0 text-center px-2 space-y-1.5">
+                      <div>
+                        {hasPenalties ? (
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                            Tempo regulamentar
+                          </p>
+                        ) : null}
+                        <p className="font-display text-4xl sm:text-5xl tabular-nums text-neon leading-none">
+                          {m.homeScore}
+                          <span className="text-muted-foreground mx-1">:</span>
+                          {m.awayScore}
+                        </p>
+                      </div>
+                      {hasPenalties ? (
+                        <div className="rounded-lg border border-line/80 bg-pitch/40 px-3 py-1.5">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                            Pênaltis
+                          </p>
+                          <p className="font-display text-xl tabular-nums text-foreground leading-none">
+                            {homePen}
+                            <span className="text-muted-foreground mx-1">:</span>
+                            {awayPen}
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="flex flex-1 items-center gap-3 min-w-0 sm:flex-row-reverse sm:text-right">
