@@ -59,12 +59,17 @@ export function PenaltyShootoutPanel({
   showTeamLabels = false,
   /** Bolinhas por cobrança — só para partidas com sequência legada no banco */
   showKickSequence = false,
+  /** Nome completo para tooltip quando o rótulo visível é a sigla */
+  homeTitle,
+  awayTitle,
   className,
 }: {
   homeScore: number;
   awayScore: number;
   homeLabel?: string;
   awayLabel?: string;
+  homeTitle?: string;
+  awayTitle?: string;
   homeAttempts?: PenaltyAttemptChar[] | unknown;
   awayAttempts?: PenaltyAttemptChar[] | unknown;
   homeKicks?: boolean[];
@@ -97,40 +102,46 @@ export function PenaltyShootoutPanel({
         className
       )}
     >
-      <div className="flex items-center justify-between gap-2 sm:gap-4 max-w-md mx-auto">
+      <div className="flex items-center justify-between gap-3 sm:gap-6 max-w-lg mx-auto">
         <div
           className={cn(
             "flex flex-col min-w-0 flex-1",
-            showTeamLabels ? "items-start gap-1.5" : "items-end justify-center"
+            showTeamLabels ? "items-center gap-1 sm:items-end sm:gap-1.5" : "items-end justify-center"
           )}
         >
           {showTeamLabels && homeLabel ? (
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate max-w-full">
+            <p
+              className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full text-center sm:text-right"
+              title={homeTitle ?? homeLabel}
+            >
               {homeLabel}
             </p>
           ) : null}
           {showKickSequence ? <KickDots attempts={homeSeq} align="end" /> : null}
         </div>
 
-        <div className="shrink-0 px-2 sm:px-4 text-center">
-          <p className="font-display text-2xl sm:text-3xl tabular-nums tracking-wide text-foreground leading-none">
+        <div className="shrink-0 px-2 sm:px-5 text-center">
+          <p className="font-display text-3xl sm:text-4xl tabular-nums tracking-wide text-foreground leading-none">
             {displayHome}
-            <span className="mx-1 sm:mx-1.5 text-muted-foreground font-sans">:</span>
+            <span className="mx-1.5 sm:mx-2 text-muted-foreground font-sans font-normal">:</span>
             {displayAway}
           </p>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Pen.
+          <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Pênaltis
           </p>
         </div>
 
         <div
           className={cn(
             "flex flex-col min-w-0 flex-1",
-            showTeamLabels ? "items-end gap-1.5" : "items-start justify-center"
+            showTeamLabels ? "items-center gap-1 sm:items-start sm:gap-1.5" : "items-start justify-center"
           )}
         >
           {showTeamLabels && awayLabel ? (
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate max-w-full text-right">
+            <p
+              className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full text-center sm:text-left"
+              title={awayTitle ?? awayLabel}
+            >
               {awayLabel}
             </p>
           ) : null}

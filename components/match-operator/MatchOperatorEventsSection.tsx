@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
+import { clubSigla } from "@/lib/club-display";
 import { cn } from "@/lib/utils";
 
 type EventRow = {
@@ -35,14 +36,6 @@ type Props = {
   /** Aba dedicada “Eventos” — layout mobile-first */
   eventsOnly?: boolean;
 };
-
-/** Sigla do cadastro do clube; se vazia, usa início do nome. */
-function clubSigla(shortName: string | null | undefined, fullName: string) {
-  const s = shortName?.trim();
-  if (s) return s;
-  const word = fullName.trim().split(/\s+/)[0];
-  return word.length > 12 ? `${word.slice(0, 11)}…` : word;
-}
 
 function SectionCard({
   title,

@@ -307,11 +307,13 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             </div>
           ) : null}
           {match ? (
-            <div className="mb-5">
+            <div className="mb-5 rounded-2xl border border-line bg-pitch/25 p-4 sm:p-5">
               <MatchScoreBoard
                 layout="operator"
                 homeName={homeName}
                 awayName={awayName}
+                homeShortName={homeShortName}
+                awayShortName={awayShortName}
                 homeScore={match.homeScore}
                 awayScore={match.awayScore}
                 homePenaltyScore={match.homePenaltyScore}
@@ -334,11 +336,11 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             </div>
           ) : null}
 
-          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 sm:p-5 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
               Configuração da partida
             </p>
-            <div className="flex flex-wrap items-end justify-center gap-4">
+            <div className="flex flex-wrap items-end justify-center gap-4 sm:gap-6">
               <div className="text-center">
                 <Label className="text-muted-foreground">Minutos por tempo</Label>
                 <Input
@@ -422,8 +424,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
 
           {showPenaltyScoreEditor ? (
             <PenaltyFinalScoreEditor
-              homeLabel={homeName}
-              awayLabel={awayName}
+              homeName={homeName}
+              awayName={awayName}
+              homeShortName={homeShortName}
+              awayShortName={awayShortName}
               homeScore={penHomeInput}
               awayScore={penAwayInput}
               onHomeChange={setPenHomeInput}

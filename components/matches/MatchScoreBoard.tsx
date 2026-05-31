@@ -1,6 +1,7 @@
 "use client";
 
 import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
+import { clubSigla } from "@/lib/club-display";
 import type { PenaltyAttemptChar } from "@/lib/match-penalties";
 import { parsePenaltyAttempts } from "@/lib/match-penalties";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,8 @@ import { cn } from "@/lib/utils";
 type Props = {
   homeName: string;
   awayName: string;
+  homeShortName?: string | null;
+  awayShortName?: string | null;
   homeScore: number;
   awayScore: number;
   homePenaltyScore?: number;
@@ -26,6 +29,8 @@ type Props = {
 export function MatchScoreBoard({
   homeName,
   awayName,
+  homeShortName,
+  awayShortName,
   homeScore,
   awayScore,
   homePenaltyScore = 0,
@@ -54,15 +59,26 @@ export function MatchScoreBoard({
   const penHome = homePenaltyScore;
   const penAway = awayPenaltyScore;
   const showKickSequence = homeSeq.length > 0 || awaySeq.length > 0;
+  const homeSigla = clubSigla(homeShortName, homeName);
+  const awaySigla = clubSigla(awayShortName, awayName);
+  const winnerSigla =
+    penaltyWinner === "home" ? homeSigla : penaltyWinner === "away" ? awaySigla : null;
+  const winnerFullName =
+    penaltyWinner === "home" ? homeName : penaltyWinner === "away" ? awayName : null;
 
   return (
     <div
       className={cn(
-        isPublic ? "w-full space-y-4" : "space-y-4",
+        isPublic ? "w-full space-y-4" : "space-y-3",
         className
       )}
     >
-      <div className="flex flex-col items-center gap-1">
+      <div
+        className={cn(
+          "flex flex-col items-center gap-1 rounded-xl border border-line/60 bg-pitch/30 px-4 py-3",
+          showPenalties && !isPublic && "pb-2"
+        )}
+      >
         {showPenalties ? (
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Tempo regulamentar
@@ -81,26 +97,31 @@ export function MatchScoreBoard({
       </div>
 
       {showPenalties ? (
-        <>
+        <div className="space-y-2.5">
           <PenaltyShootoutPanel
             homeScore={penHome}
             awayScore={penAway}
-            homeLabel={homeName}
-            awayLabel={awayName}
+            homeLabel={!isPublic ? homeSigla : homeName}
+            awayLabel={!isPublic ? awaySigla : awayName}
+            homeTitle={homeName}
+            awayTitle={awayName}
             homeAttempts={homeSeq}
             awayAttempts={awaySeq}
             homeKicks={penaltyKicks?.home}
             awayKicks={penaltyKicks?.away}
             showTeamLabels={!isPublic}
             showKickSequence={showKickSequence}
-            className={isPublic ? "max-w-lg" : undefined}
+            className={isPublic ? "max-w-lg" : "max-w-lg mx-auto"}
           />
-          {penaltyWinner ? (
-            <p className="text-center text-sm font-medium text-neon">
-              Vencedor: {penaltyWinner === "home" ? homeName : awayName}
+          {penaltyWinner && winnerSigla ? (
+            <p
+              className="text-center text-sm font-semibold text-neon"
+              title={winnerFullName ?? undefined}
+            >
+              Vencedor: {winnerSigla}
             </p>
           ) : null}
-        </>
+        </div>
       ) : null}
     </div>
   );
