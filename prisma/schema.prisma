@@ -555,6 +555,8 @@ model Match {
   awayScore          Int               @default(0)
   homePenaltyScore   Int               @default(0)
   awayPenaltyScore   Int               @default(0)
+  homePenaltyAttempts Json?
+  awayPenaltyAttempts Json?
   minute             Int?
   extraTime          Int?
   elapsedSeconds            Int               @default(0)

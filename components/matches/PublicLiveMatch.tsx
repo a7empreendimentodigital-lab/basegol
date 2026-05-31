@@ -12,6 +12,10 @@ type MatchPayload = {
   awayScore: number;
   homePenaltyScore?: number;
   awayPenaltyScore?: number;
+  homePenaltyAttempts?: ("O" | "X")[];
+  awayPenaltyAttempts?: ("O" | "X")[];
+  penaltyAttempts?: { home: ("O" | "X")[]; away: ("O" | "X")[] };
+  penaltyWinner?: "home" | "away" | null;
   matchPeriod?: string | null;
   currentPhase?: string | null;
   phaseDurationSeconds?: number;
@@ -73,6 +77,10 @@ function toMatchView(m: MatchPayload): MatchWithTeams {
     awayScore: m.awayScore,
     homePenaltyScore: m.homePenaltyScore,
     awayPenaltyScore: m.awayPenaltyScore,
+    homePenaltyAttempts: m.homePenaltyAttempts ?? m.penaltyAttempts?.home,
+    awayPenaltyAttempts: m.awayPenaltyAttempts ?? m.penaltyAttempts?.away,
+    penaltyAttempts: m.penaltyAttempts,
+    penaltyWinner: m.penaltyWinner,
     matchPeriod: m.matchPeriod,
     currentPhase: m.currentPhase,
     phaseDurationSeconds: m.phaseDurationSeconds,

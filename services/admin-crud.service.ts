@@ -95,6 +95,8 @@ export async function listMatchesAdmin(
       awayScore: scores.awayScore,
       homePenaltyScore: scores.homePenaltyScore,
       awayPenaltyScore: scores.awayPenaltyScore,
+      homePenaltyAttempts: scores.homePenaltyAttempts,
+      awayPenaltyAttempts: scores.awayPenaltyAttempts,
     };
   });
 

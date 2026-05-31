@@ -12,6 +12,7 @@ import {
   shouldMatchClockBeRunning,
   type MatchEventLike,
 } from "@/lib/match-live";
+import { penaltyShootoutWinner } from "@/lib/match-penalties";
 import {
   buildSyncPhaseClockData,
   enrichMatchPhaseFields,
@@ -121,6 +122,12 @@ export async function reconcileAndPersistScores(
       awayScore: scores.awayScore,
       homePenaltyScore: scores.homePenaltyScore,
       awayPenaltyScore: scores.awayPenaltyScore,
+      ...(scores.homePenaltyAttempts.length > 0
+        ? { homePenaltyAttempts: scores.homePenaltyAttempts }
+        : {}),
+      ...(scores.awayPenaltyAttempts.length > 0
+        ? { awayPenaltyAttempts: scores.awayPenaltyAttempts }
+        : {}),
     },
   });
   return scores;
@@ -152,6 +159,8 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
 ): T & {
   inPenaltyShootout: boolean;
   penaltyKicks: { home: boolean[]; away: boolean[] };
+  penaltyAttempts: { home: string[]; away: string[] };
+  penaltyWinner: "home" | "away" | null;
   currentPhase: string;
 } {
   const events = (match.events ?? []) as MatchEventLike[];
@@ -178,6 +187,16 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
 
   const scores = rebuildScoresFromEvents(events, match.homeTeamId, match.awayTeamId);
   const running = match.isClockRunning ?? match.clockRunning;
+  const inPenaltyShootout =
+    phase === "PENALTIES" ||
+    scores.inPenaltyShootout ||
+    scores.homePenaltyScore + scores.awayPenaltyScore > 0;
+  const shootoutResult = penaltyShootoutWinner(
+    scores.homePenaltyScore,
+    scores.awayPenaltyScore
+  );
+  const penaltyWinner =
+    inPenaltyShootout && shootoutResult !== "draw" ? shootoutResult : null;
 
   const displayMinute = Math.max(
     1,
@@ -192,6 +211,8 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
     awayScore: scores.awayScore,
     homePenaltyScore: scores.homePenaltyScore,
     awayPenaltyScore: scores.awayPenaltyScore,
+    homePenaltyAttempts: scores.homePenaltyAttempts,
+    awayPenaltyAttempts: scores.awayPenaltyAttempts,
     minute: running ? displayMinute : match.minute ?? displayMinute,
     elapsedSeconds: elapsed,
     phaseElapsedSeconds: match.phaseElapsedSeconds ?? elapsed,
@@ -209,15 +230,19 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
       home: scores.homePenaltyKicks,
       away: scores.awayPenaltyKicks,
     },
-    inPenaltyShootout:
-      phase === "PENALTIES" ||
-      scores.inPenaltyShootout ||
-      scores.homePenaltyScore + scores.awayPenaltyScore > 0,
+    penaltyAttempts: {
+      home: scores.homePenaltyAttempts,
+      away: scores.awayPenaltyAttempts,
+    },
+    penaltyWinner,
+    inPenaltyShootout,
   });
 
   return enriched as T & {
     inPenaltyShootout: boolean;
     penaltyKicks: { home: boolean[]; away: boolean[] };
+    penaltyAttempts: { home: string[]; away: string[] };
+    penaltyWinner: "home" | "away" | null;
     currentPhase: string;
   };
 }

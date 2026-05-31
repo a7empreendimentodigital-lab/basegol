@@ -14,4 +14,6 @@ ALTER TABLE `matches`
   ADD COLUMN `hasPenaltyShootout` BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN `penaltyBonusPointsEnabled` BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN `matchPeriodLabel` VARCHAR(191) NULL,
-  ADD COLUMN `showTotalGameTime` BOOLEAN NOT NULL DEFAULT false;
+  ADD COLUMN `showTotalGameTime` BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN `homePenaltyAttempts` JSON NULL,
+  ADD COLUMN `awayPenaltyAttempts` JSON NULL;

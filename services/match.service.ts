@@ -6,6 +6,7 @@ import {
   resolveMatchPeriodForDisplay,
   type MatchEventLike,
 } from "@/lib/match-live";
+import { penaltyShootoutWinner } from "@/lib/match-penalties";
 import {
   enrichMatchForApi,
   reconcileAndPersistScores,
@@ -39,8 +40,8 @@ const scoreEventsInclude = {
   where: {
     type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] as MatchEventType[] },
   },
-  orderBy: [{ createdAt: "asc" as const }],
-  select: { type: true, teamId: true, description: true },
+  orderBy: [{ minute: "asc" as const }, { createdAt: "asc" as const }],
+  select: { type: true, teamId: true, description: true, minute: true, createdAt: true },
 };
 
 function mapMatchWithScoreEvents(
@@ -50,13 +51,33 @@ function mapMatchWithScoreEvents(
 ): MatchWithTeams | null {
   if (!m) return null;
   const scores = rebuildScoresFromEvents(m.events ?? [], m.homeTeamId, m.awayTeamId);
-  return mapMatch({
+  const base = mapMatch({
     ...m,
     homeScore: scores.homeScore,
     awayScore: scores.awayScore,
     homePenaltyScore: scores.homePenaltyScore,
     awayPenaltyScore: scores.awayPenaltyScore,
   });
+  if (!base) return null;
+  const inPen =
+    scores.inPenaltyShootout ||
+    scores.homePenaltyScore + scores.awayPenaltyScore > 0;
+  const w = penaltyShootoutWinner(scores.homePenaltyScore, scores.awayPenaltyScore);
+  return {
+    ...base,
+    homePenaltyAttempts: scores.homePenaltyAttempts,
+    awayPenaltyAttempts: scores.awayPenaltyAttempts,
+    penaltyKicks: {
+      home: scores.homePenaltyKicks,
+      away: scores.awayPenaltyKicks,
+    },
+    penaltyAttempts: {
+      home: scores.homePenaltyAttempts,
+      away: scores.awayPenaltyAttempts,
+    },
+    inPenaltyShootout: inPen,
+    penaltyWinner: inPen && w !== "draw" ? w : null,
+  };
 }
 
 function mapMatch(
@@ -270,7 +291,10 @@ export function toMatchWithTeams(
     | null
 ): MatchWithTeams | null {
   if (!m) return null;
-  const enriched = "penaltyKicks" in m ? m : null;
+  const enriched =
+    "penaltyKicks" in m
+      ? (m as ReturnType<typeof enrichMatchForApi<MatchDetailRecord>>)
+      : null;
   const inPenaltyShootout =
     enriched?.inPenaltyShootout === true ||
     m.matchPeriod === "PENALTY_SHOOTOUT" ||
@@ -282,6 +306,12 @@ export function toMatchWithTeams(
     awayScore: m.awayScore,
     homePenaltyScore: m.homePenaltyScore,
     awayPenaltyScore: m.awayPenaltyScore,
+    homePenaltyAttempts:
+      (enriched?.homePenaltyAttempts as MatchWithTeams["homePenaltyAttempts"]) ??
+      undefined,
+    awayPenaltyAttempts:
+      (enriched?.awayPenaltyAttempts as MatchWithTeams["awayPenaltyAttempts"]) ??
+      undefined,
     matchPeriod: m.matchPeriod,
     currentPhase: m.currentPhase,
     phaseDurationSeconds: m.phaseDurationSeconds,
@@ -310,6 +340,27 @@ export function toMatchWithTeams(
     periodCount: m.periodCount,
     inPenaltyShootout,
     penaltyKicks: enriched?.penaltyKicks,
+    penaltyAttempts: enriched
+      ? {
+          home:
+            (enriched.homePenaltyAttempts as MatchWithTeams["homePenaltyAttempts"]) ??
+            [],
+          away:
+            (enriched.awayPenaltyAttempts as MatchWithTeams["awayPenaltyAttempts"]) ??
+            [],
+        }
+      : undefined,
+    penaltyWinner:
+      enriched?.penaltyWinner ??
+      (inPenaltyShootout
+        ? (() => {
+            const w = penaltyShootoutWinner(
+              m.homePenaltyScore,
+              m.awayPenaltyScore
+            );
+            return w === "draw" ? null : w;
+          })()
+        : null),
     scheduledAt: m.scheduledAt,
     venue: m.venue,
     round: m.round,

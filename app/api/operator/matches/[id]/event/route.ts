@@ -233,6 +233,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       });
     } else if (payload.action === "PENALTY_GOAL") {
       const resolvedTeamId = payload.teamId ?? teamIdFromSide(payload.side);
+      if (!resolvedTeamId) {
+        return fail("Selecione o time para registrar o pênalti", 400);
+      }
       await prisma.match.update({
         where: { id: matchId },
         data: { minute },
@@ -253,13 +256,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         },
       });
     } else if (payload.action === "PENALTY_MISS") {
+      const resolvedTeamId = payload.teamId ?? teamIdFromSide(payload.side);
+      if (!resolvedTeamId) {
+        return fail("Selecione o time para registrar o pênalti", 400);
+      }
       await prisma.matchEvent.create({
         data: {
           matchId,
           type: "PENALTY_MISS",
           minute,
           extraMinute,
-          teamId: payload.teamId ?? teamIdFromSide(payload.side),
+          teamId: resolvedTeamId,
           athleteId: payload.athleteId,
           description: await descriptionWithAthlete(
             payload.athleteId,

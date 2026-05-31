@@ -1,4 +1,5 @@
 export type PenaltyKicks = boolean[];
+export type PenaltyAttemptChar = "O" | "X";
 
 export type ClubPublicMatches = {
   live: MatchWithTeams[];
@@ -13,6 +14,9 @@ export type MatchWithTeams = {
   awayScore: number;
   homePenaltyScore?: number;
   awayPenaltyScore?: number;
+  homePenaltyAttempts?: PenaltyAttemptChar[];
+  awayPenaltyAttempts?: PenaltyAttemptChar[];
+  penaltyWinner?: "home" | "away" | null;
   matchPeriod?: string | null;
   currentPhase?: string | null;
   currentPhaseIndex?: number;
@@ -36,6 +40,8 @@ export type MatchWithTeams = {
   periodCount?: number;
   inPenaltyShootout?: boolean;
   penaltyKicks?: { home: PenaltyKicks; away: PenaltyKicks };
+  /** Alias legível: sequência O/X por time */
+  penaltyAttempts?: { home: PenaltyAttemptChar[]; away: PenaltyAttemptChar[] };
   scheduledAt: Date;
   venue: string | null;
   round: number;

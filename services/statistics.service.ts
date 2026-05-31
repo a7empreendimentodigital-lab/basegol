@@ -113,7 +113,7 @@ export async function getTopScorersForCategory(
       where: {
         matchId: { in: ids },
         athleteId: { not: null },
-        type: { in: ["GOAL", "PENALTY_GOAL"] },
+        type: { in: ["GOAL"] },
       },
       _count: { athleteId: true },
       orderBy: { _count: { athleteId: "desc" } },
@@ -155,7 +155,7 @@ export async function getTopScorers(limit = 10): Promise<TopScorer[]> {
       by: ["athleteId"],
       where: {
         athleteId: { not: null },
-        type: { in: ["GOAL", "PENALTY_GOAL"] },
+        type: { in: ["GOAL"] },
       },
       _count: { athleteId: true },
       orderBy: { _count: { athleteId: "desc" } },

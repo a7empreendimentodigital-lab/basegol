@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
 import { getOperatorPhaseActions, resolveCurrentPhase } from "@/lib/match-phase";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
+import { MatchScoreBoard } from "@/components/matches/MatchScoreBoard";
 import { cn } from "@/lib/utils";
 
 export type MatchData = {
@@ -47,6 +48,11 @@ export type MatchData = {
   awayScore: number;
   homePenaltyScore?: number;
   awayPenaltyScore?: number;
+  homePenaltyAttempts?: ("O" | "X")[];
+  awayPenaltyAttempts?: ("O" | "X")[];
+  penaltyKicks?: { home: boolean[]; away: boolean[] };
+  penaltyAttempts?: { home: ("O" | "X")[]; away: ("O" | "X")[] };
+  penaltyWinner?: "home" | "away" | null;
   inPenaltyShootout?: boolean;
   homeTeamId?: string;
   awayTeamId?: string;
@@ -263,11 +269,30 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
               <LiveMatchClockDisplay match={match} size="lg" />
             </div>
           ) : null}
-          {match?.inPenaltyShootout ? (
-            <p className="mb-4 text-center text-sm text-muted-foreground">
-              Tempo regulamentar: {match.homeScore} × {match.awayScore} · Pênaltis:{" "}
-              {match.homePenaltyScore ?? 0} × {match.awayPenaltyScore ?? 0}
-            </p>
+          {match ? (
+            <div className="mb-5">
+              <MatchScoreBoard
+                homeName={homeName}
+                awayName={awayName}
+                homeScore={match.homeScore}
+                awayScore={match.awayScore}
+                homePenaltyScore={match.homePenaltyScore}
+                awayPenaltyScore={match.awayPenaltyScore}
+                homePenaltyAttempts={
+                  match.homePenaltyAttempts ?? match.penaltyAttempts?.home
+                }
+                awayPenaltyAttempts={
+                  match.awayPenaltyAttempts ?? match.penaltyAttempts?.away
+                }
+                penaltyKicks={match.penaltyKicks}
+                showPenalties={
+                  !!match.inPenaltyShootout ||
+                  (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0
+                }
+                penaltyWinner={match.penaltyWinner}
+                size="sm"
+              />
+            </div>
           ) : null}
 
           <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 space-y-4">

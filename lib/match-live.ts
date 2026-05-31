@@ -1,4 +1,8 @@
 import type { MatchPeriod } from "@prisma/client";
+import {
+  rebuildPenaltyShootoutFromEvents,
+  sortEventsForScoring,
+} from "@/lib/match-penalties";
 
 export type MatchClockFields = {
   status: string;
@@ -235,63 +239,37 @@ export function rebuildScoresFromEvents(
   homeTeamId: string,
   awayTeamId: string
 ) {
+  const sorted = sortEventsForScoring(events);
+  const penalties = rebuildPenaltyShootoutFromEvents(sorted, homeTeamId, awayTeamId);
+  const firstPenaltyIdx = indexOfFirstPenaltyShootoutEvent(sorted);
+
   let homeScore = 0;
   let awayScore = 0;
-  let homePenaltyScore = 0;
-  let awayPenaltyScore = 0;
-  const homePenaltyKicks: PenaltyKickDisplay[] = [];
-  const awayPenaltyKicks: PenaltyKickDisplay[] = [];
 
-  const firstPenaltyIdx = indexOfFirstPenaltyShootoutEvent(events);
-
-  for (let i = 0; i < events.length; i++) {
-    const e = events[i];
+  for (let i = 0; i < sorted.length; i++) {
+    const e = sorted[i];
     const inPenaltyShootout = firstPenaltyIdx >= 0 && i >= firstPenaltyIdx;
-
     if (isPenaltyShootoutKickoff(e)) continue;
 
     const isHome = e.teamId === homeTeamId;
     const isAway = e.teamId === awayTeamId;
 
-    if (e.type === "GOAL") {
-      if (inPenaltyShootout) {
-        if (isHome) {
-          homePenaltyScore += 1;
-          homePenaltyKicks.push(true);
-        }
-        if (isAway) {
-          awayPenaltyScore += 1;
-          awayPenaltyKicks.push(true);
-        }
-      } else {
-        if (isHome) homeScore += 1;
-        if (isAway) awayScore += 1;
-      }
-    }
-    if (e.type === "PENALTY_GOAL") {
-      if (isHome) {
-        homePenaltyScore += 1;
-        homePenaltyKicks.push(true);
-      } else if (isAway) {
-        awayPenaltyScore += 1;
-        awayPenaltyKicks.push(true);
-      }
-    }
-    if (e.type === "PENALTY_MISS") {
-      if (isHome) homePenaltyKicks.push(false);
-      else if (isAway) awayPenaltyKicks.push(false);
+    if (e.type === "GOAL" && !inPenaltyShootout) {
+      if (isHome) homeScore += 1;
+      if (isAway) awayScore += 1;
     }
   }
 
   return {
     homeScore,
     awayScore,
-    homePenaltyScore,
-    awayPenaltyScore,
-    homePenaltyKicks,
-    awayPenaltyKicks,
-    inPenaltyShootout:
-      firstPenaltyIdx >= 0 || homePenaltyScore + awayPenaltyScore > 0,
+    homePenaltyScore: penalties.homeScore,
+    awayPenaltyScore: penalties.awayScore,
+    homePenaltyAttempts: penalties.homeAttempts,
+    awayPenaltyAttempts: penalties.awayAttempts,
+    homePenaltyKicks: penalties.homePenaltyKicks,
+    awayPenaltyKicks: penalties.awayPenaltyKicks,
+    inPenaltyShootout: penalties.inPenaltyShootout,
   };
 }
 
