@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CircleDot,
-  Flag,
   Pause,
   Play,
   Square,
@@ -15,8 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
 import {
   getOperatorPhaseActions,
   resolveCurrentPhase,
@@ -24,6 +21,7 @@ import {
 } from "@/lib/match-phase";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { MatchScoreBoard } from "@/components/matches/MatchScoreBoard";
+import { MatchOperatorEventsSection } from "@/components/match-operator/MatchOperatorEventsSection";
 import { PenaltyFinalScoreEditor } from "@/components/match-operator/PenaltyFinalScoreEditor";
 import { cn } from "@/lib/utils";
 
@@ -498,106 +496,23 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
         </SectionCard>
       )}
 
-      {(mode === "all" || mode === "eventos") && (
-        <div className="grid gap-4 xl:grid-cols-2">
-          <SectionCard
-            title="Registrar evento"
-            description={`${homeName} ou ${awayName} — use a escalação para filtrar atletas`}
-          >
-            <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <Label>Time</Label>
-                  <Select
-                    value={eventSide}
-                    onChange={(e) => setEventSide(e.target.value as "home" | "away")}
-                    className="mt-1"
-                  >
-                    <option value="home">{homeName}</option>
-                    <option value="away">{awayName}</option>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Atleta</Label>
-                  <Select
-                    value={athleteId}
-                    onChange={(e) => setAthleteId(e.target.value)}
-                    className="mt-1"
-                    disabled={athletes.length === 0}
-                  >
-                    <option value="">
-                      {athletes.length === 0 ? "Sem atletas na escalação" : "Selecione…"}
-                    </option>
-                    {athletes.map((a) => (
-                      <option key={a.value} value={a.value}>
-                        {a.label}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Descrição (substituição: Saiu: … | Entrou: …)</Label>
-                <Textarea
-                  value={eventDescription}
-                  onChange={(e) => setEventDescription(e.target.value)}
-                  className="mt-1"
-                  rows={2}
-                  placeholder="Ex.: Saiu: 8 João | Entrou: 5 Pedro"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button disabled={loading} onClick={() => action("GOAL")} className="bg-neon hover:bg-neon/90 text-background">
-                  <Flag className="h-4 w-4 mr-1" />
-                  Gol
-                </Button>
-                <Button disabled={loading} variant="outline" onClick={() => action("YELLOW_CARD")}>
-                  Amarelo
-                </Button>
-                <Button disabled={loading} variant="outline" onClick={() => action("RED_CARD")}>
-                  Vermelho
-                </Button>
-                <Button disabled={loading} variant="outline" onClick={() => action("SUBSTITUTION")}>
-                  Substituição
-                </Button>
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Linha do tempo" description="Últimos eventos registrados">
-            <div className="space-y-1 max-h-[420px] overflow-y-auto">
-              {match?.events?.length ? (
-                [...match.events].reverse().map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex gap-3 rounded-lg px-3 py-2.5 hover:bg-pitch/40 transition-colors"
-                  >
-                    <span className="shrink-0 w-12 text-sm font-bold text-neon tabular-nums">
-                      {event.minute}
-                      {event.extraMinute ? `+${event.extraMinute}` : ""}&apos;
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">
-                        {MATCH_EVENT_LABELS[event.type] ?? event.type.replace(/_/g, " ")}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {event.description ??
-                          (event.athlete
-                            ? `${event.athlete.firstName} ${event.athlete.lastName}`
-                            : "—")}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground py-8 text-center">
-                  Nenhum evento ainda. Inicie a partida e registre gols ou cartões.
-                </p>
-              )}
-            </div>
-          </SectionCard>
-        </div>
-      )}
+      {(mode === "all" || mode === "eventos") && match ? (
+        <MatchOperatorEventsSection
+          homeName={homeName}
+          awayName={awayName}
+          events={match.events}
+          eventSide={eventSide}
+          onEventSideChange={setEventSide}
+          athleteId={athleteId}
+          onAthleteIdChange={setAthleteId}
+          athletes={athletes}
+          eventDescription={eventDescription}
+          onEventDescriptionChange={setEventDescription}
+          loading={loading}
+          onAction={(name) => void action(name)}
+          eventsOnly={mode === "eventos"}
+        />
+      ) : null}
 
       {(mode === "all" || mode === "estatisticas") && (
         <SectionCard title="Estatísticas" description="Incremento rápido por time">
