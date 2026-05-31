@@ -51,27 +51,26 @@ function TeamBlock({
   return (
     <div
       className={cn(
-        "flex w-full sm:min-w-0 sm:flex-1 items-center gap-3",
-        isRight
-          ? "flex-row-reverse justify-end sm:flex-row-reverse sm:text-right"
-          : "flex-row justify-start"
+        "flex min-w-0 flex-col items-center gap-2 text-center",
+        "sm:flex-1 sm:flex-row sm:items-center sm:gap-3 sm:text-left",
+        isRight && "sm:flex-row-reverse sm:text-right"
       )}
       title={name}
     >
-      <div className="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-xl border border-line/80 bg-pitch/60 p-1.5">
+      <div className="relative h-14 w-14 sm:h-12 sm:w-12 shrink-0">
         {crestUrl ? (
-          <SafeImage src={crestUrl} alt="" fill className="object-contain p-0.5" sizes="56px" />
+          <SafeImage src={crestUrl} alt={sigla} fill className="object-contain" sizes="56px" />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-muted-foreground">
-            {sigla.slice(0, 2)}
+          <span className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
+            {sigla.slice(0, 3)}
           </span>
         )}
       </div>
-      <div className={cn("min-w-0 flex-1", isRight && "sm:text-right")}>
-        <p className="font-display text-lg sm:text-xl font-bold tracking-wide text-foreground leading-tight">
+      <div className="min-w-0 w-full sm:flex-1">
+        <p className="font-display text-base sm:text-xl font-bold tracking-wide text-foreground leading-tight">
           {sigla}
         </p>
-        <p className="hidden sm:block text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{name}</p>
+        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 sm:line-clamp-1">{name}</p>
       </div>
     </div>
   );
@@ -99,7 +98,7 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
         <div className="flex items-center justify-between gap-3 border-b border-black/10 bg-white px-4 py-3 sm:px-5 sm:py-3.5">
           <div className="flex min-w-0 items-center gap-3">
             {categoryImageUrl ? (
-              <span className="relative block h-11 w-11 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-lg border border-black/10 shadow-sm">
+              <span className="relative block h-11 w-11 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-lg">
                 <SafeImage
                   src={categoryImageUrl}
                   alt=""
@@ -157,16 +156,9 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-6">
-          <TeamBlock
-            crestUrl={match.homeTeam.club.crestUrl}
-            name={match.homeTeam.club.name}
-            shortName={match.homeTeam.club.shortName}
-            align="left"
-          />
-
-          <div className="flex flex-col items-center justify-center px-1 sm:px-3 order-first sm:order-none">
-            <div className="rounded-xl border border-line/80 bg-pitch/50 px-4 py-3 sm:px-6 sm:py-4 text-center min-w-[7.5rem] sm:min-w-[9rem]">
+        <div className="flex flex-col gap-5 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-6">
+          <div className="flex flex-col items-center justify-center px-1 sm:px-3 order-first sm:order-none sm:col-start-2 sm:row-start-1">
+            <div className="rounded-xl bg-pitch/50 px-4 py-3 sm:px-6 sm:py-4 text-center min-w-[7.5rem] sm:min-w-[9rem]">
               {hasPenalties ? (
                 <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
                   Regulamentar
@@ -194,12 +186,24 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
             </div>
           </div>
 
-          <TeamBlock
-            crestUrl={match.awayTeam.club.crestUrl}
-            name={match.awayTeam.club.name}
-            shortName={match.awayTeam.club.shortName}
-            align="right"
-          />
+          <div className="grid grid-cols-2 gap-6 sm:contents">
+            <div className="sm:col-start-1 sm:row-start-1">
+              <TeamBlock
+                crestUrl={match.homeTeam.club.crestUrl}
+                name={match.homeTeam.club.name}
+                shortName={match.homeTeam.club.shortName}
+                align="left"
+              />
+            </div>
+            <div className="sm:col-start-3 sm:row-start-1">
+              <TeamBlock
+                crestUrl={match.awayTeam.club.crestUrl}
+                name={match.awayTeam.club.name}
+                shortName={match.awayTeam.club.shortName}
+                align="right"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap pt-1 border-t border-line/80">
