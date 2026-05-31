@@ -369,11 +369,11 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
           ) : null}
 
           <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 sm:p-5 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Configuração da partida
             </p>
-            <div className="flex flex-wrap items-end justify-center gap-4 sm:gap-6">
-              <div className="text-center">
+            <div className="flex flex-wrap items-end justify-center gap-4 sm:justify-start sm:gap-6">
+              <div className="text-center sm:text-left">
                 <Label className="text-muted-foreground">Minutos por tempo</Label>
                 <Input
                   type="number"
@@ -387,7 +387,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                   }}
                 />
               </div>
-              <div className="text-center">
+              <div className="text-center sm:text-left">
                 <Label className="text-muted-foreground">Quantidade de tempos</Label>
                 <Select
                   className="w-28 mt-1 text-center font-semibold"
@@ -402,7 +402,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                 </Select>
               </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <div className="flex flex-wrap justify-center gap-4 text-sm sm:justify-start">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -442,7 +442,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                 </label>
               ) : null}
             </div>
-            <div className="flex justify-center">
+            <div className="flex justify-center sm:justify-start">
               <Button
                 type="button"
                 variant="outline"
@@ -477,7 +477,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
               <div>
                 <Label className="text-muted-foreground">Minuto (automático)</Label>
                 <div
-                  className="mt-1 flex h-12 items-center justify-center rounded-lg border border-line bg-graphite tabular-nums text-2xl font-display font-semibold text-foreground"
+                  className="mt-1 flex h-12 items-center justify-center sm:justify-start sm:px-4 rounded-lg border border-line bg-graphite tabular-nums text-2xl font-display font-semibold text-foreground"
                   aria-live="polite"
                 >
                   {inTimedPeriod || eventMinute > 0 ? eventMinute : "—"}

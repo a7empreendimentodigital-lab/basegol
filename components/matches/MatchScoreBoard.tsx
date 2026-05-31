@@ -111,7 +111,7 @@ export function MatchScoreBoard({
             awayKicks={penaltyKicks?.away}
             showTeamLabels={!isPublic}
             showKickSequence={showKickSequence}
-            className={isPublic ? "max-w-lg" : "max-w-lg mx-auto"}
+            className={isPublic ? "max-w-lg mx-auto" : "w-full"}
           />
           {penaltyWinner && winnerSigla && layout !== "operator" ? (
             <p

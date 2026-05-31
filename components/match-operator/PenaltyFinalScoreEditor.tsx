@@ -44,10 +44,10 @@ export function PenaltyFinalScoreEditor({
         </p>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-4 items-center max-w-md sm:max-w-lg">
-        <div className="flex flex-col items-center sm:items-start gap-2 min-w-0">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-10 md:gap-16 items-end w-full">
+        <div className="flex flex-col items-center gap-2 min-w-0">
           <span
-            className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full"
+            className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full text-center"
             title={homeName}
           >
             {homeSigla}
@@ -61,7 +61,7 @@ export function PenaltyFinalScoreEditor({
             max={99}
             aria-label={`Pênaltis ${homeSigla}`}
             className={cn(
-              "w-full max-w-[5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
+              "w-full max-w-[5.5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
               "border-line bg-graphite-light"
             )}
             value={homeScore}
@@ -69,15 +69,15 @@ export function PenaltyFinalScoreEditor({
           />
         </div>
 
-        <div className="flex flex-col items-center justify-center px-1 pt-6 sm:pt-7">
+        <div className="flex items-center justify-center px-1 pb-3 sm:pb-4">
           <span className="font-display text-2xl sm:text-3xl text-muted-foreground leading-none">
             ×
           </span>
         </div>
 
-        <div className="flex flex-col items-center sm:items-end gap-2 min-w-0">
+        <div className="flex flex-col items-center gap-2 min-w-0">
           <span
-            className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full"
+            className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full text-center"
             title={awayName}
           >
             {awaySigla}
@@ -91,7 +91,7 @@ export function PenaltyFinalScoreEditor({
             max={99}
             aria-label={`Pênaltis ${awaySigla}`}
             className={cn(
-              "w-full max-w-[5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
+              "w-full max-w-[5.5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
               "border-line bg-graphite-light"
             )}
             value={awayScore}
