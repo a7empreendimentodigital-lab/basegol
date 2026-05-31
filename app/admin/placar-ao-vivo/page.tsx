@@ -1,62 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { SafeImage } from "@/components/ui/SafeImage";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Calendar, ChevronRight, Radio, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/shared/AdminPageHeader";
-import { StatusBadge } from "@/components/admin/shared/StatusBadge";
+import {
+  LiveMatchAdminCard,
+  type LiveMatchAdminCardData,
+} from "@/components/admin/placar-ao-vivo/LiveMatchAdminCard";
 import { parseApiResponse } from "@/lib/api-client";
-import { MATCH_STATUS_LABELS } from "@/lib/admin-labels";
-import { formatDate, formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-
-type MatchItem = {
-  id: string;
-  status: string;
-  minute: number | null;
-  homeScore: number;
-  awayScore: number;
-  homePenaltyScore?: number;
-  awayPenaltyScore?: number;
-  hasPenaltyShootout?: boolean;
-  scheduledAt: string;
-  homeTeam: { club: { name: string; crestUrl?: string | null } };
-  awayTeam: { club: { name: string; crestUrl?: string | null } };
-  group?: {
-    category?: {
-      name: string;
-      imageUrl?: string | null;
-      championship?: { name: string } | null;
-    } | null;
-  } | null;
-};
-
-function MatchCategoryCornerBadge({
-  name,
-  imageUrl,
-}: {
-  name: string;
-  imageUrl?: string | null;
-}) {
-  return (
-    <div
-      className="absolute left-0 top-0 z-10 flex items-center gap-2.5 rounded-br-2xl bg-white pl-3 pr-4 py-2.5 sm:pl-4 sm:pr-5 sm:py-3 shadow-md border-b border-r border-black/10"
-      aria-label={`Categoria ${name}`}
-    >
-      {imageUrl ? (
-        <span className="relative block h-9 w-9 sm:h-10 sm:w-10 shrink-0 overflow-hidden rounded-lg border border-black/10">
-          <SafeImage src={imageUrl} alt="" fill className="object-cover" sizes="40px" />
-        </span>
-      ) : null}
-      <span className="font-display text-base sm:text-lg font-bold text-pitch leading-tight tracking-tight">
-        {name}
-      </span>
-    </div>
-  );
-}
 
 type FilterKey = "all" | "live" | "scheduled" | "finished";
 
@@ -67,8 +21,20 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "finished", label: "Encerradas" },
 ];
 
+function matchSearchText(m: LiveMatchAdminCardData): string {
+  const parts = [
+    m.homeTeam.club.name,
+    m.awayTeam.club.name,
+    m.homeTeam.club.shortName,
+    m.awayTeam.club.shortName,
+    m.group?.category?.name,
+    m.group?.category?.championship?.name,
+  ];
+  return parts.filter(Boolean).join(" ").toLowerCase();
+}
+
 export default function AdminPlacarAoVivoPage() {
-  const [matches, setMatches] = useState<MatchItem[]>([]);
+  const [matches, setMatches] = useState<LiveMatchAdminCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
@@ -77,8 +43,8 @@ export default function AdminPlacarAoVivoPage() {
     setLoading(true);
     return fetch("/api/admin/crud/matches?page=1&pageSize=100", { cache: "no-store" })
       .then(async (r) => {
-        if (!r.ok) return { items: [] as MatchItem[] };
-        return parseApiResponse<{ items: MatchItem[] }>(r);
+        if (!r.ok) return { items: [] as LiveMatchAdminCardData[] };
+        return parseApiResponse<{ items: LiveMatchAdminCardData[] }>(r);
       })
       .then((d) => setMatches(d.items ?? []))
       .finally(() => setLoading(false));
@@ -106,11 +72,7 @@ export default function AdminPlacarAoVivoPage() {
     }
     const q = search.trim().toLowerCase();
     if (q) {
-      list = list.filter(
-        (m) =>
-          m.homeTeam.club.name.toLowerCase().includes(q) ||
-          m.awayTeam.club.name.toLowerCase().includes(q)
-      );
+      list = list.filter((m) => matchSearchText(m).includes(q));
     }
     return list;
   }, [matches, filter, search]);
@@ -118,17 +80,17 @@ export default function AdminPlacarAoVivoPage() {
   const liveCount = matches.filter((m) => m.status === "LIVE" || m.status === "HALFTIME").length;
 
   return (
-    <div>
+    <div className="max-w-4xl mx-auto w-full">
       <AdminPageHeader
         title="Placar ao vivo"
         description="Escolha a partida, monte a escalação e opere gols, cartões e cronômetro em tempo real."
       />
 
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-6">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por clube…"
+            placeholder="Buscar por clube ou sigla…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -159,9 +121,12 @@ export default function AdminPlacarAoVivoPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 rounded-2xl border border-line bg-graphite-light animate-pulse" />
+            <div
+              key={i}
+              className="h-44 rounded-2xl border border-line bg-graphite-light animate-pulse"
+            />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -169,133 +134,10 @@ export default function AdminPlacarAoVivoPage() {
           <p className="text-muted-foreground">Nenhuma partida encontrada.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((m) => {
-            const isLive = m.status === "LIVE" || m.status === "HALFTIME";
-            const categoryName = m.group?.category?.name ?? null;
-            const categoryImageUrl = m.group?.category?.imageUrl ?? null;
-            const homePen = m.homePenaltyScore ?? 0;
-            const awayPen = m.awayPenaltyScore ?? 0;
-            const hasPenalties = homePen + awayPen > 0;
-            return (
-              <article
-                key={m.id}
-                className={cn(
-                  "relative rounded-2xl border bg-graphite-light overflow-hidden transition-colors",
-                  isLive ? "border-neon/40 shadow-[0_0_0_1px_rgba(34,197,94,0.15)]" : "border-line"
-                )}
-              >
-                {categoryName ? (
-                  <MatchCategoryCornerBadge name={categoryName} imageUrl={categoryImageUrl} />
-                ) : null}
-                <div
-                  className={cn(
-                    "p-4 sm:p-5",
-                    categoryName ? "pt-14 sm:pt-16" : undefined
-                  )}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
-                      {formatDate(m.scheduledAt)} · {formatTime(m.scheduledAt)}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <StatusBadge
-                        status={m.status}
-                        label={MATCH_STATUS_LABELS[m.status] ?? m.status}
-                      />
-                      {isLive && m.minute != null ? (
-                        <span className="text-xs font-semibold text-neon flex items-center gap-1 tabular-nums">
-                          <Radio className="h-3 w-3 animate-pulse" />
-                          {m.minute}&apos;
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                    <div className="flex flex-1 items-center gap-3 min-w-0">
-                      {m.homeTeam.club.crestUrl ? (
-                        <div className="relative h-10 w-10 shrink-0">
-                          <SafeImage
-                            src={m.homeTeam.club.crestUrl}
-                            alt=""
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-10 w-10 shrink-0 rounded-lg bg-pitch" />
-                      )}
-                      <p className="text-sm font-medium leading-snug line-clamp-2">
-                        {m.homeTeam.club.name}
-                      </p>
-                    </div>
-
-                    <div className="shrink-0 text-center px-2 space-y-1.5">
-                      <div>
-                        {hasPenalties ? (
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                            Tempo regulamentar
-                          </p>
-                        ) : null}
-                        <p className="font-display text-4xl sm:text-5xl tabular-nums text-neon leading-none">
-                          {m.homeScore}
-                          <span className="text-muted-foreground mx-1">:</span>
-                          {m.awayScore}
-                        </p>
-                      </div>
-                      {hasPenalties ? (
-                        <div className="rounded-lg border border-line/80 bg-pitch/40 px-3 py-1.5">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-                            Pênaltis
-                          </p>
-                          <p className="font-display text-xl tabular-nums text-foreground leading-none">
-                            {homePen}
-                            <span className="text-muted-foreground mx-1">:</span>
-                            {awayPen}
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="flex flex-1 items-center gap-3 min-w-0 sm:flex-row-reverse sm:text-right">
-                      {m.awayTeam.club.crestUrl ? (
-                        <div className="relative h-10 w-10 shrink-0">
-                          <SafeImage
-                            src={m.awayTeam.club.crestUrl}
-                            alt=""
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-10 w-10 shrink-0 rounded-lg bg-pitch" />
-                      )}
-                      <p className="text-sm font-medium leading-snug line-clamp-2">
-                        {m.awayTeam.club.name}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-line">
-                    <Button asChild size="sm" className="flex-1 sm:flex-none min-w-[120px]">
-                      <Link href={`/admin/partida/${m.id}/placar`}>
-                        Operar partida
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/admin/partida/${m.id}/escalacao`}>Escalação</Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/admin/partida/${m.id}/sumula`}>Súmula</Link>
-                    </Button>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+        <div className="space-y-4">
+          {filtered.map((m) => (
+            <LiveMatchAdminCard key={m.id} match={m} />
+          ))}
         </div>
       )}
     </div>
