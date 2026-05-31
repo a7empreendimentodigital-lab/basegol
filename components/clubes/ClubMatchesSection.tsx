@@ -51,11 +51,11 @@ export function ClubMatchesSection({ live, upcoming, finished }: ClubPublicMatch
         : "Nenhum resultado registrado ainda.";
 
   return (
-    <section className={cn("space-y-3", publicSectionDivider, "pb-4")}>
+    <section className={cn("space-y-5", publicSectionDivider, "pb-8 sm:pb-10")}>
       <h2 className="font-display text-2xl tracking-wide text-foreground">Jogos</h2>
 
       <nav
-        className="flex flex-wrap gap-1.5 border-b border-line/60 pb-4"
+        className="flex flex-wrap gap-2"
         aria-label="Filtrar jogos do clube"
       >
         {TABS.map(({ id, label, icon: Icon }) => {
@@ -94,6 +94,7 @@ export function ClubMatchesSection({ live, upcoming, finished }: ClubPublicMatch
       <MatchList
         matches={activeMatches}
         showFullDate
+        layout="stacked"
         emptyMessage={emptyMessage}
         variant={tab === "live" ? "live" : tab === "upcoming" ? "upcoming" : "finished"}
       />

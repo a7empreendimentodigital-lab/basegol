@@ -9,6 +9,7 @@ import {
   formatRoundLabel,
 } from "@/lib/match-display";
 import { TeamCrest } from "@/components/matches/TeamCrest";
+import { MatchListRowStacked } from "@/components/matches/MatchListRowStacked";
 import { publicEmptyShell, publicListShell } from "@/lib/public-ui-classes";
 import { cn } from "@/lib/utils";
 
@@ -210,11 +211,15 @@ function MatchListEmpty({
   );
 }
 
+type MatchListLayout = "default" | "stacked";
+
 type MatchListProps = {
   matches: MatchWithTeams[];
   showFullDate?: boolean;
   emptyMessage?: string;
   variant?: "live" | "upcoming" | "today" | "finished";
+  /** Layout empilhado — melhor leitura em detalhe do clube */
+  layout?: MatchListLayout;
 };
 
 export function MatchList({
@@ -222,6 +227,7 @@ export function MatchList({
   showFullDate = false,
   emptyMessage = "Nenhum jogo encontrado.",
   variant = "today",
+  layout = "default",
 }: MatchListProps) {
   if (matches.length === 0) {
     const emptyIcon =
@@ -235,10 +241,12 @@ export function MatchList({
     return <MatchListEmpty icon={emptyIcon} message={emptyMessage} />;
   }
 
+  const Row = layout === "stacked" ? MatchListRowStacked : MatchListRow;
+
   return (
     <div className={publicListShell}>
       {matches.map((m) => (
-        <MatchListRow key={m.id} match={m} showFullDate={showFullDate} />
+        <Row key={m.id} match={m} showFullDate={showFullDate} />
       ))}
     </div>
   );

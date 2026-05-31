@@ -33,3 +33,6 @@ export const publicEmptyShell =
 export const publicSectionDivider = "border-b border-line/60";
 
 export const publicSectionBlock = "py-4 sm:py-5";
+
+/** Linha de lista pública com respiro (detalhe de clube, etc.) */
+export const publicListRow = "block py-6 transition-colors hover:bg-graphite/40 sm:py-7";

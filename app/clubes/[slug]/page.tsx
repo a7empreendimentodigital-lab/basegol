@@ -45,7 +45,7 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
 
   return (
     <PublicRightSidebarLayout>
-      <main className="mx-auto w-full max-w-4xl space-y-6 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+      <main className="mx-auto w-full max-w-4xl space-y-8 px-3 py-4 sm:space-y-10 sm:px-5 sm:py-6 lg:px-8">
         <Link
           href="/clubes"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -54,27 +54,31 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
           Voltar aos clubes
         </Link>
 
-        <header className="flex flex-wrap items-start gap-4 border-b border-line/60 pb-5 sm:pb-6">
-          <TeamCrest url={club.crestUrl} name={club.name} size="xl" />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="font-display text-3xl tracking-wide text-foreground sm:text-4xl">
-                  {club.name}
-                </h1>
-                {club.city ? (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {club.city}
-                    {club.state ? ` / ${club.state}` : ""}
-                  </p>
-                ) : null}
-              </div>
-              <ClubFavoriteAction clubId={club.id} />
+        <header className="border-b border-line/60 pb-6 sm:pb-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+            <div className="shrink-0">
+              <TeamCrest url={club.crestUrl} name={club.name} size="xl" />
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{club._count.athletes}</span> atletas
-              cadastrados
-            </p>
+            <div className="min-w-0 flex-1 space-y-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h1 className="font-display text-2xl tracking-wide text-foreground sm:text-4xl">
+                    {club.name}
+                  </h1>
+                  {club.city ? (
+                    <p className="mt-1.5 text-sm text-muted-foreground">
+                      {club.city}
+                      {club.state ? ` / ${club.state}` : ""}
+                    </p>
+                  ) : null}
+                </div>
+                <ClubFavoriteAction clubId={club.id} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{club._count.athletes}</span> atletas
+                cadastrados
+              </p>
+            </div>
           </div>
         </header>
 
@@ -105,7 +109,7 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
 
         <ClubMatchesSection {...clubMatches} />
 
-        <section className="space-y-3">
+        <section className="space-y-5 pt-2">
           <h2 className="font-display text-2xl tracking-wide text-foreground">Elenco</h2>
           <ClubSquadSection athletes={squadAthletes} categoryOrder={categoryOrder} />
         </section>
