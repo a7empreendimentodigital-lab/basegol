@@ -33,9 +33,9 @@ function MatchScoreBlock({ match, isLive }: { match: MatchWithTeams; isLive: boo
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="whitespace-nowrap font-display text-2xl tabular-nums leading-none text-foreground sm:text-3xl">
+      <span className="whitespace-nowrap font-display text-[2.5rem] tabular-nums leading-none text-foreground">
         {match.homeScore}
-        <span className="mx-1.5 font-sans text-lg text-muted-foreground/80">:</span>
+        <span className="mx-1.5 font-sans text-xl text-muted-foreground/80">:</span>
         {match.awayScore}
       </span>
       {hasPenalties && isFinished ? (
@@ -50,15 +50,27 @@ function MatchScoreBlock({ match, isLive }: { match: MatchWithTeams; isLive: boo
 function TeamSide({
   name,
   crestUrl,
+  side,
 }: {
   name: string;
   crestUrl?: string | null;
+  side: "home" | "away";
 }) {
   return (
-    <div className="flex min-w-0 flex-col items-center gap-2 text-center">
-      <TeamCrest url={crestUrl ?? null} name={name} size="md" />
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-2",
+        side === "home" ? "flex-row justify-end" : "flex-row justify-start"
+      )}
+    >
+      <div className="shrink-0">
+        <TeamCrest url={crestUrl ?? null} name={name} size="md" />
+      </div>
       <span
-        className="max-w-[7.5rem] text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:max-w-[9rem] sm:text-base"
+        className={cn(
+          "min-w-0 text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:text-base",
+          side === "home" ? "text-right" : "text-left"
+        )}
         title={name}
       >
         {name}
@@ -134,9 +146,9 @@ export function MatchListRowStacked({ match, showFullDate = false }: Props) {
         </div>
 
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-1 sm:gap-8 sm:px-2">
-          <TeamSide name={homeName} crestUrl={match.homeTeam.club.crestUrl} />
+          <TeamSide name={homeName} crestUrl={match.homeTeam.club.crestUrl} side="home" />
           <MatchScoreBlock match={match} isLive={isLive} />
-          <TeamSide name={awayName} crestUrl={match.awayTeam.club.crestUrl} />
+          <TeamSide name={awayName} crestUrl={match.awayTeam.club.crestUrl} side="away" />
         </div>
 
         {competitionParts.length > 0 ? (

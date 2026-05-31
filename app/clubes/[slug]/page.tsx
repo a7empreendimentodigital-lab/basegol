@@ -55,18 +55,18 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
         </Link>
 
         <header className="border-b border-line/60 pb-6 sm:pb-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+          <div className="flex items-start gap-4">
             <div className="shrink-0">
               <TeamCrest url={club.crestUrl} name={club.name} size="xl" />
             </div>
-            <div className="min-w-0 flex-1 space-y-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <h1 className="font-display text-2xl tracking-wide text-foreground sm:text-4xl">
+                  <h1 className="font-display text-xl leading-tight tracking-wide text-foreground sm:text-4xl">
                     {club.name}
                   </h1>
                   {club.city ? (
-                    <p className="mt-1.5 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {club.city}
                       {club.state ? ` / ${club.state}` : ""}
                     </p>
