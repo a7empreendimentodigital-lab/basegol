@@ -16,6 +16,7 @@ type Props = {
   onAwayChange: (value: number) => void;
   onSave: () => void;
   loading?: boolean;
+  className?: string;
 };
 
 export function PenaltyFinalScoreEditor({
@@ -29,17 +30,23 @@ export function PenaltyFinalScoreEditor({
   onAwayChange,
   onSave,
   loading = false,
+  className,
 }: Props) {
   const homeSigla = clubSigla(homeShortName, homeName);
   const awaySigla = clubSigla(awayShortName, awayName);
 
   return (
-    <div className="mb-4 rounded-xl border border-line bg-pitch/30 p-3 sm:p-4 space-y-3">
+    <div
+      className={cn(
+        "rounded-xl border border-line bg-pitch/30 p-3 sm:p-4 space-y-3 h-full",
+        className
+      )}
+    >
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Pênaltis
       </p>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-6 items-end w-full">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-4 items-end w-full max-w-md lg:max-w-none">
         <div className="flex flex-col items-center gap-2 min-w-0">
           <span
             className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full text-center"

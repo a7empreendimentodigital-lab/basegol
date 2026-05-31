@@ -93,6 +93,9 @@ export type MatchData = {
 type PanelMode = "placar" | "eventos" | "estatisticas" | "all";
 type AthleteOption = { value: string; label: string };
 
+const OPERATOR_SUB_PANEL =
+  "rounded-xl border border-line bg-pitch/30 p-3 sm:p-4 space-y-3 h-full";
+
 function SectionCard({
   title,
   description,
@@ -372,210 +375,214 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             </div>
           ) : null}
 
-          <div className="mb-4 rounded-xl border border-line bg-pitch/30 p-3 sm:p-4 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Configuração
-            </p>
-            <div className="flex flex-wrap items-end justify-center gap-4 sm:justify-start sm:gap-6">
-              <div className="text-center sm:text-left">
-                <Label className="text-muted-foreground">Minutos por tempo</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={60}
-                  className="w-24 text-center text-lg font-semibold mt-1 tabular-nums"
-                  value={periodLengthMin}
-                  onChange={(e) => {
-                    configFormDirty.current = true;
-                    setPeriodLengthMin(Number(e.target.value));
-                  }}
-                />
+          <div
+            className={cn(
+              "grid gap-3 lg:gap-4 items-start",
+              showPenaltyScoreEditor ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+            )}
+          >
+            <div className={OPERATOR_SUB_PANEL}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Configuração
+              </p>
+              <div className="flex flex-wrap items-end justify-center gap-3 sm:justify-start lg:gap-4">
+                <div className="text-center sm:text-left">
+                  <Label className="text-muted-foreground text-xs">Min./tempo</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={60}
+                    className="w-20 text-center text-base font-semibold mt-1 tabular-nums"
+                    value={periodLengthMin}
+                    onChange={(e) => {
+                      configFormDirty.current = true;
+                      setPeriodLengthMin(Number(e.target.value));
+                    }}
+                  />
+                </div>
+                <div className="text-center sm:text-left">
+                  <Label className="text-muted-foreground text-xs">Tempos</Label>
+                  <Select
+                    className="w-24 mt-1 text-center font-semibold text-sm"
+                    value={String(totalPeriods)}
+                    onChange={(e) => {
+                      configFormDirty.current = true;
+                      setTotalPeriods(Number(e.target.value));
+                    }}
+                  >
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                  </Select>
+                </div>
               </div>
-              <div className="text-center sm:text-left">
-                <Label className="text-muted-foreground">Quantidade de tempos</Label>
-                <Select
-                  className="w-28 mt-1 text-center font-semibold"
-                  value={String(totalPeriods)}
-                  onChange={(e) => {
-                    configFormDirty.current = true;
-                    setTotalPeriods(Number(e.target.value));
-                  }}
-                >
-                  <option value="2">2 tempos</option>
-                  <option value="3">3 tempos</option>
-                </Select>
-              </div>
-            </div>
-            <div className="flex flex-wrap justify-center gap-4 text-sm sm:justify-start">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasIntervals}
-                  onChange={(e) => {
-                    configFormDirty.current = true;
-                    setHasIntervals(e.target.checked);
-                  }}
-                  className="rounded border-line"
-                />
-                Intervalo entre tempos
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasPenaltyShootout}
-                  onChange={(e) => {
-                    configFormDirty.current = true;
-                    setHasPenaltyShootout(e.target.checked);
-                  }}
-                  className="rounded border-line"
-                />
-                Disputa de pênaltis
-              </label>
-              {hasPenaltyShootout ? (
+              <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs sm:justify-start sm:text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={penaltyBonusPointsEnabled}
+                    checked={hasIntervals}
                     onChange={(e) => {
                       configFormDirty.current = true;
-                      setPenaltyBonusPointsEnabled(e.target.checked);
+                      setHasIntervals(e.target.checked);
                     }}
                     className="rounded border-line"
                   />
-                  Ponto bônus nos pênaltis
+                  Intervalo
                 </label>
-              ) : null}
-            </div>
-            <div className="flex justify-center sm:justify-start">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasPenaltyShootout}
+                    onChange={(e) => {
+                      configFormDirty.current = true;
+                      setHasPenaltyShootout(e.target.checked);
+                    }}
+                    className="rounded border-line"
+                  />
+                  Pênaltis
+                </label>
+                {hasPenaltyShootout ? (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={penaltyBonusPointsEnabled}
+                      onChange={(e) => {
+                        configFormDirty.current = true;
+                        setPenaltyBonusPointsEnabled(e.target.checked);
+                      }}
+                      className="rounded border-line"
+                    />
+                    Bônus pênaltis
+                  </label>
+                ) : null}
+              </div>
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 disabled={loading}
+                className="w-full sm:w-auto"
                 onClick={() => phaseAction("SET_MATCH_CONFIG")}
               >
                 Salvar configuração
               </Button>
             </div>
+
+            {showPenaltyScoreEditor ? (
+              <PenaltyFinalScoreEditor
+                className={OPERATOR_SUB_PANEL}
+                homeName={homeName}
+                awayName={awayName}
+                homeShortName={homeShortName}
+                awayShortName={awayShortName}
+                homeScore={penHomeInput}
+                awayScore={penAwayInput}
+                onHomeChange={setPenHomeInput}
+                onAwayChange={setPenAwayInput}
+                onSave={() => void savePenaltyScore()}
+                loading={loading}
+              />
+            ) : null}
           </div>
 
-          {showPenaltyScoreEditor ? (
-            <PenaltyFinalScoreEditor
-              homeName={homeName}
-              awayName={awayName}
-              homeShortName={homeShortName}
-              awayShortName={awayShortName}
-              homeScore={penHomeInput}
-              awayScore={penAwayInput}
-              onHomeChange={setPenHomeInput}
-              onAwayChange={setPenAwayInput}
-              onSave={() => void savePenaltyScore()}
-              loading={loading}
-            />
-          ) : null}
-
-          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 sm:p-5 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Minuto do evento
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground">Minuto (automático)</Label>
-                <div
-                  className="mt-1 flex h-12 items-center justify-center sm:justify-start sm:px-4 rounded-lg border border-line bg-graphite tabular-nums text-2xl font-display font-semibold text-foreground"
-                  aria-live="polite"
-                >
-                  {inTimedPeriod || eventMinute > 0 ? eventMinute : "—"}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 items-start">
+            <div className={OPERATOR_SUB_PANEL}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Minuto do evento
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-muted-foreground text-xs">Minuto</Label>
+                  <div
+                    className="mt-1 flex h-10 items-center justify-center rounded-lg border border-line bg-graphite tabular-nums text-xl font-display font-semibold text-foreground"
+                    aria-live="polite"
+                  >
+                    {inTimedPeriod || eventMinute > 0 ? eventMinute : "—"}
+                  </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
-                  Segue o cronômetro do tempo em andamento. Na linha do tempo e no público
-                  aparece como no exemplo: 12+3&apos;.
-                </p>
+                <div>
+                  <Label className="text-muted-foreground text-xs">Acréscimo</Label>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 shrink-0"
+                      disabled={loading || extraMinute <= 0}
+                      aria-label="Diminuir acréscimo"
+                      onClick={() => setExtraMinute((v) => Math.max(0, v - 1))}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={30}
+                      inputMode="numeric"
+                      className="h-10 flex-1 min-w-0 text-center text-lg font-display font-semibold tabular-nums"
+                      value={extraMinute}
+                      onChange={(e) =>
+                        setExtraMinute(Math.min(30, Math.max(0, Number(e.target.value) || 0)))
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 shrink-0"
+                      disabled={loading || extraMinute >= 30}
+                      aria-label="Aumentar acréscimo"
+                      onClick={() => setExtraMinute((v) => Math.min(30, v + 1))}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">Acréscimo (manual)</Label>
-                <div className="mt-1 flex items-center gap-2">
+              <p className="text-xs rounded-lg bg-pitch/40 border border-line/80 px-3 py-1.5">
+                <span className="text-muted-foreground">Próximo: </span>
+                <span className="font-semibold text-neon tabular-nums">{eventMinutePreview}</span>
+              </p>
+            </div>
+
+            <div className={OPERATOR_SUB_PANEL}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Fases
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {phaseActions.map((pa) => (
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 shrink-0"
-                    disabled={loading || extraMinute <= 0}
-                    aria-label="Diminuir acréscimo"
-                    onClick={() => setExtraMinute((v) => Math.max(0, v - 1))}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={30}
-                    inputMode="numeric"
-                    className="h-10 flex-1 text-center text-lg font-display font-semibold tabular-nums"
-                    value={extraMinute}
-                    onChange={(e) =>
-                      setExtraMinute(Math.min(30, Math.max(0, Number(e.target.value) || 0)))
+                    key={`${pa.action}-${pa.label}`}
+                    disabled={loading}
+                    variant={pa.variant ?? "default"}
+                    className="h-10 justify-start text-sm"
+                    onClick={() =>
+                      phaseAction(pa.action, {
+                        targetPhase: pa.payload?.targetPhase,
+                        startClock: pa.payload?.startClock,
+                        phaseDurationSeconds:
+                          (pa.payload?.phaseDurationSeconds as number | undefined) ??
+                          phaseDurationSeconds,
+                      })
                     }
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 shrink-0"
-                    disabled={loading || extraMinute >= 30}
-                    aria-label="Aumentar acréscimo"
-                    onClick={() => setExtraMinute((v) => Math.min(30, v + 1))}
                   >
-                    <Plus className="h-4 w-4" />
+                    {pa.action === "GO_TO_PHASE" && pa.payload?.startClock ? (
+                      <Play className="h-4 w-4 mr-2 shrink-0" />
+                    ) : pa.action === "PAUSE_CLOCK" ? (
+                      <Pause className="h-4 w-4 mr-2 shrink-0" />
+                    ) : pa.action === "END_MATCH" ? (
+                      <Square className="h-4 w-4 mr-2 shrink-0" />
+                    ) : pa.label.includes("pênalt") ? (
+                      <CircleDot className="h-4 w-4 mr-2 shrink-0" />
+                    ) : pa.action === "RESUME_CLOCK" ? (
+                      <Play className="h-4 w-4 mr-2 shrink-0" />
+                    ) : (
+                      <Timer className="h-4 w-4 mr-2 shrink-0" />
+                    )}
+                    {pa.label}
                   </Button>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
-                  Ajuste antes de registrar gol, cartão ou falta. Zere após o lance se não houver
-                  acréscimo.
-                </p>
+                ))}
               </div>
             </div>
-            <p className="text-sm rounded-lg bg-pitch/40 border border-line/80 px-3 py-2">
-              <span className="text-muted-foreground">Próximo evento: </span>
-              <span className="font-semibold text-neon tabular-nums">{eventMinutePreview}</span>
-            </p>
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-            Fases do jogo (controle manual)
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {phaseActions.map((pa) => (
-              <Button
-                key={`${pa.action}-${pa.label}`}
-                disabled={loading}
-                variant={pa.variant ?? "default"}
-                className="h-11 justify-start"
-                onClick={() =>
-                  phaseAction(pa.action, {
-                    targetPhase: pa.payload?.targetPhase,
-                    startClock: pa.payload?.startClock,
-                    phaseDurationSeconds:
-                      (pa.payload?.phaseDurationSeconds as number | undefined) ??
-                      phaseDurationSeconds,
-                  })
-                }
-              >
-                {pa.action === "GO_TO_PHASE" && pa.payload?.startClock ? (
-                  <Play className="h-4 w-4 mr-2 shrink-0" />
-                ) : pa.action === "PAUSE_CLOCK" ? (
-                  <Pause className="h-4 w-4 mr-2 shrink-0" />
-                ) : pa.action === "END_MATCH" ? (
-                  <Square className="h-4 w-4 mr-2 shrink-0" />
-                ) : pa.label.includes("pênalt") ? (
-                  <CircleDot className="h-4 w-4 mr-2 shrink-0" />
-                ) : pa.action === "RESUME_CLOCK" ? (
-                  <Play className="h-4 w-4 mr-2 shrink-0" />
-                ) : (
-                  <Timer className="h-4 w-4 mr-2 shrink-0" />
-                )}
-                {pa.label}
-              </Button>
-            ))}
           </div>
         </SectionCard>
       )}

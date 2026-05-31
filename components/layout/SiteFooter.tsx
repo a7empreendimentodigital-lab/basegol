@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
 import {
   DEVELOPER_NAME,
@@ -26,54 +25,40 @@ export function SiteFooterInner({
   return (
     <footer
       className={cn(
-        "mt-auto border-t border-line/80 bg-graphite/40 px-4 py-6 sm:px-6 sm:py-8",
+        "mt-auto border-t border-line/80 bg-graphite/40 px-4 py-5 sm:px-6 sm:py-6",
         className
       )}
     >
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4 text-center sm:gap-5">
-        <p className="text-xs text-muted-foreground leading-relaxed">
+      <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4 text-center">
+        <p className="text-xs text-muted-foreground">
           © {year} {systemName}. Todos os direitos reservados.
         </p>
 
-        <div className="flex flex-col items-center gap-2.5">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
+        <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-2 sm:gap-y-1">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/75">
             Desenvolvido por
-          </p>
+          </span>
           <Link
             href={DEVELOPER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(
-              "group inline-flex items-center gap-2.5 rounded-xl border border-line/60 bg-pitch/30 px-3 py-2",
-              "transition-colors hover:border-line hover:bg-graphite-light"
-            )}
+            className="inline-flex flex-col items-center gap-1.5 sm:flex-row sm:gap-2 text-muted-foreground hover:text-foreground"
             aria-label={`${DEVELOPER_NAME} — site do desenvolvedor (abre em nova aba)`}
           >
             {logoSrc ? (
-              <span className="relative block h-8 w-8 shrink-0 overflow-hidden rounded-md bg-background/10">
+              <span className="relative block h-5 w-5 shrink-0 sm:h-4 sm:w-4">
                 <SafeImage
                   src={logoSrc}
                   alt=""
                   fill
-                  className="object-contain p-0.5"
-                  sizes="32px"
+                  className="object-contain"
+                  sizes="20px"
                 />
               </span>
-            ) : (
-              <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neon/15 font-display text-sm text-neon"
-                aria-hidden
-              >
-                A7
-              </span>
-            )}
-            <span className="text-sm font-medium text-foreground group-hover:text-neon transition-colors">
+            ) : null}
+            <span className="text-xs font-normal text-inherit sm:text-sm">
               {DEVELOPER_NAME}
             </span>
-            <ExternalLink
-              className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-neon transition-colors"
-              aria-hidden
-            />
           </Link>
         </div>
       </div>
