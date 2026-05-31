@@ -125,7 +125,9 @@ export function PublicLiveMatch({
   const [stats, setStats] = useState(initialStats);
 
   const refresh = useCallback(async () => {
-    const res = await fetch(`/api/matches/${matchId}`, { cache: "no-store" });
+    const res = await fetch(`/api/matches/${matchId}?t=${Date.now()}`, {
+      cache: "no-store",
+    });
     if (!res.ok) return;
     const data = await parseApiResponse<MatchPayload>(res);
     if (!data) return;

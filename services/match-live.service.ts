@@ -6,13 +6,16 @@ import {
   type MatchPhaseFields,
 } from "@/lib/match-phase";
 import {
-  rebuildScoresFromEvents,
   resolveElapsedSeconds,
   resolveMatchPeriodForDisplay,
   shouldMatchClockBeRunning,
   type MatchEventLike,
 } from "@/lib/match-live";
-import { penaltyShootoutWinner } from "@/lib/match-penalties";
+import {
+  attemptsToBooleans,
+  parsePenaltyAttempts,
+  penaltyShootoutWinner,
+} from "@/lib/match-penalties";
 import {
   buildSyncPhaseClockData,
   enrichMatchPhaseFields,
@@ -39,6 +42,8 @@ type MatchWithRelations = {
   awayScore: number;
   homePenaltyScore: number;
   awayPenaltyScore: number;
+  homePenaltyAttempts?: unknown;
+  awayPenaltyAttempts?: unknown;
   minute: number | null;
   elapsedSeconds: number;
   accumulatedPeriodSeconds: number;
@@ -50,6 +55,16 @@ type MatchWithRelations = {
   awayTeamId: string;
   events?: MatchEventLike[];
   [key: string]: unknown;
+};
+
+export type MatchScoreAudit = {
+  source: "database";
+  homeScore: number;
+  awayScore: number;
+  homePenaltyScore: number;
+  awayPenaltyScore: number;
+  homePenaltyAttempts: string;
+  awayPenaltyAttempts: string;
 };
 
 export async function syncMatchClockToNow(matchId: string) {
@@ -108,12 +123,14 @@ export async function repairLiveClockIfNeeded(
   });
 }
 
+/** Apenas após eventos do operador — não chamar em GET da partida. */
 export async function reconcileAndPersistScores(
   matchId: string,
   homeTeamId: string,
   awayTeamId: string,
   events: MatchEventLike[]
 ) {
+  const { rebuildScoresFromEvents } = await import("@/lib/match-live");
   const matchRow = await prisma.match.findUnique({
     where: { id: matchId },
     select: { homePenaltyAttempts: true, awayPenaltyAttempts: true },
@@ -140,7 +157,6 @@ export async function reconcileAndPersistScores(
   return scores;
 }
 
-/** Não altera fase manual — apenas legado quando partida antiga sem fases. */
 export async function repairMatchPeriodIfNeeded(
   match: MatchWithRelations & { events?: MatchEventLike[] }
 ) {
@@ -161,6 +177,10 @@ export async function repairMatchPeriodIfNeeded(
   }
 }
 
+/**
+ * Enriquece resposta da API sem recalcular placar.
+ * Tempo normal e pênaltis vêm exclusivamente dos campos persistidos no banco.
+ */
 export function enrichMatchForApi<T extends MatchWithRelations>(
   match: T
 ): T & {
@@ -169,6 +189,7 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
   penaltyAttempts: { home: string[]; away: string[] };
   penaltyWinner: "home" | "away" | null;
   currentPhase: string;
+  scoreAudit: MatchScoreAudit;
 } {
   const events = (match.events ?? []) as MatchEventLike[];
   const phase = resolveCurrentPhase(match as MatchPhaseFields);
@@ -192,19 +213,23 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
       ? resolvePhaseElapsed(match as MatchPhaseFields)
       : resolveElapsedSeconds(match);
 
-  const scores = rebuildScoresFromEvents(events, match.homeTeamId, match.awayTeamId, {
-    storedHomePenaltyAttempts: match.homePenaltyAttempts,
-    storedAwayPenaltyAttempts: match.awayPenaltyAttempts,
-  });
+  const homeScore = match.homeScore;
+  const awayScore = match.awayScore;
+  const homePenaltyScore = match.homePenaltyScore;
+  const awayPenaltyScore = match.awayPenaltyScore;
+
+  const homeAttempts = parsePenaltyAttempts(match.homePenaltyAttempts);
+  const awayAttempts = parsePenaltyAttempts(match.awayPenaltyAttempts);
+
   const running = match.isClockRunning ?? match.clockRunning;
   const inPenaltyShootout =
     phase === "PENALTIES" ||
-    scores.inPenaltyShootout ||
-    scores.homePenaltyScore + scores.awayPenaltyScore > 0;
-  const shootoutResult = penaltyShootoutWinner(
-    scores.homePenaltyScore,
-    scores.awayPenaltyScore
-  );
+    match.hasPenaltyShootout === true ||
+    homePenaltyScore + awayPenaltyScore > 0 ||
+    homeAttempts.length > 0 ||
+    awayAttempts.length > 0;
+
+  const shootoutResult = penaltyShootoutWinner(homePenaltyScore, awayPenaltyScore);
   const penaltyWinner =
     inPenaltyShootout && shootoutResult !== "draw" ? shootoutResult : null;
 
@@ -213,16 +238,26 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
     Math.ceil(elapsed / 60) || (match.minute ?? 1)
   );
 
+  const scoreAudit: MatchScoreAudit = {
+    source: "database",
+    homeScore,
+    awayScore,
+    homePenaltyScore,
+    awayPenaltyScore,
+    homePenaltyAttempts: homeAttempts.join(""),
+    awayPenaltyAttempts: awayAttempts.join(""),
+  };
+
   const enriched = enrichMatchPhaseFields({
     ...match,
     matchPeriod: period as MatchPeriod,
     currentPhase: phase,
-    homeScore: scores.homeScore,
-    awayScore: scores.awayScore,
-    homePenaltyScore: scores.homePenaltyScore,
-    awayPenaltyScore: scores.awayPenaltyScore,
-    homePenaltyAttempts: scores.homePenaltyAttempts,
-    awayPenaltyAttempts: scores.awayPenaltyAttempts,
+    homeScore,
+    awayScore,
+    homePenaltyScore,
+    awayPenaltyScore,
+    homePenaltyAttempts: homeAttempts,
+    awayPenaltyAttempts: awayAttempts,
     minute: running ? displayMinute : match.minute ?? displayMinute,
     elapsedSeconds: elapsed,
     phaseElapsedSeconds: match.phaseElapsedSeconds ?? elapsed,
@@ -237,15 +272,16 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
         ? match.phaseStartedAt.toISOString()
         : match.phaseStartedAt ?? null,
     penaltyKicks: {
-      home: scores.homePenaltyKicks,
-      away: scores.awayPenaltyKicks,
+      home: attemptsToBooleans(homeAttempts),
+      away: attemptsToBooleans(awayAttempts),
     },
     penaltyAttempts: {
-      home: scores.homePenaltyAttempts,
-      away: scores.awayPenaltyAttempts,
+      home: homeAttempts,
+      away: awayAttempts,
     },
     penaltyWinner,
     inPenaltyShootout,
+    scoreAudit,
   });
 
   return enriched as T & {
@@ -254,5 +290,6 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
     penaltyAttempts: { home: string[]; away: string[] };
     penaltyWinner: "home" | "away" | null;
     currentPhase: string;
+    scoreAudit: MatchScoreAudit;
   };
 }

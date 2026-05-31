@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  countConvertedAttempts,
-  parsePenaltyAttempts,
-  type PenaltyAttemptChar,
-} from "@/lib/match-penalties";
+import { parsePenaltyAttempts, type PenaltyAttemptChar } from "@/lib/match-penalties";
 import { cn } from "@/lib/utils";
 
 function KickDots({
@@ -25,7 +21,7 @@ function KickDots({
       role="list"
       aria-label={
         attempts.length > 0
-          ? `${countConvertedAttempts(attempts)} convertidos de ${attempts.length} cobranças`
+          ? `${attempts.filter((a) => a === "O").length} convertidos de ${attempts.length} cobranças`
           : "Sem cobranças"
       }
     >
@@ -87,10 +83,9 @@ export function PenaltyShootoutPanel({
     return awayKicks.map((k) => (k ? "O" : "X") as PenaltyAttemptChar);
   })();
 
-  const displayHome =
-    homeSeq.length > 0 ? countConvertedAttempts(homeSeq) : homeScore;
-  const displayAway =
-    awaySeq.length > 0 ? countConvertedAttempts(awaySeq) : awayScore;
+  /** Placar sempre do banco (homePenaltyScore / awayPenaltyScore), nunca recalculado na UI. */
+  const displayHome = homeScore;
+  const displayAway = awayScore;
 
   return (
     <div

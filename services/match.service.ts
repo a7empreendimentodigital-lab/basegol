@@ -1,7 +1,6 @@
 import type { MatchEventType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
-  rebuildScoresFromEvents,
   resolveElapsedSeconds,
   resolveMatchPeriodForDisplay,
   type MatchEventLike,
@@ -9,11 +8,14 @@ import {
 import { penaltyShootoutWinner } from "@/lib/match-penalties";
 import {
   enrichMatchForApi,
-  reconcileAndPersistScores,
   repairLiveClockIfNeeded,
   repairMatchPeriodIfNeeded,
   syncMatchClockToNow,
 } from "@/services/match-live.service";
+import {
+  attemptsToBooleans,
+  parsePenaltyAttempts,
+} from "@/lib/match-penalties";
 import type { ClubPublicMatches, MatchWithTeams } from "@/types";
 
 const matchInclude = {
@@ -50,33 +52,30 @@ function mapMatchWithScoreEvents(
   }
 ): MatchWithTeams | null {
   if (!m) return null;
-  const scores = rebuildScoresFromEvents(m.events ?? [], m.homeTeamId, m.awayTeamId, {
-    storedHomePenaltyAttempts: m.homePenaltyAttempts,
-    storedAwayPenaltyAttempts: m.awayPenaltyAttempts,
-  });
-  const base = mapMatch({
-    ...m,
-    homeScore: scores.homeScore,
-    awayScore: scores.awayScore,
-    homePenaltyScore: scores.homePenaltyScore,
-    awayPenaltyScore: scores.awayPenaltyScore,
-  });
+  const base = mapMatch(m);
   if (!base) return null;
+  const homeAttempts = parsePenaltyAttempts(m.homePenaltyAttempts);
+  const awayAttempts = parsePenaltyAttempts(m.awayPenaltyAttempts);
   const inPen =
-    scores.inPenaltyShootout ||
-    scores.homePenaltyScore + scores.awayPenaltyScore > 0;
-  const w = penaltyShootoutWinner(scores.homePenaltyScore, scores.awayPenaltyScore);
+    base.inPenaltyShootout ||
+    (m.homePenaltyScore ?? 0) + (m.awayPenaltyScore ?? 0) > 0 ||
+    homeAttempts.length > 0 ||
+    awayAttempts.length > 0;
+  const w = penaltyShootoutWinner(
+    m.homePenaltyScore ?? 0,
+    m.awayPenaltyScore ?? 0
+  );
   return {
     ...base,
-    homePenaltyAttempts: scores.homePenaltyAttempts,
-    awayPenaltyAttempts: scores.awayPenaltyAttempts,
+    homePenaltyAttempts: homeAttempts,
+    awayPenaltyAttempts: awayAttempts,
     penaltyKicks: {
-      home: scores.homePenaltyKicks,
-      away: scores.awayPenaltyKicks,
+      home: attemptsToBooleans(homeAttempts),
+      away: attemptsToBooleans(awayAttempts),
     },
     penaltyAttempts: {
-      home: scores.homePenaltyAttempts,
-      away: scores.awayPenaltyAttempts,
+      home: homeAttempts,
+      away: awayAttempts,
     },
     inPenaltyShootout: inPen,
     penaltyWinner: inPen && w !== "draw" ? w : null,
@@ -266,18 +265,8 @@ export async function getMatchDetailForApi(id: string): Promise<
     if (!match) return null;
     await repairMatchPeriodIfNeeded(match);
     await repairLiveClockIfNeeded(match);
-    await reconcileAndPersistScores(
-      id,
-      match.homeTeamId,
-      match.awayTeamId,
-      match.events
-    );
-    const refreshed = await prisma.match.findUnique({
-      where: { id },
-      include: matchDetailInclude,
-    });
-    if (!refreshed) return null;
-    return enrichMatchForApi(refreshed);
+    // Não recalcula placar no GET — evita sobrescrever pênaltis corretos no banco (ex.: 5x6 → 5x5).
+    return enrichMatchForApi(match);
   } catch {
     return null;
   }

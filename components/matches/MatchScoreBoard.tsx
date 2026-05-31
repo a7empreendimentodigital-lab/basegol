@@ -2,7 +2,7 @@
 
 import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
 import type { PenaltyAttemptChar } from "@/lib/match-penalties";
-import { countConvertedAttempts, parsePenaltyAttempts } from "@/lib/match-penalties";
+import { parsePenaltyAttempts } from "@/lib/match-penalties";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -51,10 +51,8 @@ export function MatchScoreBoard({
       ? parsePenaltyAttempts(awayPenaltyAttempts)
       : (penaltyKicks?.away ?? []).map((k) => (k ? "O" : "X") as PenaltyAttemptChar);
 
-  const penHome =
-    homeSeq.length > 0 ? countConvertedAttempts(homeSeq) : homePenaltyScore;
-  const penAway =
-    awaySeq.length > 0 ? countConvertedAttempts(awaySeq) : awayPenaltyScore;
+  const penHome = homePenaltyScore;
+  const penAway = awayPenaltyScore;
 
   return (
     <div

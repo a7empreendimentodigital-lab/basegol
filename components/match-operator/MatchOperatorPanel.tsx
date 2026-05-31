@@ -137,7 +137,9 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   );
 
   const refresh = useCallback(async () => {
-    const res = await fetch(`/api/matches/${matchId}`);
+    const res = await fetch(`/api/matches/${matchId}?t=${Date.now()}`, {
+      cache: "no-store",
+    });
     if (!res.ok) return;
     const data = await parseApiResponse<MatchData>(res);
     setMatch(data);

@@ -3,6 +3,8 @@ import { getMatchById, getMatchDetailForApi, toMatchWithTeams } from "@/services
 import { getStandingsForCategory } from "@/services/statistics.service";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const dbMatch = await getMatchById(id);
