@@ -48,6 +48,22 @@ export type MatchPhaseConfig = {
   phaseDurationSeconds: number;
 };
 
+/** Fonte única para quantidade de tempos (evita dessync totalPeriods vs periodCount). */
+export function resolveTotalPeriods(
+  match: Pick<MatchPhaseFields, "totalPeriods" | "periodCount" | "periodsConfigured">
+): number {
+  if (match.periodsConfigured && match.totalPeriods != null) {
+    return Math.min(3, Math.max(2, match.totalPeriods));
+  }
+  if (match.totalPeriods != null) {
+    return Math.min(3, Math.max(2, match.totalPeriods));
+  }
+  if (match.periodCount != null) {
+    return Math.min(3, Math.max(2, match.periodCount));
+  }
+  return 2;
+}
+
 export type PhaseClockDisplay = {
   phase: MatchGamePhase;
   phaseLabel: string;
@@ -176,7 +192,7 @@ export function formatPublicPhaseClock(
 
 export function getMatchConfig(match: MatchPhaseFields): MatchPhaseConfig {
   return {
-    totalPeriods: Math.min(3, Math.max(2, match.totalPeriods ?? match.periodCount ?? 2)),
+    totalPeriods: resolveTotalPeriods(match),
     hasIntervals: match.hasIntervals ?? true,
     hasPenaltyShootout: match.hasPenaltyShootout ?? false,
     penaltyBonusPointsEnabled: match.penaltyBonusPointsEnabled ?? false,

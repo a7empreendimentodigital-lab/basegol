@@ -8,6 +8,7 @@ import {
   phaseIndex,
   resolveCurrentPhase,
   resolvePhaseElapsed,
+  resolveTotalPeriods,
   startPhaseClock,
   type MatchPhaseFields,
 } from "@/lib/match-phase";
@@ -111,10 +112,10 @@ export function buildConfigUpdateData(
   match: Match,
   input: SetMatchConfigInput
 ): Prisma.MatchUpdateInput {
-  const totalPeriods = Math.min(
-    3,
-    Math.max(2, input.totalPeriods ?? match.totalPeriods ?? match.periodCount ?? 2)
-  );
+  const totalPeriods =
+    input.totalPeriods != null
+      ? Math.min(3, Math.max(2, input.totalPeriods))
+      : resolveTotalPeriods(match as MatchPhaseFields);
   const duration =
     input.phaseDurationSeconds ??
     (input.periodLengthMin != null

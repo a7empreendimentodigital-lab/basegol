@@ -6,6 +6,7 @@ import {
   formatLiveClockLines,
 } from "@/lib/match-clock-display";
 import { formatElapsedClock } from "@/lib/match-live";
+import { resolveTotalPeriods } from "@/lib/match-phase";
 import type { MatchWithTeams } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,9 @@ type Props = {
     | "clockRunning"
     | "clockStartedAt"
     | "periodLengthMin"
+    | "totalPeriods"
     | "periodCount"
+    | "periodsConfigured"
   >;
   size?: "sm" | "lg";
   className?: string;
@@ -63,7 +66,7 @@ export function LiveMatchClockDisplay({ match, size = "sm", className }: Props) 
       clockRunning: running,
       clockStartedAt: match.phaseStartedAt ?? match.clockStartedAt ?? null,
       periodLengthMin: match.periodLengthMin ?? 17,
-      periodCount: match.periodCount ?? 3,
+      periodCount: resolveTotalPeriods(match),
     };
     return {
       built: buildPublicMatchClockDisplay(fields, [], now),

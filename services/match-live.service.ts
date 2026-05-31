@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import {
   resolveCurrentPhase,
   resolvePhaseElapsed,
+  resolveTotalPeriods,
   isTimedPhase,
   type MatchPhaseFields,
 } from "@/lib/match-phase";
@@ -284,7 +285,14 @@ export function enrichMatchForApi<T extends MatchWithRelations>(
     scoreAudit,
   });
 
-  return enriched as T & {
+  const periods = resolveTotalPeriods(match as MatchPhaseFields);
+  const withPeriods = {
+    ...enriched,
+    totalPeriods: periods,
+    periodCount: periods,
+  };
+
+  return withPeriods as T & {
     inPenaltyShootout: boolean;
     penaltyKicks: { home: boolean[]; away: boolean[] };
     penaltyAttempts: { home: string[]; away: string[] };

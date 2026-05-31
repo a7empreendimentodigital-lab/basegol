@@ -6,6 +6,7 @@ import {
   type MatchEventLike,
 } from "@/lib/match-live";
 import { penaltyShootoutWinner } from "@/lib/match-penalties";
+import { resolveTotalPeriods } from "@/lib/match-phase";
 import {
   enrichMatchForApi,
   repairLiveClockIfNeeded,
@@ -93,6 +94,7 @@ function mapMatch(
   const inPenalties =
     period === "PENALTY_SHOOTOUT" ||
     (m.homePenaltyScore > 0 || m.awayPenaltyScore > 0);
+  const periods = resolveTotalPeriods(m);
   return {
     id: m.id,
     status: m.status,
@@ -108,7 +110,7 @@ function mapMatch(
     phaseStartedAt: m.phaseStartedAt?.toISOString() ?? null,
     isClockRunning: m.isClockRunning,
     periodsConfigured: m.periodsConfigured,
-    totalPeriods: m.totalPeriods,
+    totalPeriods: periods,
     hasIntervals: m.hasIntervals,
     hasPenaltyShootout: m.hasPenaltyShootout,
     penaltyBonusPointsEnabled: m.penaltyBonusPointsEnabled,
@@ -122,7 +124,7 @@ function mapMatch(
     clockRunning: m.isClockRunning || m.clockRunning,
     clockStartedAt: (m.phaseStartedAt ?? m.clockStartedAt)?.toISOString() ?? null,
     periodLengthMin: m.periodLengthMin,
-    periodCount: m.periodCount,
+    periodCount: periods,
     inPenaltyShootout: inPenalties,
     scheduledAt: m.scheduledAt,
     venue: m.venue,
@@ -291,6 +293,7 @@ export function toMatchWithTeams(
     enriched?.inPenaltyShootout === true ||
     m.matchPeriod === "PENALTY_SHOOTOUT" ||
     m.homePenaltyScore + m.awayPenaltyScore > 0;
+  const periods = resolveTotalPeriods(m);
   return {
     id: m.id,
     status: m.status,
@@ -314,7 +317,7 @@ export function toMatchWithTeams(
         : (m.phaseStartedAt as string | null | undefined) ?? null,
     isClockRunning: m.isClockRunning,
     periodsConfigured: m.periodsConfigured,
-    totalPeriods: m.totalPeriods,
+    totalPeriods: periods,
     hasIntervals: m.hasIntervals,
     hasPenaltyShootout: m.hasPenaltyShootout,
     penaltyBonusPointsEnabled: m.penaltyBonusPointsEnabled,
@@ -329,7 +332,7 @@ export function toMatchWithTeams(
         ? m.clockStartedAt.toISOString()
         : (m.clockStartedAt as string | null | undefined) ?? null,
     periodLengthMin: m.periodLengthMin,
-    periodCount: m.periodCount,
+    periodCount: periods,
     inPenaltyShootout,
     penaltyKicks: enriched?.penaltyKicks,
     penaltyAttempts: enriched

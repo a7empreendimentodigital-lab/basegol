@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CircleDot,
   Flag,
@@ -17,7 +17,11 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
-import { getOperatorPhaseActions, resolveCurrentPhase } from "@/lib/match-phase";
+import {
+  getOperatorPhaseActions,
+  resolveCurrentPhase,
+  resolveTotalPeriods,
+} from "@/lib/match-phase";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { MatchScoreBoard } from "@/components/matches/MatchScoreBoard";
 import { cn } from "@/lib/utils";
@@ -120,6 +124,18 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   const [hasIntervals, setHasIntervals] = useState(true);
   const [hasPenaltyShootout, setHasPenaltyShootout] = useState(false);
   const [penaltyBonusPointsEnabled, setPenaltyBonusPointsEnabled] = useState(false);
+  /** Evita que o poll sobrescreva o formulário enquanto o operador edita. */
+  const configFormDirty = useRef(false);
+
+  const applyConfigFromMatch = useCallback((data: MatchData) => {
+    if (data.periodLengthMin != null) setPeriodLengthMin(data.periodLengthMin);
+    setTotalPeriods(resolveTotalPeriods(data));
+    if (data.hasIntervals != null) setHasIntervals(data.hasIntervals);
+    if (data.hasPenaltyShootout != null) setHasPenaltyShootout(data.hasPenaltyShootout);
+    if (data.penaltyBonusPointsEnabled != null) {
+      setPenaltyBonusPointsEnabled(data.penaltyBonusPointsEnabled);
+    }
+  }, []);
 
   const loadAthletes = useCallback(
     async (side: "home" | "away") => {
@@ -144,15 +160,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
     const data = await parseApiResponse<MatchData>(res);
     setMatch(data);
     if (data?.minute != null) setMinute(data.minute);
-    if (data?.periodLengthMin != null) setPeriodLengthMin(data.periodLengthMin);
-    if (data?.totalPeriods != null) setTotalPeriods(data.totalPeriods);
-    else if (data?.periodCount != null) setTotalPeriods(data.periodCount);
-    if (data?.hasIntervals != null) setHasIntervals(data.hasIntervals);
-    if (data?.hasPenaltyShootout != null) setHasPenaltyShootout(data.hasPenaltyShootout);
-    if (data?.penaltyBonusPointsEnabled != null) {
-      setPenaltyBonusPointsEnabled(data.penaltyBonusPointsEnabled);
+    if (data && !configFormDirty.current) {
+      applyConfigFromMatch(data);
     }
-  }, [matchId]);
+  }, [matchId, applyConfigFromMatch]);
 
   useEffect(() => {
     void refresh();
@@ -186,6 +197,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
       const updated = await parseApiResponse<MatchData>(res);
       setMatch(updated);
       setMinute(updated?.minute ?? minute);
+      if (actionName === "SET_MATCH_CONFIG" && updated) {
+        applyConfigFromMatch(updated);
+        configFormDirty.current = false;
+      }
       setEventDescription("");
       toast({ title: "Partida atualizada", variant: "success" });
     } catch {
@@ -223,28 +238,26 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
           phaseStartedAt: match.phaseStartedAt ?? null,
           isClockRunning: match.isClockRunning ?? match.clockRunning ?? false,
           periodsConfigured: match.periodsConfigured ?? false,
-          totalPeriods: match.totalPeriods ?? totalPeriods,
-          hasIntervals: match.hasIntervals ?? hasIntervals,
-          hasPenaltyShootout: match.hasPenaltyShootout ?? hasPenaltyShootout,
-          penaltyBonusPointsEnabled:
-            match.penaltyBonusPointsEnabled ?? penaltyBonusPointsEnabled,
+          totalPeriods,
+          hasIntervals,
+          hasPenaltyShootout,
+          penaltyBonusPointsEnabled,
           matchPeriod: match.matchPeriod,
-          periodLengthMin: match.periodLengthMin,
-          periodCount: match.periodCount,
+          periodLengthMin,
+          periodCount: totalPeriods,
         }),
         phaseDurationSeconds: match.phaseDurationSeconds ?? phaseDurationSeconds,
         phaseElapsedSeconds: match.phaseElapsedSeconds ?? 0,
         phaseStartedAt: match.phaseStartedAt ?? null,
         isClockRunning: match.isClockRunning ?? match.clockRunning ?? false,
         periodsConfigured: match.periodsConfigured ?? false,
-        totalPeriods: match.totalPeriods ?? totalPeriods,
-        hasIntervals: match.hasIntervals ?? hasIntervals,
-        hasPenaltyShootout: match.hasPenaltyShootout ?? hasPenaltyShootout,
-        penaltyBonusPointsEnabled:
-          match.penaltyBonusPointsEnabled ?? penaltyBonusPointsEnabled,
+        totalPeriods,
+        hasIntervals,
+        hasPenaltyShootout,
+        penaltyBonusPointsEnabled,
         matchPeriod: match.matchPeriod,
-        periodLengthMin: match.periodLengthMin,
-        periodCount: match.periodCount,
+        periodLengthMin,
+        periodCount: totalPeriods,
       })
     : []
   ).filter((a) => a.action !== "SET_MATCH_CONFIG");
@@ -311,7 +324,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                   max={60}
                   className="w-24 text-center text-lg font-semibold mt-1 tabular-nums"
                   value={periodLengthMin}
-                  onChange={(e) => setPeriodLengthMin(Number(e.target.value))}
+                  onChange={(e) => {
+                    configFormDirty.current = true;
+                    setPeriodLengthMin(Number(e.target.value));
+                  }}
                 />
               </div>
               <div className="text-center">
@@ -319,7 +335,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                 <Select
                   className="w-28 mt-1 text-center font-semibold"
                   value={String(totalPeriods)}
-                  onChange={(e) => setTotalPeriods(Number(e.target.value))}
+                  onChange={(e) => {
+                    configFormDirty.current = true;
+                    setTotalPeriods(Number(e.target.value));
+                  }}
                 >
                   <option value="2">2 tempos</option>
                   <option value="3">3 tempos</option>
@@ -331,7 +350,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                 <input
                   type="checkbox"
                   checked={hasIntervals}
-                  onChange={(e) => setHasIntervals(e.target.checked)}
+                  onChange={(e) => {
+                    configFormDirty.current = true;
+                    setHasIntervals(e.target.checked);
+                  }}
                   className="rounded border-line"
                 />
                 Intervalo entre tempos
@@ -340,7 +362,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                 <input
                   type="checkbox"
                   checked={hasPenaltyShootout}
-                  onChange={(e) => setHasPenaltyShootout(e.target.checked)}
+                  onChange={(e) => {
+                    configFormDirty.current = true;
+                    setHasPenaltyShootout(e.target.checked);
+                  }}
                   className="rounded border-line"
                 />
                 Disputa de pênaltis
@@ -350,7 +375,10 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                   <input
                     type="checkbox"
                     checked={penaltyBonusPointsEnabled}
-                    onChange={(e) => setPenaltyBonusPointsEnabled(e.target.checked)}
+                    onChange={(e) => {
+                      configFormDirty.current = true;
+                      setPenaltyBonusPointsEnabled(e.target.checked);
+                    }}
                     className="rounded border-line"
                   />
                   Ponto bônus nos pênaltis

@@ -1,5 +1,6 @@
 import { formatLiveClockCompact } from "@/lib/match-clock-display";
 import { getPeriodElapsedSeconds } from "@/lib/match-live";
+import { resolveTotalPeriods } from "@/lib/match-phase";
 import { formatDate, formatTime } from "@/lib/utils";
 
 export function formatRoundLabel(round: number): string {
@@ -34,6 +35,7 @@ type LiveClockMatch = {
   clockRunning?: boolean;
   clockStartedAt?: Date | string | null;
   periodLengthMin?: number;
+  totalPeriods?: number;
   periodCount?: number;
 };
 
@@ -56,7 +58,7 @@ function toClockFields(match: LiveClockMatch, status: string) {
     clockRunning: running,
     clockStartedAt: match.phaseStartedAt ?? match.clockStartedAt ?? null,
     periodLengthMin: match.periodLengthMin ?? 17,
-    periodCount: match.periodCount ?? 3,
+    periodCount: resolveTotalPeriods(match),
   };
 }
 
@@ -86,7 +88,7 @@ export function matchProgressPercent(
 ): number {
   if (status === "HALFTIME") {
     const len = match?.periodLengthMin ?? 17;
-    const total = (match?.periodCount ?? 3) * len * 60;
+    const total = resolveTotalPeriods(match ?? {}) * len * 60;
     return Math.round(((len * 60) / total) * 100);
   }
   const len = match?.periodLengthMin ?? 17;
