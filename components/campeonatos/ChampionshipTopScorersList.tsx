@@ -7,11 +7,7 @@ import { ChampionshipEmptyPanel } from "./ChampionshipEmptyPanel";
 export function ChampionshipTopScorersList({ scorers }: { scorers: TopScorer[] }) {
   if (scorers.length === 0) {
     return (
-      <ChampionshipEmptyPanel
-        icon={Award}
-        title="Sem gols registrados"
-        description="Os artilheiros aparecerão aqui quando houver gols nas partidas."
-      />
+      <ChampionshipEmptyPanel icon={Award} title="Sem gols registrados" />
     );
   }
 

@@ -25,7 +25,7 @@ export function FavoritosPageContent() {
 
   return (
     <>
-      <PublicPageBanner title="Favoritos" subtitle="Seus clubes salvos em um só lugar" />
+      <PublicPageBanner title="Favoritos" />
 
       <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         {!session?.user ? (
@@ -44,11 +44,7 @@ export function FavoritosPageContent() {
             Carregando favoritos…
           </div>
         ) : items.length === 0 ? (
-          <ChampionshipEmptyPanel
-            icon={Heart}
-            title="Nenhum clube favorito"
-            description="Abra a página de um clube e use o atalho de favoritos para salvá-lo aqui."
-          />
+          <ChampionshipEmptyPanel icon={Heart} title="Nenhum clube favorito" />
         ) : (
           <ul className="grid w-full gap-3 sm:grid-cols-2 lg:gap-4">
             {items.map((club) => (

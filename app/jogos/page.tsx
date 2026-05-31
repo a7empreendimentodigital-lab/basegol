@@ -21,11 +21,11 @@ export default async function JogosPage({
       ? await getUpcomingMatches(50)
       : await getTodayMatches();
 
-  const banner = isLive
-    ? { title: "Ao vivo", subtitle: "Acompanhe as partidas em andamento" }
+  const bannerTitle = isLive
+    ? "Ao vivo"
     : isUpcoming
-      ? { title: "Próximos jogos", subtitle: "Confira as partidas que estão por vir" }
-      : { title: "Jogos de hoje", subtitle: "Todos os jogos programados para hoje" };
+      ? "Próximos jogos"
+      : "Jogos de hoje";
 
   const emptyMessage = isLive
     ? "Nenhuma partida ao vivo no momento."
@@ -35,7 +35,7 @@ export default async function JogosPage({
 
   return (
     <PublicRightSidebarLayout>
-      <PublicPageBanner title={banner.title} subtitle={banner.subtitle} />
+      <PublicPageBanner title={bannerTitle} />
 
       <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         <JogosFilterTabs isLive={isLive} isUpcoming={isUpcoming} />

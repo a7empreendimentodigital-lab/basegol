@@ -89,7 +89,7 @@ function TeamLineupEditor({
   }
 
   return (
-    <section className="rounded-2xl border border-line bg-graphite-light overflow-hidden flex flex-col min-h-[480px]">
+    <section className="rounded-2xl border border-line bg-graphite-light overflow-hidden flex flex-col min-h-[320px] sm:min-h-[360px]">
       <div className="px-4 py-3 border-b border-line bg-pitch/20 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -150,7 +150,7 @@ function TeamLineupEditor({
           </Button>
         </div>
       ) : (
-        <ul className="divide-y divide-line flex-1 overflow-y-auto max-h-[520px]">
+        <ul className="divide-y divide-line flex-1 overflow-y-auto max-h-[min(420px,55dvh)]">
           {filtered.map((a) => {
             const inLineup = selected.has(a.id);
             const num = a.shirtNumber;
@@ -263,19 +263,9 @@ export function MatchLineupPanel({ matchId }: { matchId: string }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-neon/30 bg-neon/5 px-4 py-3 text-sm">
-        <p className="text-foreground">
-          <strong>1.</strong> Marque os atletas de cada time e salve.{" "}
-          <strong>2.</strong> Em <strong>Eventos</strong>, só aparecem os escalados (ou todos, se vazio).{" "}
-          <strong>3.</strong> A <strong>Súmula</strong> usa esta lista.
-        </p>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <TeamLineupEditor side="home" team={board.home} onSave={saveSide} saving={saving} />
-        <TeamLineupEditor side="away" team={board.away} onSave={saveSide} saving={saving} />
-      </div>
+    <div className="grid gap-3 lg:grid-cols-2">
+      <TeamLineupEditor side="home" team={board.home} onSave={saveSide} saving={saving} />
+      <TeamLineupEditor side="away" team={board.away} onSave={saveSide} saving={saving} />
     </div>
   );
 }

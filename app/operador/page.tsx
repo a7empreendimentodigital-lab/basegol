@@ -29,8 +29,8 @@ export default function OperadorPage() {
   }, []);
 
   return (
-    <main className="p-4 md:p-6 max-w-5xl mx-auto w-full space-y-4">
-        <h1 className="font-display text-3xl tracking-wide">Partidas atribuídas</h1>
+    <main className="p-4 md:p-6 max-w-5xl mx-auto w-full space-y-3">
+        <h1 className="font-display text-2xl tracking-wide">Partidas</h1>
         {matches.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhuma partida atribuída.</p>
         )}
@@ -39,7 +39,7 @@ export default function OperadorPage() {
             <Link
               key={m.id}
               href={`/operador/partida/${m.id}`}
-              className="rounded-2xl border border-line bg-graphite-light p-4 block hover:bg-graphite transition-colors"
+              className="rounded-2xl border border-line bg-graphite-light p-3 block hover:bg-graphite transition-colors"
             >
               <div className="flex items-center gap-3">
                 <TeamCrest url={null} name={m.homeTeam.club.name} size="sm" />

@@ -56,11 +56,7 @@ export function ChampionshipCategorySection({
 
           <TabsContent value="geral" className="mt-0 focus-visible:ring-0">
             {generalStandings.length === 0 ? (
-              <ChampionshipEmptyPanel
-                icon={ListOrdered}
-                title="Sem classificação geral"
-                description="A tabela será exibida quando as equipes e resultados forem cadastrados."
-              />
+              <ChampionshipEmptyPanel icon={ListOrdered} title="Sem classificação geral" />
             ) : (
               <StandingTable rows={generalStandings} />
             )}
@@ -72,7 +68,6 @@ export function ChampionshipCategorySection({
                 <ChampionshipEmptyPanel
                   icon={Layers}
                   title={`Sem classificação — ${g.name}`}
-                  description="Cadastre jogos e resultados deste grupo no admin."
                 />
               ) : (
                 <StandingTable rows={g.standings} />

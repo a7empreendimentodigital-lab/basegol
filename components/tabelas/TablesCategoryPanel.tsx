@@ -19,7 +19,7 @@ export function TablesCategoryPanel({ category }: Props) {
 
   return (
     <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
-      <div className="space-y-1 border-b border-line px-4 py-4 sm:px-5">
+      <div className="space-y-1 border-b border-line px-4 py-3 sm:px-5">
         <Link
           href={`/campeonatos/${category.championshipSlug}`}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -40,7 +40,6 @@ export function TablesCategoryPanel({ category }: Props) {
           <ChampionshipEmptyPanel
             icon={ListOrdered}
             title="Classificação ainda não publicada"
-            description="A tabela desta categoria aparecerá aqui quando for cadastrada no admin."
           />
         ) : (
           <Tabs defaultValue={defaultTab} className="w-full">
@@ -77,7 +76,6 @@ export function TablesCategoryPanel({ category }: Props) {
                   <ChampionshipEmptyPanel
                     icon={Layers}
                     title={`Sem classificação — ${g.name}`}
-                    description="Os jogos deste grupo ainda não geraram pontuação na tabela."
                   />
                 )}
               </TabsContent>

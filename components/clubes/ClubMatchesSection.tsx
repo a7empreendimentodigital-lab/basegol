@@ -31,7 +31,7 @@ export function ClubMatchesSection({ live, upcoming, finished }: ClubPublicMatch
   const hasAny = counts.live + counts.upcoming + counts.finished > 0;
   if (!hasAny) {
     return (
-      <section className="rounded-2xl border border-dashed border-line bg-graphite-light/80 px-6 py-12 text-center">
+      <section className="rounded-2xl border border-dashed border-line bg-graphite-light/80 px-4 py-8 text-center sm:px-5">
         <p className="text-sm text-muted-foreground">
           Nenhum jogo registrado para este clube ainda.
         </p>
@@ -50,13 +50,8 @@ export function ClubMatchesSection({ live, upcoming, finished }: ClubPublicMatch
         : "Nenhum resultado registrado ainda.";
 
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="font-display text-2xl tracking-wide text-foreground">Jogos</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Partidas deste clube — próximas, ao vivo e resultados com placar
-        </p>
-      </div>
+    <section className="space-y-3">
+      <h2 className="font-display text-2xl tracking-wide text-foreground">Jogos</h2>
 
       <nav className="flex flex-wrap gap-1.5" aria-label="Filtrar jogos do clube">
         {TABS.map(({ id, label, icon: Icon }) => {

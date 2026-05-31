@@ -106,11 +106,11 @@ function SectionCard({
 }) {
   return (
     <section className={cn("rounded-2xl border border-line bg-graphite-light overflow-hidden", className)}>
-      <div className="px-4 py-3 border-b border-line">
-        <h3 className="font-semibold text-foreground">{title}</h3>
+      <div className="px-4 py-2.5 border-b border-line">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {description ? <p className="text-xs text-muted-foreground mt-0.5">{description}</p> : null}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-3 sm:p-4">{children}</div>
     </section>
   );
 }
@@ -263,6 +263,13 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
       match.currentPhase === "PENALTIES" ||
       (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0);
 
+  const showScoreDetailInPanel =
+    !!match &&
+    (showPenaltyScoreEditor ||
+      !!match.inPenaltyShootout ||
+      match.hasPenaltyShootout === true ||
+      (match.homePenaltyScore ?? 0) + (match.awayPenaltyScore ?? 0) > 0);
+
   async function savePenaltyScore() {
     await action("SET_PENALTY_SCORE", {
       homePenaltyScore: penHomeInput,
@@ -329,17 +336,14 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
   return (
     <div className="space-y-4">
       {(mode === "all" || mode === "placar") && (
-        <SectionCard
-          title="Controle da partida"
-          description="Configure tempos e intervalos. Cada fase é iniciada e encerrada manualmente; o público vê só a fase atual e o cronômetro dela."
-        >
+        <SectionCard title="Tempos e placar">
           {match && isLivePhase ? (
-            <div className="mb-5 flex justify-center">
+            <div className="mb-3 flex justify-center">
               <LiveMatchClockDisplay match={match} size="lg" />
             </div>
           ) : null}
-          {match ? (
-            <div className="mb-5 rounded-2xl border border-line bg-pitch/25 p-4 sm:p-5">
+          {showScoreDetailInPanel ? (
+            <div className="mb-4 rounded-xl border border-line bg-pitch/25 p-3 sm:p-4">
               <MatchScoreBoard
                 layout="operator"
                 homeName={homeName}
@@ -368,9 +372,9 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
             </div>
           ) : null}
 
-          <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 sm:p-5 space-y-4">
+          <div className="mb-4 rounded-xl border border-line bg-pitch/30 p-3 sm:p-4 space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Configuração da partida
+              Configuração
             </p>
             <div className="flex flex-wrap items-end justify-center gap-4 sm:justify-start sm:gap-6">
               <div className="text-center sm:text-left">
@@ -494,7 +498,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 shrink-0"
+                    className="h-10 w-10 shrink-0"
                     disabled={loading || extraMinute <= 0}
                     aria-label="Diminuir acréscimo"
                     onClick={() => setExtraMinute((v) => Math.max(0, v - 1))}
@@ -506,7 +510,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                     min={0}
                     max={30}
                     inputMode="numeric"
-                    className="h-12 flex-1 text-center text-xl font-display font-semibold tabular-nums"
+                    className="h-10 flex-1 text-center text-lg font-display font-semibold tabular-nums"
                     value={extraMinute}
                     onChange={(e) =>
                       setExtraMinute(Math.min(30, Math.max(0, Number(e.target.value) || 0)))
@@ -516,7 +520,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 shrink-0"
+                    className="h-10 w-10 shrink-0"
                     disabled={loading || extraMinute >= 30}
                     aria-label="Aumentar acréscimo"
                     onClick={() => setExtraMinute((v) => Math.min(30, v + 1))}
@@ -597,7 +601,7 @@ export function MatchOperatorPanel({ matchId, mode = "all" }: { matchId: string;
       ) : null}
 
       {(mode === "all" || mode === "estatisticas") && (
-        <SectionCard title="Estatísticas" description="Incremento rápido por time">
+        <SectionCard title="Estatísticas">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {(
               [

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { ListOrdered, Trophy } from "lucide-react";
 import { ChampionshipEmptyPanel } from "@/components/campeonatos/ChampionshipEmptyPanel";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
@@ -27,7 +26,6 @@ export function TablesPageView({ categories }: Props) {
       <ChampionshipEmptyPanel
         icon={ListOrdered}
         title="Nenhuma competição com tabelas"
-        description="Quando houver campeonatos ativos e categorias cadastradas, as classificações aparecerão aqui."
       />
     );
   }
@@ -57,18 +55,6 @@ export function TablesPageView({ categories }: Props) {
             );
           })}
         </div>
-        {selected ? (
-          <p className="mt-3 text-xs text-muted-foreground">
-            <Link
-              href={`/campeonatos/${selected.championshipSlug}`}
-              className="hover:text-foreground transition-colors"
-            >
-              {selected.championshipName}
-            </Link>
-            {" · "}
-            Temporada {selected.season}
-          </p>
-        ) : null}
       </section>
 
       {selected ? <TablesCategoryPanel key={selected.id} category={selected} /> : null}

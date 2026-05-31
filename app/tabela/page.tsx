@@ -10,10 +10,7 @@ export default async function TabelaPage() {
 
   return (
     <PublicRightSidebarLayout>
-      <PublicPageBanner
-        title="Tabelas"
-        subtitle="Classificação geral das competições"
-      />
+      <PublicPageBanner title="Tabelas" />
 
       <main className="w-full px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         <TablesPageView categories={categories} />

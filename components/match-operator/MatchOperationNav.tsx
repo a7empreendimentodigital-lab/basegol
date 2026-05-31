@@ -75,7 +75,7 @@ export function MatchOperationNav({
   const statusLabel = MATCH_STATUS_LABELS[live.status] ?? live.status;
 
   return (
-    <div className="mb-6 space-y-4">
+    <div className="mb-4 space-y-3">
       <Link
         href={backHref}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -85,11 +85,8 @@ export function MatchOperationNav({
       </Link>
 
       <div className="rounded-2xl border border-line bg-graphite-light overflow-hidden">
-        <div className="px-4 sm:px-6 py-5 border-b border-line bg-pitch/30">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Operação da partida
-            </p>
+        <div className="px-4 sm:px-6 py-4 border-b border-line bg-pitch/30">
+          <div className="flex flex-wrap items-center justify-end gap-3 mb-3">
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
@@ -108,7 +105,7 @@ export function MatchOperationNav({
             </span>
           </div>
 
-          <div className="flex items-center justify-center gap-4 sm:gap-8">
+          <div className="flex items-center justify-center gap-4 sm:gap-6">
             <div className="flex flex-1 flex-col items-center gap-2 min-w-0 text-center">
               <TeamCrest url={homeCrest ?? null} name={homeName} size="lg" />
               <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 leading-snug">
@@ -117,7 +114,7 @@ export function MatchOperationNav({
             </div>
 
             <div className="shrink-0 text-center px-2">
-              <p className="font-display text-5xl sm:text-6xl tabular-nums text-neon leading-none">
+              <p className="font-display text-4xl sm:text-5xl tabular-nums text-neon leading-none">
                 {live.homeScore}
                 <span className="text-muted-foreground mx-1 sm:mx-2">:</span>
                 {live.awayScore}

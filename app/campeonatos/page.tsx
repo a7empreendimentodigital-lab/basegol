@@ -10,14 +10,11 @@ export default async function CampeonatosPage() {
 
   return (
     <PublicRightSidebarLayout>
-      <PublicPageBanner
-        title="Campeonatos"
-        subtitle="Competições e temporadas do futebol de base"
-      />
+      <PublicPageBanner title="Campeonatos" />
 
       <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         {championships.length === 0 ? (
-          <p className="rounded-2xl border border-line bg-graphite-light py-10 text-center text-sm text-muted-foreground">
+          <p className="rounded-2xl border border-line bg-graphite-light py-8 text-center text-sm text-muted-foreground">
             Nenhum campeonato ativo no momento.
           </p>
         ) : (

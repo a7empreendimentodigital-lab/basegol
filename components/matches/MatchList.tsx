@@ -202,8 +202,8 @@ function MatchListEmpty({
   message: string;
 }) {
   return (
-    <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-graphite-light/80 px-6 py-14 text-center">
-      <Icon className="mb-3 h-10 w-10 text-muted-foreground/50" strokeWidth={1.25} aria-hidden />
+    <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-graphite-light/80 px-4 py-8 text-center sm:px-5">
+      <Icon className="mb-2 h-7 w-7 text-muted-foreground/45" strokeWidth={1.25} aria-hidden />
       <p className="text-sm text-muted-foreground">{message}</p>
     </div>
   );

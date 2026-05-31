@@ -31,7 +31,6 @@ import {
   timelineEventTitle,
 } from "@/lib/match-timeline";
 import { publicTabTriggerClassFlex } from "@/lib/public-ui-classes";
-import { formatTime } from "@/lib/utils";
 import type { MatchWithTeams, StandingRowDisplay } from "@/types";
 
 type EventItem = {
@@ -124,7 +123,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
         })()
       : null);
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-5">
       <Link
         href="/jogos"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -133,20 +132,13 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
         Voltar aos jogos
       </Link>
 
-      <div className="space-y-5 rounded-2xl border border-line bg-graphite-light p-5 text-center sm:p-6">
-        <div className="flex flex-col items-center gap-2">
-          {isLive ? (
-            <>
-              <LiveBadge />
-              <LiveMatchClockDisplay match={match} size="lg" />
-            </>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5 opacity-70" aria-hidden />
-              {formatTime(match.scheduledAt)}
-            </span>
-          )}
-        </div>
+      <div className="space-y-4 rounded-2xl border border-line bg-graphite-light p-4 text-center sm:p-5">
+        {isLive ? (
+          <div className="flex flex-col items-center gap-2">
+            <LiveBadge />
+            <LiveMatchClockDisplay match={match} size="lg" />
+          </div>
+        ) : null}
 
         <div className="flex items-center justify-center gap-5 sm:gap-10">
           <div className="flex min-w-0 max-w-[9rem] flex-1 flex-col items-center gap-2.5">
@@ -257,11 +249,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
               Cronologia
             </h3>
             {timelineEvents.length === 0 ? (
-              <ChampionshipEmptyPanel
-                icon={ClipboardList}
-                title="Nenhum evento registrado ainda"
-                description="Gols, cartões e substituições aparecerão aqui durante a partida."
-              />
+              <ChampionshipEmptyPanel icon={ClipboardList} title="Nenhum evento ainda" />
             ) : (
               <div className="divide-y divide-[#a1a1aa17] overflow-hidden rounded-2xl border border-line bg-graphite-light">
                 {timelineEvents.map((ev) => (
@@ -298,11 +286,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
           {standings.length > 0 ? (
             <StandingTable rows={standings} />
           ) : (
-            <ChampionshipEmptyPanel
-              icon={ListOrdered}
-              title="Classificação indisponível"
-              description="A tabela desta categoria ainda não foi publicada."
-            />
+            <ChampionshipEmptyPanel icon={ListOrdered} title="Classificação indisponível" />
           )}
         </TabsContent>
       </Tabs>

@@ -23,7 +23,7 @@ export function ChampionshipDetailHeader({ name, season, logoUrl, description }:
         Voltar aos campeonatos
       </Link>
 
-      <div className="flex items-start gap-4 sm:gap-5 rounded-2xl border border-line bg-graphite-light p-5 sm:p-6">
+      <div className="flex items-start gap-4 sm:gap-5 rounded-2xl border border-line bg-graphite-light p-4 sm:p-5">
         <div className="flex h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 items-center justify-center">
           {logoSrc ? (
             <SafeImage
@@ -49,7 +49,7 @@ export function ChampionshipDetailHeader({ name, season, logoUrl, description }:
             <span>Temporada {season}</span>
           </p>
           {description ? (
-            <p className="mt-3 text-sm text-muted-foreground/90 leading-relaxed">{description}</p>
+            <p className="mt-2 text-sm text-muted-foreground/90 line-clamp-3">{description}</p>
           ) : null}
         </div>
       </div>

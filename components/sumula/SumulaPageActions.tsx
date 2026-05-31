@@ -62,11 +62,6 @@ export function SumulaPageActions({ matchId, initialMeta }: Props) {
           {showForm ? "Ocultar arbitragem" : "Editar arbitragem e observações"}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Use &quot;Imprimir / Baixar PDF&quot; e escolha &quot;Salvar como PDF&quot; na janela de impressão do
-        navegador.
-      </p>
-
       {showForm ? (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3 max-w-2xl">
           <h3 className="font-semibold text-sm">Arbitragem e observações (FPF)</h3>

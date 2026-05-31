@@ -100,8 +100,8 @@ function TeamSideToggle({
             className={cn(
               "rounded-xl border transition-colors touch-manipulation",
               large
-                ? "min-h-[3.25rem] px-3 py-2.5 text-left sm:min-h-[3.5rem] sm:text-center sm:px-4"
-                : "min-h-11 px-3 py-2 text-left md:min-h-[3.75rem] md:text-center md:px-4",
+                ? "min-h-11 px-3 py-2 text-left sm:text-center sm:px-4"
+                : "min-h-10 px-3 py-2 text-left md:text-center md:px-4",
               active
                 ? "border-neon bg-neon/15 text-foreground ring-2 ring-neon/50"
                 : "border-line bg-pitch/40 text-muted-foreground hover:bg-pitch/60 hover:text-foreground"
@@ -147,7 +147,7 @@ export function MatchOperatorEventsSection({
 
   const actionBtn = cn(
     "touch-manipulation font-semibold",
-    eventsOnly ? "min-h-[3.25rem] text-base sm:min-h-10 sm:text-sm" : "min-h-10"
+    eventsOnly ? "min-h-11 text-base sm:min-h-10 sm:text-sm" : "min-h-10"
   );
 
   return (
@@ -159,15 +159,7 @@ export function MatchOperatorEventsSection({
           : "xl:grid-cols-2"
       )}
     >
-      <SectionCard
-        compact={eventsOnly}
-        title="Registrar evento"
-        description={
-          eventsOnly
-            ? `Time: ${homeSigla} ou ${awaySigla} — toque no evento`
-            : `${homeSigla} ou ${awaySigla} — use a escalação para filtrar atletas`
-        }
-      >
+      <SectionCard compact={eventsOnly} title="Registrar evento">
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-muted-foreground">Time</Label>
@@ -193,7 +185,7 @@ export function MatchOperatorEventsSection({
               onClick={() => onAction("GOAL")}
               className={cn(
                 actionBtn,
-                "bg-neon hover:bg-neon/90 text-background h-auto py-3.5",
+                "bg-neon hover:bg-neon/90 text-background h-auto py-2.5",
                 eventsOnly ? "col-span-2 lg:col-span-1" : "col-span-2"
               )}
             >
@@ -275,7 +267,7 @@ export function MatchOperatorEventsSection({
               </details>
             ) : (
               <div>
-                <Label>Descrição (substituição: Saiu: … | Entrou: …)</Label>
+                <Label>Descrição</Label>
                 <Textarea
                   value={eventDescription}
                   onChange={(e) => onEventDescriptionChange(e.target.value)}
@@ -289,11 +281,7 @@ export function MatchOperatorEventsSection({
         </div>
       </SectionCard>
 
-      <SectionCard
-        compact={eventsOnly}
-        title="Linha do tempo"
-        description="Últimos eventos registrados"
-      >
+      <SectionCard compact={eventsOnly} title="Linha do tempo">
         <div
           className={cn(
             "space-y-1 overflow-y-auto overscroll-contain -mx-1 px-1",
@@ -341,8 +329,8 @@ export function MatchOperatorEventsSection({
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              Nenhum evento ainda. Registre gols ou cartões acima.
+            <p className="text-sm text-muted-foreground py-5 text-center">
+              Nenhum evento ainda.
             </p>
           )}
         </div>

@@ -34,17 +34,12 @@ export function PenaltyFinalScoreEditor({
   const awaySigla = clubSigla(awayShortName, awayName);
 
   return (
-    <div className="mb-6 rounded-xl border border-line bg-pitch/30 p-4 sm:p-5 space-y-4">
-      <div className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Disputa de pênaltis
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Informe o resultado (ex.: 5 × 6). O tempo regulamentar não é alterado.
-        </p>
-      </div>
+    <div className="mb-4 rounded-xl border border-line bg-pitch/30 p-3 sm:p-4 space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Pênaltis
+      </p>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-10 md:gap-16 items-end w-full">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-6 items-end w-full">
         <div className="flex flex-col items-center gap-2 min-w-0">
           <span
             className="font-display text-base sm:text-lg font-semibold tracking-wide text-foreground truncate max-w-full text-center"
@@ -61,7 +56,7 @@ export function PenaltyFinalScoreEditor({
             max={99}
             aria-label={`Pênaltis ${homeSigla}`}
             className={cn(
-              "w-full max-w-[5.5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
+              "w-full max-w-[5.5rem] h-10 sm:h-11 text-center text-lg sm:text-xl font-display font-semibold tabular-nums",
               "border-line bg-graphite-light"
             )}
             value={homeScore}
@@ -91,7 +86,7 @@ export function PenaltyFinalScoreEditor({
             max={99}
             aria-label={`Pênaltis ${awaySigla}`}
             className={cn(
-              "w-full max-w-[5.5rem] h-12 sm:h-14 text-center text-xl sm:text-2xl font-display font-semibold tabular-nums",
+              "w-full max-w-[5.5rem] h-10 sm:h-11 text-center text-lg sm:text-xl font-display font-semibold tabular-nums",
               "border-line bg-graphite-light"
             )}
             value={awayScore}

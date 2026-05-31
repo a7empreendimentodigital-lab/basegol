@@ -108,13 +108,8 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
 
         <ClubMatchesSection {...clubMatches} />
 
-        <section className="space-y-4">
-          <div>
-            <h2 className="font-display text-2xl tracking-wide text-foreground">Elenco</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Atletas organizados por categoria (Sub-11, Sub-12…)
-            </p>
-          </div>
+        <section className="space-y-3">
+          <h2 className="font-display text-2xl tracking-wide text-foreground">Elenco</h2>
           <ClubSquadSection athletes={squadAthletes} categoryOrder={categoryOrder} />
         </section>
       </main>
