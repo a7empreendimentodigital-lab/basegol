@@ -14,19 +14,19 @@ function CategoryCircle({
 }) {
   const src = normalizeImageSrc(imageUrl);
 
+  if (!src) {
+    return <Layers className="h-10 w-10 shrink-0 text-neon/70" aria-hidden />;
+  }
+
   return (
-    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-graphite-light transition-colors group-hover:border-foreground/30 group-hover:bg-graphite/80">
-      {src ? (
-        <SafeImage
-          src={src}
-          alt={label}
-          fill
-          className="object-cover"
-          sizes="64px"
-        />
-      ) : (
-        <Layers className="h-6 w-6 text-muted-foreground opacity-80" aria-hidden />
-      )}
+    <div className="relative h-16 w-16 shrink-0">
+      <SafeImage
+        src={src}
+        alt={label}
+        fill
+        className="object-contain transition-opacity group-hover:opacity-90"
+        sizes="64px"
+      />
     </div>
   );
 }

@@ -19,6 +19,8 @@ const DEFAULT_PAGE_SIZE = 100;
 
 type Props<T extends { id: string }> = {
   entity: string;
+  /** Ex.: `/api/admin/users` — quando omitido, usa `/api/admin/crud/{entity}` */
+  apiBase?: string;
   title: string;
   description?: string;
   searchPlaceholder?: string;
@@ -41,6 +43,7 @@ type Props<T extends { id: string }> = {
 
 export function AdminGroupedListPage<T extends { id: string }>({
   entity,
+  apiBase,
   title,
   description,
   searchPlaceholder = "Buscar...",
@@ -72,6 +75,8 @@ export function AdminGroupedListPage<T extends { id: string }>({
 
   const extraParamsKey = useMemo(() => JSON.stringify(extraParams ?? {}), [extraParams]);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const listBase = apiBase ?? `/api/admin/crud/${entity}`;
+  const deleteBase = apiBase ?? `/api/admin/crud/${entity}`;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,7 +86,7 @@ export function AdminGroupedListPage<T extends { id: string }>({
       for (const [key, value] of Object.entries(extraParams ?? {})) {
         if (value) params.set(key, value);
       }
-      const res = await fetch(`/api/admin/crud/${entity}?${params}`);
+      const res = await fetch(`${listBase}?${params}`);
       if (!res.ok) throw new Error("Falha ao carregar");
       const data = await parseApiResponse<{ items: T[]; total: number }>(res);
       setItems(data.items ?? []);
@@ -93,7 +98,7 @@ export function AdminGroupedListPage<T extends { id: string }>({
     } finally {
       setLoading(false);
     }
-  }, [entity, page, pageSize, q, extraParamsKey, toast]);
+  }, [listBase, page, pageSize, q, extraParamsKey, toast]);
 
   useEffect(() => {
     const timer = setTimeout(() => void load(), 300);
@@ -118,7 +123,7 @@ export function AdminGroupedListPage<T extends { id: string }>({
   async function handleDelete(row: T) {
     if (!confirm(deleteConfirm(row))) return;
     try {
-      const res = await fetch(`/api/admin/crud/${entity}/${row.id}`, { method: "DELETE" });
+      const res = await fetch(`${deleteBase}/${row.id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error((json as { error?: string }).error || "Falha ao excluir");

@@ -15,7 +15,14 @@ type Props = {
 export function TablesCategoryPanel({ category }: Props) {
   const hasGeneral = category.generalStandings.length > 0;
   const hasAnyGroup = category.groups.some((g) => g.standings.length > 0);
-  const defaultTab = hasGeneral ? "geral" : category.groups[0] ? `group-${category.groups[0].id}` : "geral";
+  const firstGroupWithData = category.groups.find((g) => g.standings.length > 0);
+  const defaultTab = hasGeneral
+    ? "geral"
+    : firstGroupWithData
+      ? `group-${firstGroupWithData.id}`
+      : category.groups[0]
+        ? `group-${category.groups[0].id}`
+        : "geral";
 
   return (
     <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
@@ -60,11 +67,7 @@ export function TablesCategoryPanel({ category }: Props) {
               {hasGeneral ? (
                 <StandingTable rows={category.generalStandings} />
               ) : (
-                <ChampionshipEmptyPanel
-                  icon={ListOrdered}
-                  title="Sem classificação geral"
-                  description="Cadastre equipes e resultados para montar a tabela geral."
-                />
+                <ChampionshipEmptyPanel icon={ListOrdered} title="Sem classificação geral" />
               )}
             </TabsContent>
 

@@ -43,6 +43,15 @@ export function groupItemsByKey<T extends { id: string }>(
 }
 
 /** Ordem preferida para chaves de status (ex.: ACTIVE antes de DRAFT). */
+/** Lista única sem filtros por pill (ex.: temas). */
+export function adminListSingleGroup<T extends { id: string }>(
+  items: T[],
+  label = "Listagem"
+): ListGroup<T>[] {
+  if (items.length === 0) return [];
+  return [{ key: "all", label, items: [...items] }];
+}
+
 export function sortKeysByOrder(keys: string[], order: string[]): string[] {
   const rank = new Map(order.map((k, i) => [k, i]));
   return [...keys].sort((a, b) => {

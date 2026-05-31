@@ -98,6 +98,12 @@ export const GROUP_STATUS_LABELS: Record<string, string> = {
   INACTIVE: "Inativo",
 };
 
+export const MENU_AREA_LABELS: Record<string, string> = {
+  PUBLIC: "Site público",
+  ADMIN: "Painel admin",
+  CLUBE: "Portal do clube",
+};
+
 export const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: "Super Admin",
   ADMIN_LIGA: "Admin da Liga",

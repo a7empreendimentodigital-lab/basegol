@@ -12,16 +12,22 @@ export type TopScorerRow = {
 
 type Props = {
   title: string;
+  categoryLabel?: string;
   scorers: TopScorerRow[];
 };
 
-export function HomeTopScorersCard({ title, scorers }: Props) {
+export function HomeTopScorersCard({ title, categoryLabel, scorers }: Props) {
   return (
     <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
       <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-4">
-        <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
-          <Award className="h-4 w-4 text-muted-foreground" aria-hidden />
-          {title}
+        <h2 className="flex min-w-0 flex-1 items-center gap-2 text-base font-semibold text-foreground">
+          <Award className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="truncate">{title}</span>
+          {categoryLabel ? (
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              {categoryLabel}
+            </span>
+          ) : null}
         </h2>
         <HomeSectionLink href="/campeonatos">Ver campeonatos</HomeSectionLink>
       </div>

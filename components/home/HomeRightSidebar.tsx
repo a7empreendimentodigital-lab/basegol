@@ -27,11 +27,11 @@ function RightSidebarPatrocinio({
   if (!rightBanner?.imageUrl) return null;
 
   return (
-    <div className="mt-2 border-t border-line pt-4">
+    <div className="mt-2 border-t border-line pt-4 max-md:-mx-3 max-md:px-0">
       <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         Patrocinador
       </p>
-      <SidebarAdBanner banner={rightBanner} variant="right" />
+      <SidebarAdBanner banner={rightBanner} variant="right" className="max-md:rounded-2xl" />
     </div>
   );
 }
@@ -91,11 +91,19 @@ export function HomeRightSidebar({
       </section>
 
       {standings.length > 0 && (
-        <HomeStandingsCard title={`Tabela — ${selected?.label ?? ""}`} rows={standings} />
+        <HomeStandingsCard
+          title="Tabela"
+          categoryLabel={selected?.label}
+          rows={standings}
+        />
       )}
 
       {scorers.length > 0 && (
-        <HomeTopScorersCard title={`Artilheiros — ${selected?.label ?? ""}`} scorers={scorers} />
+        <HomeTopScorersCard
+          title="Artilheiros"
+          categoryLabel={selected?.label}
+          scorers={scorers}
+        />
       )}
 
       <RightSidebarPatrocinio rightBanner={rightBanner} />

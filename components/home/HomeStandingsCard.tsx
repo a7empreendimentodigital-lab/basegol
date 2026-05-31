@@ -5,15 +5,28 @@ import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 
 type Props = {
   title: string;
+  categoryLabel?: string;
   groupLabel?: string;
   rows: StandingRowDisplay[];
 };
 
-export function HomeStandingsCard({ title, groupLabel = "Grupo 1", rows }: Props) {
+export function HomeStandingsCard({
+  title,
+  categoryLabel,
+  groupLabel = "Grupo 1",
+  rows,
+}: Props) {
   return (
     <section className="overflow-hidden rounded-2xl border border-line bg-graphite-light">
       <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-4">
-        <h2 className="text-base font-semibold text-foreground">{title}</h2>
+        <h2 className="flex min-w-0 flex-1 items-baseline gap-2 text-base font-semibold text-foreground">
+          <span className="truncate">{title}</span>
+          {categoryLabel ? (
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              {categoryLabel}
+            </span>
+          ) : null}
+        </h2>
         <HomeSectionLink href="/tabela">{groupLabel}</HomeSectionLink>
       </div>
       <div className="overflow-x-auto">
