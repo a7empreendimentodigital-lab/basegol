@@ -421,20 +421,35 @@ async function resolveCategory(
   return cat;
 }
 
+async function preloadCategoryMatchFingerprints(championshipId: string, categoryId: string) {
+  const rows = await prisma.match.findMany({
+    where: { championshipId, group: { categoryId } },
+    select: { importFingerprint: true },
+  });
+  return new Set(
+    rows.map((r) => r.importFingerprint).filter((f): f is string => typeof f === "string" && f.length > 0)
+  );
+}
+
 async function importParsedSchedule(
   importId: string,
   championshipId: string,
   categoryId: string,
   categorySlug: string,
   parsed: ParsedFpSchedule,
-  options?: { participantsOnly?: boolean }
+  options?: { participantsOnly?: boolean; fastMode?: boolean }
 ): Promise<ScheduleImportSummary> {
   const counters = new ImportCounters();
   counters.summary.warnings = [...parsed.warnings];
+  const fastMode = options?.fastMode === true;
 
-  const log: LogFn = (level, message, metadata) => {
-    void appendLog(importId, level, message, metadata);
-  };
+  const log: LogFn = fastMode
+    ? (level, message, metadata) => {
+        if (level === "ERROR") void appendLog(importId, level, message, metadata);
+      }
+    : (level, message, metadata) => {
+        void appendLog(importId, level, message, metadata);
+      };
 
   const participantsOnly = options?.participantsOnly === true || parsed.matches.length === 0;
 
@@ -475,7 +490,17 @@ async function importParsedSchedule(
     });
   }
 
-  if (!participantsOnly) for (const m of parsed.matches) {
+  if (!participantsOnly) {
+    const knownFingerprints = fastMode
+      ? await preloadCategoryMatchFingerprints(championshipId, categoryId)
+      : null;
+
+    const phaseCache = new Map<string, Awaited<ReturnType<typeof findOrCreatePhase>>>();
+    const turnCache = new Map<string, Awaited<ReturnType<typeof findOrCreateTurn>>>();
+    const roundCache = new Map<number, Awaited<ReturnType<typeof findOrCreateRound>>>();
+    const venueCache = new Map<string, string>();
+
+    for (const m of parsed.matches) {
     try {
       const homeName = resolver.resolve(m.homeRaw);
       const awayName = resolver.resolve(m.awayRaw);
@@ -506,26 +531,42 @@ async function importParsedSchedule(
       const homeTeam = await findOrCreateTeam(homeClubId, groupId, log, counters);
       const awayTeam = await findOrCreateTeam(awayClubId, groupId, log, counters);
 
-      const phase = await findOrCreatePhase(
-        championshipId,
-        m.phaseName,
-        m.phaseSlug,
-        log,
-        counters
-      );
-      const turn = await findOrCreateTurn(phase.id, m.turnName, m.turnSlug, log, counters);
-      const roundLabel = `Rodada ${String(m.roundNumber).padStart(2, "0")}`;
-      const round = await findOrCreateRound(
-        championshipId,
-        phase.id,
-        turn.id,
-        m.roundNumber,
-        roundLabel,
-        log,
-        counters
-      );
+      const phaseKey = m.phaseSlug;
+      let phase = phaseCache.get(phaseKey);
+      if (!phase) {
+        phase = await findOrCreatePhase(championshipId, m.phaseName, m.phaseSlug, log, counters);
+        phaseCache.set(phaseKey, phase);
+      }
 
-      const venue = await findOrCreateVenue(m.venueName, log, counters);
+      const turnKey = `${phase.id}:${m.turnSlug}`;
+      let turn = turnCache.get(turnKey);
+      if (!turn) {
+        turn = await findOrCreateTurn(phase.id, m.turnName, m.turnSlug, log, counters);
+        turnCache.set(turnKey, turn);
+      }
+
+      let round = roundCache.get(m.roundNumber);
+      if (!round) {
+        const roundLabel = `Rodada ${String(m.roundNumber).padStart(2, "0")}`;
+        round = await findOrCreateRound(
+          championshipId,
+          phase.id,
+          turn.id,
+          m.roundNumber,
+          roundLabel,
+          log,
+          counters
+        );
+        roundCache.set(m.roundNumber, round);
+      }
+
+      const venueNorm = normalizeEntityName(m.venueName);
+      let venueId = venueCache.get(venueNorm);
+      if (!venueId) {
+        const venue = await findOrCreateVenue(m.venueName, log, counters);
+        venueId = venue.id;
+        venueCache.set(venueNorm, venueId);
+      }
 
       const fingerprint = buildMatchImportFingerprint({
         championshipId,
@@ -538,32 +579,40 @@ async function importParsedSchedule(
         awayClubId,
       });
 
-      const existingMatch = await findExistingImportedMatch({
-        championshipId,
-        categorySlug,
-        categoryId,
-        phaseSlug: m.phaseSlug,
-        turnSlug: m.turnSlug,
-        roundNumber: m.roundNumber,
-        scheduledAt: m.scheduledAt,
-        homeClubId,
-        awayClubId,
-      });
-      if (existingMatch) {
-        counters.summary.matchesIgnored++;
-        counters.summary.matchesSkippedDuplicate++;
-        if (existingMatch.importFingerprint !== fingerprint) {
-          await prisma.match.update({
-            where: { id: existingMatch.id },
-            data: { importFingerprint: fingerprint },
-          });
+      if (fastMode && knownFingerprints) {
+        if (knownFingerprints.has(fingerprint)) {
+          counters.summary.matchesIgnored++;
+          counters.summary.matchesSkippedDuplicate++;
+          continue;
         }
-        log("INFO", "Jogo já existente — ignorado", {
-          matchNumber: m.matchNumber,
-          fingerprint,
-          matchId: existingMatch.id,
+      } else {
+        const existingMatch = await findExistingImportedMatch({
+          championshipId,
+          categorySlug,
+          categoryId,
+          phaseSlug: m.phaseSlug,
+          turnSlug: m.turnSlug,
+          roundNumber: m.roundNumber,
+          scheduledAt: m.scheduledAt,
+          homeClubId,
+          awayClubId,
         });
-        continue;
+        if (existingMatch) {
+          counters.summary.matchesIgnored++;
+          counters.summary.matchesSkippedDuplicate++;
+          if (existingMatch.importFingerprint !== fingerprint) {
+            await prisma.match.update({
+              where: { id: existingMatch.id },
+              data: { importFingerprint: fingerprint },
+            });
+          }
+          log("INFO", "Jogo já existente — ignorado", {
+            matchNumber: m.matchNumber,
+            fingerprint,
+            matchId: existingMatch.id,
+          });
+          continue;
+        }
       }
 
       await prisma.match.create({
@@ -581,24 +630,28 @@ async function importParsedSchedule(
           round: m.roundNumber,
           scheduledAt: m.scheduledAt,
           venue: m.venueName,
-          venueId: venue.id,
+          venueId,
           importFingerprint: fingerprint,
           status: "SCHEDULED",
         },
       });
+      knownFingerprints?.add(fingerprint);
       counters.summary.matchesImported++;
       counters.summary.matchesCreated++;
-      log("INFO", `Jogo importado #${m.matchNumber}`, {
-        home: homeName,
-        away: awayName,
-        scheduledAt: m.scheduledAt.toISOString(),
-      });
+      if (!fastMode) {
+        log("INFO", `Jogo importado #${m.matchNumber}`, {
+          home: homeName,
+          away: awayName,
+          scheduledAt: m.scheduledAt.toISOString(),
+        });
+      }
     } catch (e) {
       counters.summary.errors++;
       log("ERROR", `Erro ao importar jogo #${m.matchNumber}`, {
         error: e instanceof Error ? e.message : String(e),
         line: `${m.homeRaw} x ${m.awayRaw}`,
       });
+    }
     }
   }
 
@@ -613,6 +666,10 @@ export type RunStructuredScheduleImportInput = {
   participantsOnly?: boolean;
   autoCreateCategory?: boolean;
   categoryId?: string;
+  /** Filtra por nome da categoria (ex.: Sub-11). */
+  categoryHint?: string;
+  /** Menos logs e caches — pacotes grandes (FPF). */
+  fastMode?: boolean;
   sourceLabel?: string;
 };
 
@@ -628,7 +685,16 @@ export async function runStructuredScheduleImport(input: RunStructuredScheduleIm
   const sourceLabel = input.sourceLabel ?? "arquivo";
 
   let schedulesToImport = allSchedules;
-  if (input.categoryId) {
+  if (input.categoryHint?.trim()) {
+    schedulesToImport = allSchedules.filter((s) =>
+      categoryHintsMatch(s.categoryHint, input.categoryHint!)
+    );
+    if (schedulesToImport.length === 0) {
+      throw new Error(
+        `Os dados não contêm a categoria "${input.categoryHint}". Encontrado: ${detectedCategories.join(", ") || "nenhuma"}.`
+      );
+    }
+  } else if (input.categoryId) {
     const selected = await prisma.category.findFirst({
       where: { id: input.categoryId, championshipId: input.championshipId },
     });
@@ -674,7 +740,7 @@ export async function runStructuredScheduleImport(input: RunStructuredScheduleIm
         category.id,
         category.slug,
         parsed,
-        { participantsOnly: input.participantsOnly }
+        { participantsOnly: input.participantsOnly, fastMode: input.fastMode }
       );
 
       partSummary.byCategory = [

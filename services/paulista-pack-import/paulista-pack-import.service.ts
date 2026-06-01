@@ -9,6 +9,8 @@ export type PaulistaPackImportInput = {
   participantsOnly?: boolean;
   autoCreateCategory?: boolean;
   categoryId?: string;
+  /** Importa só uma categoria por requisição (ex.: Sub-11). */
+  categoryHint?: string;
   /** Caminho da pasta com CSVs ou arquivo .json */
   sourcePath?: string;
   /** Buffer JSON (upload admin) */
@@ -44,6 +46,8 @@ export async function runPaulistaPackImport(input: PaulistaPackImportInput) {
     participantsOnly: input.participantsOnly,
     autoCreateCategory: input.autoCreateCategory !== false,
     categoryId: input.categoryId,
+    categoryHint: input.categoryHint,
+    fastMode: true,
     sourceLabel: "Pacote FPF Paulista",
   });
 }

@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     const file = form.get("file");
     const championshipId = String(form.get("championshipId") ?? "").trim();
     const participantsOnly = String(form.get("participantsOnly") ?? "") === "true";
+    const categoryHint = String(form.get("categoryHint") ?? "").trim() || undefined;
 
     if (!championshipId) return fail("Selecione o campeonato.", 400);
     if (!(file instanceof File)) return fail("Envie o arquivo JSON do pacote FPF.", 400);
@@ -53,20 +54,19 @@ export async function POST(req: Request) {
       fileName: file.name,
       createdById: user.id,
       participantsOnly,
+      categoryHint,
     });
 
     return ok(result, 201);
   } catch (error) {
+    console.error("[paulista-pack-import]", error);
     if (error instanceof Error && error.message === "FORBIDDEN") {
       return fail("Sem permissão", 403);
     }
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return fail("Faça login novamente.", 401);
     }
-    return fail(
-      error instanceof Error ? error.message : "Falha na importação",
-      400,
-      error instanceof Error ? error.message : undefined
-    );
+    const message = error instanceof Error ? error.message : "Falha na importação";
+    return fail(message, 500, message);
   }
 }

@@ -26,6 +26,56 @@ type ImportResult = {
   parsed: { matchCount: number; title: string };
 };
 
+function mergeImportSummaries(parts: ScheduleImportSummary[]): ScheduleImportSummary {
+  const merged: ScheduleImportSummary = {
+    clubsCreated: 0,
+    clubsReused: 0,
+    venuesCreated: 0,
+    venuesReused: 0,
+    groupsCreated: 0,
+    groupsReused: 0,
+    phasesCreated: 0,
+    phasesReused: 0,
+    turnsCreated: 0,
+    turnsReused: 0,
+    roundsCreated: 0,
+    roundsReused: 0,
+    teamsCreated: 0,
+    teamsReused: 0,
+    matchesImported: 0,
+    matchesCreated: 0,
+    matchesUpdated: 0,
+    matchesIgnored: 0,
+    matchesSkippedDuplicate: 0,
+    errors: 0,
+    warnings: [],
+  };
+  for (const p of parts) {
+    merged.clubsCreated += p.clubsCreated;
+    merged.clubsReused += p.clubsReused;
+    merged.venuesCreated += p.venuesCreated;
+    merged.venuesReused += p.venuesReused;
+    merged.groupsCreated += p.groupsCreated;
+    merged.groupsReused += p.groupsReused;
+    merged.phasesCreated += p.phasesCreated;
+    merged.phasesReused += p.phasesReused;
+    merged.turnsCreated += p.turnsCreated;
+    merged.turnsReused += p.turnsReused;
+    merged.roundsCreated += p.roundsCreated;
+    merged.roundsReused += p.roundsReused;
+    merged.teamsCreated += p.teamsCreated;
+    merged.teamsReused += p.teamsReused;
+    merged.matchesImported += p.matchesImported;
+    merged.matchesCreated += p.matchesCreated;
+    merged.matchesUpdated += p.matchesUpdated;
+    merged.matchesIgnored += p.matchesIgnored;
+    merged.matchesSkippedDuplicate += p.matchesSkippedDuplicate;
+    merged.errors += p.errors;
+    merged.warnings.push(...p.warnings);
+  }
+  return merged;
+}
+
 export function PaulistaPackImportPanel() {
   const [championships, setChampionships] = useState<Option[]>([]);
   const [championshipId, setChampionshipId] = useState("");
@@ -34,6 +84,7 @@ export function PaulistaPackImportPanel() {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<PackPreview | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,14 +95,18 @@ export function PaulistaPackImportPanel() {
       });
   }, []);
 
-  const buildFormData = useCallback(() => {
-    const fd = new FormData();
-    fd.set("action", "import");
-    fd.set("championshipId", championshipId);
-    fd.set("participantsOnly", String(participantsOnly));
-    if (file) fd.set("file", file);
-    return fd;
-  }, [championshipId, participantsOnly, file]);
+  const buildFormData = useCallback(
+    (categoryHint?: string) => {
+      const fd = new FormData();
+      fd.set("action", "import");
+      fd.set("championshipId", championshipId);
+      fd.set("participantsOnly", String(participantsOnly));
+      if (categoryHint) fd.set("categoryHint", categoryHint);
+      if (file) fd.set("file", file);
+      return fd;
+    },
+    [championshipId, participantsOnly, file]
+  );
 
   async function onPreview() {
     if (!file) {
@@ -88,21 +143,43 @@ export function PaulistaPackImportPanel() {
     }
     setLoading(true);
     setError(null);
+    setProgress(null);
     try {
-      const res = await fetch("/api/admin/import/paulista-pack", {
-        method: "POST",
-        body: buildFormData(),
-      });
-      const json = await parseAdminApiResponse(res);
-      if (!json.ok) {
-        setError(json.error ?? "Falha na importação");
-        return;
+      const categories = preview.categories.map((c) => c.categoryHint);
+      const summaries: ScheduleImportSummary[] = [];
+      let lastPayload: ImportResult | null = null;
+
+      for (let i = 0; i < categories.length; i++) {
+        const cat = categories[i];
+        setProgress(`Importando ${cat} (${i + 1} de ${categories.length})…`);
+        const res = await fetch("/api/admin/import/paulista-pack", {
+          method: "POST",
+          body: buildFormData(cat),
+        });
+        const json = await parseAdminApiResponse(res);
+        if (!json.ok) {
+          setError(
+            json.error ??
+              `Falha ao importar ${cat}. Tente o script CLI: npm run import:paulista-pack`
+          );
+          return;
+        }
+        const data = json.data as ImportResult;
+        summaries.push(data.summary);
+        lastPayload = data;
       }
-      setResult(json.data as ImportResult);
+
+      if (lastPayload) {
+        setResult({
+          ...lastPayload,
+          summary: mergeImportSummaries(summaries),
+        });
+      }
     } catch {
       setError("Erro de rede ao importar. Se persistir, use o script CLI (npm run import:paulista-pack).");
     } finally {
       setLoading(false);
+      setProgress(null);
     }
   }
 
@@ -154,11 +231,12 @@ export function PaulistaPackImportPanel() {
           }}
         />
         <p className="text-xs text-muted-foreground">
-          Envie <code className="text-xs">basegol_paulista_import_2026.json</code>. A prévia roda no navegador; a
-          confirmação envia ao servidor (~1.000 jogos pode demorar — em caso de timeout use o script CLI).
+          Envie <code className="text-xs">basegol_paulista_import_2026.json</code>. A prévia é local; a confirmação
+          importa Sub-11 e Sub-12 em duas etapas no servidor.
         </p>
       </div>
 
+      {progress && <p className="text-sm text-primary">{progress}</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-2">
