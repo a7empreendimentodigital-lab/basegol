@@ -1,6 +1,7 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import { ensureTeamInGroup } from "@/lib/team-enrollment";
 import { prisma } from "@/lib/prisma";
+import { removeTeamFromGroup } from "@/services/group-team-admin.service";
 import { fail, ok } from "@/utils/api-response";
 import { z } from "zod";
 
@@ -48,16 +49,18 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     await ensureAdmin();
     const { id: groupId } = await params;
-    const teamId = new URL(req.url).searchParams.get("teamId");
+    const url = new URL(req.url);
+    const teamId = url.searchParams.get("teamId");
+    const force = url.searchParams.get("force") === "true" || url.searchParams.get("force") === "1";
+
     if (!teamId) return fail("teamId obrigatório", 400);
 
-    const team = await prisma.team.findFirst({ where: { id: teamId, groupId } });
-    if (!team) return fail("Equipe não encontrada neste grupo", 404);
-
-    await prisma.team.delete({ where: { id: teamId } });
-    return ok({ deleted: true });
+    const result = await removeTeamFromGroup(groupId, teamId, { force });
+    return ok(result);
   } catch (e) {
     if (e instanceof Error && e.message === "FORBIDDEN") return fail("Sem permissão", 403);
-    return fail("Erro ao remover clube do grupo", 400);
+    const message = e instanceof Error ? e.message : "Erro ao remover clube do grupo";
+    const needsForce = message.includes("jogo(s) neste grupo");
+    return fail(message, needsForce ? 409 : 400, message);
   }
 }

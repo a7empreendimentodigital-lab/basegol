@@ -66,16 +66,37 @@ export function GroupTeamsField({ groupId }: Props) {
     }
   }
 
-  async function removeTeam(teamId: string) {
-    if (!confirm("Remover este clube do grupo?")) return;
+  async function removeTeam(teamId: string, clubName: string, force = false) {
+    const msg = force
+      ? `Remover "${clubName}" e APAGAR todos os jogos deste clube neste grupo? Esta ação não pode ser desfeita.`
+      : `Remover "${clubName}" deste grupo?`;
+    if (!confirm(msg)) return;
+
     try {
-      const res = await fetch(`/api/admin/groups/${groupId}/teams?teamId=${teamId}`, {
+      const qs = new URLSearchParams({ teamId });
+      if (force) qs.set("force", "true");
+      const res = await fetch(`/api/admin/groups/${groupId}/teams?${qs}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error();
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err = (json as { error?: string }).error ?? "";
+        if (res.status === 409 && err.includes("jogo(s)")) {
+          const okForce = confirm(
+            `${err}\n\nDeseja remover o clube e apagar esses jogos do grupo?`
+          );
+          if (okForce) return removeTeam(teamId, clubName, true);
+          return;
+        }
+        throw new Error(err || "Não foi possível remover");
+      }
+      const data = json.data as { matchesDeleted?: number } | undefined;
+      if (data?.matchesDeleted && data.matchesDeleted > 0) {
+        alert(`Clube removido. ${data.matchesDeleted} jogo(s) do grupo foram excluídos.`);
+      }
       await load();
-    } catch {
-      alert("Não foi possível remover o clube do grupo.");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Não foi possível remover o clube do grupo.");
     }
   }
 
@@ -84,7 +105,8 @@ export function GroupTeamsField({ groupId }: Props) {
       <div>
         <p className="text-sm font-medium text-foreground">Clubes no grupo</p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Inscreva os clubes que disputarão jogos neste grupo (mandante e visitante).
+          Inscreva os clubes que disputarão jogos neste grupo. Se o clube já tiver jogos importados,
+          a remoção pode pedir confirmação para apagar esses jogos.
         </p>
       </div>
 
@@ -101,7 +123,12 @@ export function GroupTeamsField({ groupId }: Props) {
             >
               <TeamCrest url={t.club.crestUrl} name={t.club.name} size="sm" />
               <span className="flex-1 text-sm truncate">{t.club.name}</span>
-              <Button type="button" variant="outline" size="sm" onClick={() => void removeTeam(t.id)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void removeTeam(t.id, t.club.name)}
+              >
                 Remover
               </Button>
             </li>
