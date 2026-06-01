@@ -34,6 +34,9 @@ export type ScheduleImportSummary = {
   teamsCreated: number;
   teamsReused: number;
   matchesImported: number;
+  matchesCreated: number;
+  matchesUpdated: number;
+  matchesIgnored: number;
   matchesSkippedDuplicate: number;
   errors: number;
   warnings: string[];
@@ -72,6 +75,9 @@ function mergeSummaries(parts: ScheduleImportSummary[]): ScheduleImportSummary {
     teamsCreated: 0,
     teamsReused: 0,
     matchesImported: 0,
+    matchesCreated: 0,
+    matchesUpdated: 0,
+    matchesIgnored: 0,
     matchesSkippedDuplicate: 0,
     errors: 0,
     warnings: [],
@@ -93,6 +99,9 @@ function mergeSummaries(parts: ScheduleImportSummary[]): ScheduleImportSummary {
     merged.teamsCreated += p.teamsCreated;
     merged.teamsReused += p.teamsReused;
     merged.matchesImported += p.matchesImported;
+    merged.matchesCreated += p.matchesCreated;
+    merged.matchesUpdated += p.matchesUpdated;
+    merged.matchesIgnored += p.matchesIgnored;
     merged.matchesSkippedDuplicate += p.matchesSkippedDuplicate;
     merged.errors += p.errors;
     merged.warnings.push(...p.warnings);
@@ -123,6 +132,9 @@ class ImportCounters {
     teamsCreated: 0,
     teamsReused: 0,
     matchesImported: 0,
+    matchesCreated: 0,
+    matchesUpdated: 0,
+    matchesIgnored: 0,
     matchesSkippedDuplicate: 0,
     errors: 0,
     warnings: [],
@@ -539,6 +551,7 @@ async function importParsedSchedule(
         awayClubId,
       });
       if (existingMatch) {
+        counters.summary.matchesIgnored++;
         counters.summary.matchesSkippedDuplicate++;
         if (existingMatch.importFingerprint !== fingerprint) {
           await prisma.match.update({
@@ -575,6 +588,7 @@ async function importParsedSchedule(
         },
       });
       counters.summary.matchesImported++;
+      counters.summary.matchesCreated++;
       log("INFO", `Jogo importado #${m.matchNumber}`, {
         home: homeName,
         away: awayName,
