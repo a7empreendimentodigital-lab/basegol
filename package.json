@@ -17,6 +17,9 @@
     "db:reconcile-penalties": "tsx scripts/reconcile-match-penalties.ts",
     "db:fix-bebedouro-lg": "tsx scripts/fix-bebedouro-lg-penalties.ts",
     "db:repair-match-timeline": "tsx scripts/repair-match-penalties-timeline.ts",
+    "import:athletes": "tsx scripts/run-athlete-import.ts",
+    "import:results": "tsx scripts/run-match-results-import.ts",
+    "import:standings": "tsx scripts/recalculate-standings.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

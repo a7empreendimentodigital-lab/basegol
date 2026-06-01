@@ -45,6 +45,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/jogos", label: "Jogos", icon: Calendar },
       { href: "/admin/importacao-tabela", label: "Importar tabela PDF", icon: FileUp },
       { href: "/admin/importacao-jogos", label: "Importar jogos", icon: Calendar },
+      { href: "/admin/importacao-atletas", label: "Importar atletas", icon: FileUp },
+      { href: "/admin/importacao-resultados", label: "Importar resultados", icon: FileUp },
       { href: "/admin/placar-ao-vivo", label: "Placar ao vivo", icon: ActivitySquare },
     ],
   },
