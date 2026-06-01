@@ -606,15 +606,27 @@ async function importParsedSchedule(
   return counters.summary;
 }
 
-export async function runSchedulePdfImport(input: RunScheduleImportInput) {
+export type RunStructuredScheduleImportInput = {
+  championshipId: string;
+  schedules: ParsedFpSchedule[];
+  fileName: string;
+  createdById?: string;
+  participantsOnly?: boolean;
+  autoCreateCategory?: boolean;
+  categoryId?: string;
+  sourceLabel?: string;
+};
+
+/** Importa estruturas já parseadas (PDF, pacote FPF CSV/JSON, etc.). */
+export async function runStructuredScheduleImport(input: RunStructuredScheduleImportInput) {
   const championship = await prisma.championship.findUnique({
     where: { id: input.championshipId },
   });
   if (!championship) throw new Error("Campeonato não encontrado.");
 
-  const text = await extractTextFromPdf(input.buffer);
-  const allSchedules = parseFpPaulistaSchedules(text);
+  const allSchedules = input.schedules;
   const detectedCategories = [...new Set(allSchedules.map((s) => s.categoryHint))];
+  const sourceLabel = input.sourceLabel ?? "arquivo";
 
   let schedulesToImport = allSchedules;
   if (input.categoryId) {
@@ -625,7 +637,7 @@ export async function runSchedulePdfImport(input: RunScheduleImportInput) {
     schedulesToImport = allSchedules.filter((s) => categoryHintsMatch(s.categoryHint, selected.name));
     if (schedulesToImport.length === 0) {
       throw new Error(
-        `O PDF não contém a categoria "${selected.name}". Encontrado no arquivo: ${detectedCategories.join(", ") || "nenhuma"}. Deixe a categoria em branco para importar todas.`
+        `Os dados não contêm a categoria "${selected.name}". Encontrado: ${detectedCategories.join(", ") || "nenhuma"}.`
       );
     }
   }
@@ -641,7 +653,7 @@ export async function runSchedulePdfImport(input: RunScheduleImportInput) {
   });
 
   try {
-    await appendLog(importRecord.id, "INFO", `PDF analisado: ${schedulesToImport.length} categoria(s)`, {
+    await appendLog(importRecord.id, "INFO", `${sourceLabel}: ${schedulesToImport.length} categoria(s)`, {
       detectedCategories,
       importing: schedulesToImport.map((s) => s.categoryHint),
       totalMatches: schedulesToImport.reduce((n, s) => n + s.matches.length, 0),
@@ -733,6 +745,21 @@ export async function runSchedulePdfImport(input: RunScheduleImportInput) {
     });
     throw e;
   }
+}
+
+export async function runSchedulePdfImport(input: RunScheduleImportInput) {
+  const text = await extractTextFromPdf(input.buffer);
+  const allSchedules = parseFpPaulistaSchedules(text);
+  return runStructuredScheduleImport({
+    championshipId: input.championshipId,
+    schedules: allSchedules,
+    fileName: input.fileName,
+    createdById: input.createdById,
+    participantsOnly: input.participantsOnly,
+    autoCreateCategory: input.autoCreateCategory,
+    categoryId: input.categoryId,
+    sourceLabel: "PDF analisado",
+  });
 }
 
 export async function getScheduleImport(importId: string) {

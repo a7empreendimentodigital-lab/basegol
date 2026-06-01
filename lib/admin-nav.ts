@@ -43,6 +43,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/categorias", label: "Categorias", icon: Layers },
       { href: "/admin/grupos", label: "Grupos", icon: Blocks },
       { href: "/admin/jogos", label: "Jogos", icon: Calendar },
+      { href: "/admin/importacao-paulista", label: "Importar pacote Paulista", icon: FileUp },
       { href: "/admin/importacao-tabela", label: "Importar tabela PDF", icon: FileUp },
       { href: "/admin/importacao-jogos", label: "Importar jogos", icon: Calendar },
       { href: "/admin/importacao-atletas", label: "Importar atletas", icon: FileUp },

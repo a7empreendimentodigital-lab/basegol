@@ -20,6 +20,7 @@
     "import:athletes": "tsx scripts/run-athlete-import.ts",
     "import:results": "tsx scripts/run-match-results-import.ts",
     "import:standings": "tsx scripts/recalculate-standings.ts",
+    "import:paulista-pack": "tsx scripts/run-paulista-pack-import.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

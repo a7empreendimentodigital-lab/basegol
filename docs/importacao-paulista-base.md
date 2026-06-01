@@ -2,6 +2,25 @@
 
 Fluxo recomendado (sem duplicar cadastros):
 
+### Pacote FPF 2026 (recomendado — um passo)
+
+Arquivos em `basegol_paulista_import_2026/`:
+
+- `basegol_paulista_import_2026.json` (tudo em um arquivo)
+- ou `group_teams.csv` + `fixtures.csv` (+ `competitions.csv` opcional)
+
+**Painel:** `/admin/importacao-paulista` — envie o JSON e selecione o campeonato.
+
+**CLI:**
+
+```bash
+npm run import:paulista-pack -- ~/Downloads/basegol_paulista_import_2026 <championshipId>
+npm run import:paulista-pack -- ~/Downloads/basegol_paulista_import_2026/basegol_paulista_import_2026.json <championshipId> --preview
+npm run import:paulista-pack -- ~/Downloads/basegol_paulista_import_2026 <championshipId> --participants-only
+```
+
+### Fluxo alternativo (PDF)
+
 1. **Clubes e grupos** — `/admin/importacao-tabela` (PDF) com opção *somente participantes* ou importação completa inicial.
 2. **Jogos** — `/admin/importacao-jogos` (PDF) ou `npx tsx scripts/run-schedule-import.ts`.
 3. **Atletas** — `/admin/importacao-atletas` (CSV) ou `npx tsx scripts/run-athlete-import.ts`.
