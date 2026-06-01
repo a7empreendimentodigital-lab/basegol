@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { parseAdminApiResponse } from "@/lib/parse-admin-api-response";
+import { previewPaulistaPackFromJson } from "@/lib/paulista-pack-preview-client";
 import type { ScheduleImportSummary } from "@/services/schedule-import/schedule-import.service";
 
 type Option = { value: string; label: string };
@@ -42,19 +44,36 @@ export function PaulistaPackImportPanel() {
       });
   }, []);
 
-  const buildFormData = useCallback(
-    (action: "preview" | "import") => {
-      const fd = new FormData();
-      fd.set("action", action);
-      fd.set("championshipId", championshipId);
-      fd.set("participantsOnly", String(participantsOnly));
-      if (file) fd.set("file", file);
-      return fd;
-    },
-    [championshipId, participantsOnly, file]
-  );
+  const buildFormData = useCallback(() => {
+    const fd = new FormData();
+    fd.set("action", "import");
+    fd.set("championshipId", championshipId);
+    fd.set("participantsOnly", String(participantsOnly));
+    if (file) fd.set("file", file);
+    return fd;
+  }, [championshipId, participantsOnly, file]);
 
-  async function runAction(action: "preview" | "import") {
+  async function onPreview() {
+    if (!file) {
+      setError("Selecione o arquivo JSON do pacote.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const text = await file.text();
+      const raw = JSON.parse(text) as unknown;
+      setPreview(previewPaulistaPackFromJson(raw));
+    } catch (e) {
+      setPreview(null);
+      setError(e instanceof Error ? e.message : "JSON inválido");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function onImport() {
     if (!championshipId) {
       setError("Selecione o campeonato.");
       return;
@@ -63,24 +82,25 @@ export function PaulistaPackImportPanel() {
       setError("Selecione o arquivo JSON do pacote.");
       return;
     }
+    if (!preview) {
+      setError("Gere a prévia antes de confirmar.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/admin/import/paulista-pack", {
         method: "POST",
-        body: buildFormData(action),
+        body: buildFormData(),
       });
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error ?? "Falha na importação");
-      if (action === "preview") {
-        setPreview(json.data);
-        setResult(null);
-      } else {
-        setResult(json.data);
-        setPreview(json.data?.preview ?? preview);
+      const json = await parseAdminApiResponse(res);
+      if (!json.ok) {
+        setError(json.error ?? "Falha na importação");
+        return;
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro");
+      setResult(json.data as ImportResult);
+    } catch {
+      setError("Erro de rede ao importar. Se persistir, use o script CLI (npm run import:paulista-pack).");
     } finally {
       setLoading(false);
     }
@@ -134,19 +154,19 @@ export function PaulistaPackImportPanel() {
           }}
         />
         <p className="text-xs text-muted-foreground">
-          Envie <code className="text-xs">basegol_paulista_import_2026.json</code> ou use o script com a
-          pasta de CSVs. Reimportação é segura (não duplica clubes, grupos nem jogos).
+          Envie <code className="text-xs">basegol_paulista_import_2026.json</code>. A prévia roda no navegador; a
+          confirmação envia ao servidor (~1.000 jogos pode demorar — em caso de timeout use o script CLI).
         </p>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" disabled={loading || !file} onClick={() => runAction("preview")}>
-          {loading ? "Processando…" : "Gerar prévia"}
+        <Button type="button" variant="outline" disabled={loading || !file} onClick={onPreview}>
+          {loading && !preview ? "Processando…" : "Gerar prévia"}
         </Button>
-        <Button type="button" disabled={loading || !file || !preview} onClick={() => runAction("import")}>
-          Confirmar importação
+        <Button type="button" disabled={loading || !file || !preview} onClick={onImport}>
+          {loading && preview ? "Importando…" : "Confirmar importação"}
         </Button>
       </div>
 

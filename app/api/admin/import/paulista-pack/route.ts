@@ -1,12 +1,13 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import {
+  parsePaulistaPackBuffer,
   previewPaulistaPack,
-  runPaulistaPackImport,
-} from "@/services/paulista-pack-import/paulista-pack-import.service";
-import type { PaulistaPack } from "@/services/paulista-pack-import/paulista-pack.types";
+} from "@/services/paulista-pack-import/paulista-pack-preview";
 import { fail, ok } from "@/utils/api-response";
 
 export const runtime = "nodejs";
+/** Importação completa pode levar vários minutos (mil jogos). */
+export const maxDuration = 300;
 
 const MAX_BYTES = 25 * 1024 * 1024;
 
@@ -17,20 +18,6 @@ async function ensureAdmin() {
     throw new Error("FORBIDDEN");
   }
   return user;
-}
-
-function parsePackBuffer(buffer: Buffer): PaulistaPack {
-  const raw = JSON.parse(buffer.toString("utf8")) as {
-    competitions?: PaulistaPack["competitions"];
-    group_teams?: PaulistaPack["groupTeams"];
-    fixtures?: PaulistaPack["fixtures"];
-  };
-  return {
-    season: raw.competitions?.[0]?.season ?? 2026,
-    competitions: raw.competitions ?? [],
-    groupTeams: raw.group_teams ?? [],
-    fixtures: raw.fixtures ?? [],
-  };
 }
 
 export async function POST(req: Request) {
@@ -50,11 +37,15 @@ export async function POST(req: Request) {
     if (file.size > MAX_BYTES) return fail("JSON muito grande (máx. 25 MB).", 400);
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const pack = parsePackBuffer(buffer);
+    const pack = parsePaulistaPackBuffer(buffer);
 
     if (action === "preview") {
       return ok(previewPaulistaPack(pack));
     }
+
+    const { runPaulistaPackImport } = await import(
+      "@/services/paulista-pack-import/paulista-pack-import.service"
+    );
 
     const result = await runPaulistaPackImport({
       championshipId,
@@ -68,6 +59,9 @@ export async function POST(req: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "FORBIDDEN") {
       return fail("Sem permissão", 403);
+    }
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return fail("Faça login novamente.", 401);
     }
     return fail(
       error instanceof Error ? error.message : "Falha na importação",

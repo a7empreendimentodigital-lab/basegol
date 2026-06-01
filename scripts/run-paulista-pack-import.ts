@@ -8,10 +8,8 @@
  *   npx tsx scripts/run-paulista-pack-import.ts ~/Downloads/basegol_paulista_import_2026 <id>
  *   npx tsx scripts/run-paulista-pack-import.ts ~/Downloads/basegol_paulista_import_2026/basegol_paulista_import_2026.json <id>
  */
-import {
-  previewPaulistaPack,
-  runPaulistaPackImport,
-} from "@/services/paulista-pack-import/paulista-pack-import.service";
+import { previewPaulistaPack } from "@/services/paulista-pack-import/paulista-pack-preview";
+import { runPaulistaPackImport } from "@/services/paulista-pack-import/paulista-pack-import.service";
 import { loadPaulistaPack } from "@/services/paulista-pack-import/paulista-pack-loader";
 
 async function main() {
