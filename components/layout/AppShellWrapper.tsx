@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNavClient } from "@/components/layout/BottomNavClient";
 import { PublicTopBar } from "@/components/layout/PublicTopBar";
 import { InstallPwaPrompt } from "@/components/pwa/InstallPwaPrompt";
+import { StaffPortalBar } from "@/components/layout/PortalNavLinks";
 import { SiteFooterClient } from "@/components/layout/SiteFooterClient";
 import { isAuthRoute, isPublicAppRoute } from "@/lib/public-routes";
 import type { PublicBannerDto } from "@/services/banner.service";
@@ -82,7 +83,8 @@ export function AppShellWrapper({
   }
 
   const showPublicChrome = isPublicAppRoute(pathname);
-  const showOperadorHeader = pathname.startsWith("/operador");
+  const showOperadorHeader =
+    pathname.startsWith("/operador") || pathname.startsWith("/partida");
 
   if (!showPublicChrome && !showOperadorHeader) {
     return (
@@ -103,6 +105,7 @@ export function AppShellWrapper({
           userRole={userRole}
           mobileLogoUrl={mobileLogoUrl}
         />
+        <StaffPortalBar userRole={userRole} currentArea="operador" />
         <div className="flex flex-1 flex-col">
           {children}
           {footer}

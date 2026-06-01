@@ -6,15 +6,16 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { MobileBrandLogo } from "@/components/brand/MobileBrandLogo";
 import { AdminNavList } from "@/components/admin/AdminNavList";
-import { PublicSiteNavLink } from "@/components/layout/PortalNavLinks";
+import { StaffPortalBar } from "@/components/layout/PortalNavLinks";
 import { cn } from "@/lib/utils";
 
 type Props = {
   mobileLogoUrl?: string | null;
   systemName?: string;
+  userRole?: string | null;
 };
 
-export function AdminMobileHeader({ mobileLogoUrl, systemName = "BASEGOL" }: Props) {
+export function AdminMobileHeader({ mobileLogoUrl, systemName = "BASEGOL", userRole }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "/";
   const skipPathClose = useRef(true);
@@ -103,9 +104,12 @@ export function AdminMobileHeader({ mobileLogoUrl, systemName = "BASEGOL" }: Pro
             <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
               <AdminNavList onNavigate={close} />
             </div>
-            <div className="shrink-0 border-t border-line p-4">
-              <PublicSiteNavLink onNavigate={close} variant="admin" />
-            </div>
+            <StaffPortalBar
+              userRole={userRole}
+              currentArea="admin"
+              onNavigate={close}
+              variant="stacked"
+            />
           </aside>
         </div>
       ) : null}

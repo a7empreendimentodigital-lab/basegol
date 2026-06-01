@@ -2,9 +2,13 @@
 
 import { Logo } from "@/components/brand/Logo";
 import { AdminNavList } from "@/components/admin/AdminNavList";
-import { PublicSiteNavLink } from "@/components/layout/PortalNavLinks";
+import { StaffPortalBar } from "@/components/layout/PortalNavLinks";
 
-export function AdminSidebar() {
+type Props = {
+  userRole?: string | null;
+};
+
+export function AdminSidebar({ userRole }: Props) {
   return (
     <aside className="hidden lg:flex w-[280px] shrink-0 flex-col border-r border-line bg-graphite/90">
       <div className="shrink-0 border-b border-line px-4 py-5 flex flex-col items-center">
@@ -18,9 +22,7 @@ export function AdminSidebar() {
         <AdminNavList />
       </div>
 
-      <div className="shrink-0 border-t border-line p-4">
-        <PublicSiteNavLink variant="admin" />
-      </div>
+      <StaffPortalBar userRole={userRole} currentArea="admin" variant="stacked" />
     </aside>
   );
 }

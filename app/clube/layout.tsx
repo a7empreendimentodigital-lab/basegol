@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { StaffPortalBar } from "@/components/layout/PortalNavLinks";
 import {
   Users,
   FileText,
@@ -29,9 +31,11 @@ const clubNav = [
 
 export default function ClubeLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     <div className="min-h-screen">
+      <StaffPortalBar userRole={session?.user?.role} currentArea="clube" />
       <div className="border-b border-line bg-graphite/50 px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
         {clubNav.map(({ href, label, icon: Icon }) => {
           const active =
