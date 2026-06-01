@@ -60,7 +60,18 @@ function parseRow(row: CsvRow, line: number): {
   error?: string;
 } {
   const clubName =
-    pickColumn(row, "clube", "club", "club_name", "clubname", "time") || "";
+    pickColumn(
+      row,
+      "clube",
+      "club",
+      "club_name",
+      "clubname",
+      "time",
+      "alias",
+      "apelido",
+      "nome_clube",
+      "official_name"
+    ) || "";
   const fullName = pickColumn(row, "nome_completo", "nomecompleto", "atleta", "name");
   let firstName = pickColumn(row, "nome", "first_name", "firstname");
   let lastName = pickColumn(row, "sobrenome", "last_name", "lastname");
