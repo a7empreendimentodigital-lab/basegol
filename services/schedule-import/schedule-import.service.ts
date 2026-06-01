@@ -10,7 +10,6 @@ import {
   normalizeEntityName,
 } from "@/lib/normalize-name";
 import { slugify } from "@/lib/utils";
-import { extractTextFromPdf } from "@/services/schedule-import/pdf-text";
 import {
   ClubNameResolver,
   groupForClubs,
@@ -748,6 +747,7 @@ export async function runStructuredScheduleImport(input: RunStructuredScheduleIm
 }
 
 export async function runSchedulePdfImport(input: RunScheduleImportInput) {
+  const { extractTextFromPdf } = await import("@/services/schedule-import/pdf-text");
   const text = await extractTextFromPdf(input.buffer);
   const allSchedules = parseFpPaulistaSchedules(text);
   return runStructuredScheduleImport({
