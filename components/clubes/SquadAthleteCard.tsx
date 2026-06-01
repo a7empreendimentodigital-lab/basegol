@@ -24,23 +24,19 @@ export function SquadAthleteCard({
 
   return (
     <article
-      className={cn(
-        "flex flex-col items-center p-2.5 text-center",
-        "sm:flex-row sm:items-center sm:gap-3 sm:p-3 sm:text-left",
-        className
-      )}
+      className={cn("flex flex-col items-center p-3 text-center", className)}
     >
-      <div className="relative h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-xl bg-pitch/50 sm:h-14 sm:w-14 sm:rounded-lg">
+      <div className="relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-xl bg-pitch/50">
         {photo ? (
-          <SafeImage src={photo} alt="" fill className="object-cover" sizes="72px" />
+          <SafeImage src={photo} alt="" fill className="object-cover" sizes="(max-width: 640px) 136px, 160px" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center font-display text-xl text-neon/50 sm:text-2xl">
+          <div className="flex h-full w-full items-center justify-center font-display text-3xl text-neon/50">
             {displayNumber ?? "—"}
           </div>
         )}
         {displayNumber && photo ? (
           <span
-            className="absolute bottom-0 right-0 min-w-[1.25rem] rounded-tl-md bg-foreground px-1 py-0.5 text-[10px] font-bold leading-none text-background tabular-nums"
+            className="absolute bottom-0 right-0 min-w-[1.625rem] rounded-tl-lg bg-foreground px-1.5 py-1 text-xs font-bold leading-none text-background tabular-nums"
             aria-hidden
           >
             {displayNumber}
@@ -48,8 +44,8 @@ export function SquadAthleteCard({
         ) : null}
       </div>
 
-      <div className="mt-2 min-w-0 w-full sm:mt-0 sm:flex-1">
-        <p className="text-[11px] font-semibold leading-snug text-foreground line-clamp-2 sm:text-sm sm:line-clamp-2">
+      <div className="mt-2.5 min-w-0 w-full">
+        <p className="text-xs font-semibold leading-snug text-foreground line-clamp-2 sm:text-sm">
           {name}
         </p>
         <p className="mt-1 inline-flex max-w-full rounded-md bg-pitch/50 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:text-xs">

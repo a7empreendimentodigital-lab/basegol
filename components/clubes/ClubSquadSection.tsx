@@ -98,7 +98,7 @@ export function ClubSquadSection({ athletes, categoryOrder = [] }: Props) {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-2 sm:gap-2.5 sm:p-3 lg:grid-cols-3 lg:gap-3">
+            <div className="grid grid-cols-2 justify-items-center gap-x-3 gap-y-4 py-3 sm:gap-x-4 sm:gap-y-5 sm:py-4 lg:grid-cols-3">
               {group.athletes.map((a) => (
                 <SquadAthleteCard
                   key={a.id}
