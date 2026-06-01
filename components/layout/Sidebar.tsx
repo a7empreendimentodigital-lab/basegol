@@ -11,9 +11,10 @@ import type { PublicBannerDto } from "@/services/banner.service";
 type SidebarProps = {
   leftBanner?: PublicBannerDto | null;
   isLoggedIn?: boolean;
+  userRole?: string | null;
 };
 
-export function Sidebar({ leftBanner, isLoggedIn }: SidebarProps) {
+export function Sidebar({ leftBanner, isLoggedIn, userRole }: SidebarProps) {
   const pathname = usePathname();
 
   if (
@@ -50,7 +51,7 @@ export function Sidebar({ leftBanner, isLoggedIn }: SidebarProps) {
       ) : null}
 
       <div className="shrink-0 p-3 border-t border-line">
-        <SidebarFooterLinks isLoggedIn={isLoggedIn} />
+        <SidebarFooterLinks isLoggedIn={isLoggedIn} userRole={userRole} />
       </div>
     </aside>
   );

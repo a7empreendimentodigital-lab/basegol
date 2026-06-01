@@ -16,6 +16,7 @@ type Props = {
   userName?: string | null;
   userImage?: string | null;
   isLoggedIn?: boolean;
+  userRole?: string | null;
   mobileLogoUrl?: string | null;
   systemName?: string;
 };
@@ -28,17 +29,19 @@ const PublicAppChrome = memo(function PublicAppChrome({
   userName,
   userImage,
   isLoggedIn,
+  userRole,
   mobileLogoUrl,
   systemName = "BASEGOL",
 }: PublicChromeProps) {
   return (
     <>
-      <Sidebar leftBanner={leftSidebarBanner} isLoggedIn={isLoggedIn} />
+      <Sidebar leftBanner={leftSidebarBanner} isLoggedIn={isLoggedIn} userRole={userRole} />
       <div className="flex min-h-screen flex-col pb-16 md:pb-0 md:pl-64 lg:pl-72">
         <PublicTopBar
           userName={userName}
           userImage={userImage}
           isLoggedIn={isLoggedIn}
+          userRole={userRole}
           mobileLogoUrl={mobileLogoUrl}
         />
         <div className="flex flex-1 flex-col w-full min-h-0">
@@ -58,6 +61,7 @@ export function AppShellWrapper({
   userName,
   userImage,
   isLoggedIn,
+  userRole,
   mobileLogoUrl,
   systemName = "BASEGOL",
 }: Props) {
@@ -96,6 +100,7 @@ export function AppShellWrapper({
           userName={userName}
           userImage={userImage}
           isLoggedIn={isLoggedIn}
+          userRole={userRole}
           mobileLogoUrl={mobileLogoUrl}
         />
         <div className="flex flex-1 flex-col">
@@ -112,6 +117,7 @@ export function AppShellWrapper({
       userName={userName}
       userImage={userImage}
       isLoggedIn={isLoggedIn}
+      userRole={userRole}
       mobileLogoUrl={mobileLogoUrl}
       systemName={systemName}
     >

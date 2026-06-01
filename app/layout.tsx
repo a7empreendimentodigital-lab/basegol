@@ -84,6 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             userName={session?.user?.name ?? null}
             userImage={session?.user?.image ?? null}
             isLoggedIn={!!session?.user}
+            userRole={session?.user?.role ?? null}
             mobileLogoUrl={brand?.mobileLogoUrl ?? null}
             systemName={brand?.systemName ?? "BASEGOL"}
           >

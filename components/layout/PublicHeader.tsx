@@ -14,6 +14,7 @@ type Props = {
   userName?: string | null;
   userImage?: string | null;
   isLoggedIn?: boolean;
+  userRole?: string | null;
   mobileLogoUrl?: string | null;
 };
 
@@ -158,7 +159,7 @@ const DesktopFavoritesButton = memo(function DesktopFavoritesButton() {
   );
 });
 
-export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }: Props) {
+export function PublicHeader({ userName, userImage, isLoggedIn, userRole, mobileLogoUrl }: Props) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -242,6 +243,7 @@ export function PublicHeader({ userName, userImage, isLoggedIn, mobileLogoUrl }:
         open={menuOpen}
         onClose={closeMenu}
         isLoggedIn={isLoggedIn}
+        userRole={userRole}
         userName={userName}
         userImage={userImage}
       />

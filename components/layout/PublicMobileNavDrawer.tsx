@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart, LogOut, Star, User, X } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { AdminPanelNavLink } from "@/components/layout/PortalNavLinks";
 import { PublicNavLinks } from "@/components/layout/PublicNavLinks";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   isLoggedIn?: boolean;
+  userRole?: string | null;
   userName?: string | null;
   userImage?: string | null;
 };
@@ -30,6 +32,7 @@ export function PublicMobileNavDrawer({
   open,
   onClose,
   isLoggedIn,
+  userRole,
   userName,
   userImage,
 }: Props) {
@@ -159,6 +162,11 @@ export function PublicMobileNavDrawer({
 
         {/* Rodapé discreto */}
         <div className="shrink-0 space-y-0.5 border-t border-white/[0.08] bg-pitch px-3 py-3">
+          <AdminPanelNavLink
+            userRole={userRole}
+            onNavigate={onClose}
+            variant="drawer"
+          />
           <Link
             href="/favoritos"
             onClick={onClose}

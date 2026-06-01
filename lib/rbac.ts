@@ -57,6 +57,11 @@ export function hasPermission(role: string, permission: string): boolean {
 
 import { isClubPortalRoute } from "@/lib/public-routes";
 
+export function canAccessAdminPanel(role?: string | null): boolean {
+  const r = role?.toUpperCase();
+  return r === "SUPER_ADMIN" || r === "ADMIN_LIGA";
+}
+
 export function canAccessRoute(role: string, pathname: string): boolean {
   if (!isAppRole(role)) return false;
   if (pathname.startsWith("/admin")) {

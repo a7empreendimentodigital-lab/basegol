@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { LogOut, Star } from "lucide-react";
+import { AdminPanelNavLink } from "@/components/layout/PortalNavLinks";
 import { useClubFavorites } from "@/hooks/use-club-favorites";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 
@@ -59,10 +60,12 @@ export function SidebarFavorites({ isLoggedIn }: SidebarSessionProps) {
 
 export function SidebarFooterLinks({
   isLoggedIn,
+  userRole,
   onNavigate,
-}: SidebarSessionProps & { onNavigate?: () => void }) {
+}: SidebarSessionProps & { userRole?: string | null; onNavigate?: () => void }) {
   return (
     <div className="space-y-1">
+      <AdminPanelNavLink userRole={userRole} onNavigate={onNavigate} variant="sidebar" />
       {isLoggedIn ? (
         <button
           type="button"

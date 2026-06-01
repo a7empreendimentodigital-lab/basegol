@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { AdminNavList } from "@/components/admin/AdminNavList";
+import { PublicSiteNavLink } from "@/components/layout/PortalNavLinks";
 
 export function AdminSidebar() {
   return (
@@ -19,14 +18,8 @@ export function AdminSidebar() {
         <AdminNavList />
       </div>
 
-      <div className="shrink-0 border-t border-line p-4 space-y-2">
-        <Link
-          href="/"
-          className="flex items-center justify-center gap-2 rounded-lg border border-line px-3 py-2.5 text-sm text-muted-foreground hover:bg-graphite-light hover:text-foreground transition-colors"
-        >
-          <ExternalLink className="h-4 w-4 shrink-0" />
-          Ver site público
-        </Link>
+      <div className="shrink-0 border-t border-line p-4">
+        <PublicSiteNavLink variant="admin" />
       </div>
     </aside>
   );
