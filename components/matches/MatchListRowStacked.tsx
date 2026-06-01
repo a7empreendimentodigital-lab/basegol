@@ -50,9 +50,9 @@ function MatchScoreBlock({ match, isLive }: { match: MatchWithTeams; isLive: boo
 function TeamSide({ name, crestUrl }: { name: string; crestUrl?: string | null }) {
   return (
     <div className="flex min-w-0 flex-col items-center gap-2 text-center">
-      <TeamCrest url={crestUrl ?? null} name={name} size="md" />
+      <TeamCrest url={crestUrl ?? null} name={name} size="match" />
       <span
-        className="max-w-[7.5rem] text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:max-w-[9rem] sm:text-base"
+        className="max-w-[8.5rem] text-sm font-semibold leading-snug text-foreground line-clamp-2 sm:max-w-[10rem] sm:text-base"
         title={name}
       >
         {name}

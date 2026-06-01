@@ -7,13 +7,14 @@ import { cn } from "@/lib/utils";
 type Props = {
   url: string | null;
   name: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "match";
 };
 
 const sizeMap = {
   sm: "h-8 w-8 text-[10px]",
   md: "h-11 w-11 text-xs",
   lg: "h-14 w-14 text-sm",
+  match: "h-[4.75rem] w-[4.75rem] text-sm",
   xl: "h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] text-sm",
 };
 
