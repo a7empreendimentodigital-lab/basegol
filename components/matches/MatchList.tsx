@@ -111,12 +111,16 @@ function MatchScore({ match, isLive }: { match: MatchWithTeams; isLive: boolean 
   const hasPenalties = homePen + awayPen > 0;
 
   if (!showScore) {
-    return <span className="text-sm font-medium text-muted-foreground">x</span>;
+    return (
+      <span className="inline-flex min-w-[3.75rem] items-center justify-center rounded-md bg-graphite-light px-2.5 py-1 text-xs font-semibold tabular-nums text-foreground sm:text-sm">
+        {formatTime(match.scheduledAt)}
+      </span>
+    );
   }
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="whitespace-nowrap font-display text-xl tabular-nums text-foreground sm:text-2xl">
+      <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-graphite-light px-2.5 py-1 font-display text-xl tabular-nums text-foreground sm:text-2xl">
         {match.homeScore}
         <span className="mx-1 font-sans text-base text-muted-foreground">:</span>
         {match.awayScore}
@@ -153,7 +157,7 @@ export function MatchListRow({ match, showFullDate = false }: MatchListRowProps)
     <Link
       href={`/jogos/${match.id}`}
       className={cn(
-        "block w-full px-3 py-5 transition-colors hover:bg-graphite/50 sm:px-5 sm:py-5 lg:px-8",
+        "block w-full bg-graphite/30 px-3 py-5 transition-colors hover:bg-graphite/50 sm:px-5 sm:py-5 lg:px-8",
         isLive && "bg-red-500/[0.03] hover:bg-red-500/[0.05]"
       )}
     >

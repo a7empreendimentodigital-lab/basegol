@@ -23,13 +23,13 @@ export async function PublicRightSidebarLayout({ children }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1">
-        <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden xl:pr-[300px] 2xl:pr-[320px]">
           {children}
           <HomeRightSidebarMobile rightBanner={rightBanner} />
         </div>
 
-        <aside className="hidden shrink-0 flex-col overflow-y-auto border-l border-line bg-graphite/40 xl:flex xl:w-[300px] 2xl:w-[320px]">
-          <div className="sticky top-0 p-4">
+        <aside className="hidden border-l border-line bg-graphite/40 xl:fixed xl:right-0 xl:top-16 xl:z-30 xl:flex xl:h-[calc(100dvh-4rem)] xl:w-[300px] xl:flex-col xl:overflow-y-auto 2xl:w-[320px]">
+          <div className="p-4">
             <Suspense fallback={<DesktopSidebarSkeleton />}>
               <HomeRightSidebarDesktop rightBanner={rightBanner} />
             </Suspense>

@@ -25,15 +25,15 @@ function MatchScoreBlock({ match, isLive }: { match: MatchWithTeams; isLive: boo
 
   if (!showScore) {
     return (
-      <span className="font-display text-lg text-muted-foreground sm:text-xl" aria-hidden>
-        ×
+      <span className="inline-flex min-w-[4.25rem] items-center justify-center rounded-md bg-graphite-light px-3 py-1.5 text-sm font-semibold tabular-nums text-foreground sm:text-base">
+        {formatTime(match.scheduledAt)}
       </span>
     );
   }
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="whitespace-nowrap font-display text-[2.5rem] tabular-nums leading-none text-foreground">
+      <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-graphite-light px-3 py-1.5 font-display text-[2.5rem] tabular-nums leading-none text-foreground">
         {match.homeScore}
         <span className="mx-1.5 font-sans text-xl text-muted-foreground/80">:</span>
         {match.awayScore}
@@ -83,7 +83,7 @@ export function MatchListRowStacked({ match, showFullDate = false }: Props) {
   return (
     <Link
       href={`/jogos/${match.id}`}
-      className={cn(publicListRow, isLive && "bg-red-500/[0.03] hover:bg-red-500/[0.06]")}
+      className={cn(publicListRow, "bg-graphite/30", isLive && "bg-red-500/[0.03] hover:bg-red-500/[0.06]")}
     >
       <div className="space-y-4 sm:space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
