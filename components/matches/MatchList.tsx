@@ -222,6 +222,34 @@ type MatchListProps = {
   layout?: MatchListLayout;
 };
 
+type MatchListGroup = {
+  key: string;
+  categoryName: string;
+  championshipName: string | null;
+  items: MatchWithTeams[];
+};
+
+function groupMatchesByCategory(matches: MatchWithTeams[]): MatchListGroup[] {
+  const grouped = new Map<string, MatchListGroup>();
+  for (const match of matches) {
+    const categoryName = (match.categoryName ?? "Sem categoria").trim();
+    const championshipName = match.championshipName ?? null;
+    const key = `${categoryName}::${championshipName ?? ""}`;
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.items.push(match);
+      continue;
+    }
+    grouped.set(key, {
+      key,
+      categoryName,
+      championshipName,
+      items: [match],
+    });
+  }
+  return [...grouped.values()];
+}
+
 export function MatchList({
   matches,
   showFullDate = false,
@@ -242,12 +270,32 @@ export function MatchList({
   }
 
   const Row = layout === "stacked" ? MatchListRowStacked : MatchListRow;
+  const groupByCategory = variant === "today" || variant === "upcoming";
+  const groups = groupByCategory ? groupMatchesByCategory(matches) : [];
 
   return (
     <div className={publicListShell}>
-      {matches.map((m) => (
-        <Row key={m.id} match={m} showFullDate={showFullDate} />
-      ))}
+      {groupByCategory ? (
+        groups.map((group, groupIdx) => (
+          <section key={group.key} className={groupIdx > 0 ? "border-t border-line/60" : undefined}>
+            <header className="px-3 py-3 sm:px-5 sm:py-3.5 lg:px-8">
+              <p className="font-display text-base font-bold uppercase tracking-wide text-foreground sm:text-lg">
+                {group.categoryName}
+              </p>
+              {group.championshipName ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">{group.championshipName}</p>
+              ) : null}
+            </header>
+            <div>
+              {group.items.map((m) => (
+                <Row key={m.id} match={m} showFullDate={showFullDate} />
+              ))}
+            </div>
+          </section>
+        ))
+      ) : (
+        matches.map((m) => <Row key={m.id} match={m} showFullDate={showFullDate} />)
+      )}
     </div>
   );
 }
