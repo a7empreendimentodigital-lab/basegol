@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, RefreshCw } from "lucide-react";
+import { CalendarDays, RefreshCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { AdminGroupedListPage } from "@/components/admin/shared/AdminGroupedListPage";
 import { AdminListRowActions } from "@/components/admin/shared/AdminListRowActions";
@@ -14,6 +14,7 @@ import { clubSigla } from "@/lib/club-display";
 import { formatRoundLabel } from "@/lib/match-display";
 import { formatDate, formatTime } from "@/lib/utils";
 import { useAdminOptions } from "@/hooks/use-admin-options";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
@@ -126,11 +127,14 @@ function MatchListRow({
 
 export function AdminMatchesPage() {
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const [categoryId, setCategoryId] = useState("");
   const [roundNumber, setRoundNumber] = useState("");
   const [clubId, setClubId] = useState("");
   const [syncingRounds, setSyncingRounds] = useState(false);
+  const [purgingMatches, setPurgingMatches] = useState(false);
   const { options: categories } = useAdminOptions("categories");
+  const { options: championships } = useAdminOptions("championships");
   const { options: clubs } = useAdminOptions("clubs");
   const { options: rounds } = useAdminOptions("match-rounds", {
     categoryId: categoryId || undefined,
@@ -160,6 +164,51 @@ export function AdminMatchesPage() {
       }),
     []
   );
+
+  async function purgeAllMatches() {
+    const ok = await confirm({
+      title: "Apagar todos os jogos do Paulista?",
+      description:
+        "Remove somente partidas, placares e histórico de importação de jogos.\n\nOs grupos, clubes inscritos e categorias NÃO serão alterados. Depois você pode importar rodada a rodada pelo PDF.",
+      confirmLabel: "Apagar jogos",
+      variant: "destructive",
+    });
+    if (!ok) return;
+
+    const paulista =
+      championships.find((c) => /paulista/i.test(c.label)) ?? championships[0];
+
+    setPurgingMatches(true);
+    try {
+      const res = await fetch("/api/admin/purge-matches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirm: true,
+          championshipId: paulista?.value,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Falha ao apagar jogos");
+      }
+      const data = json.data as { matchesDeleted: number; championshipName?: string };
+      toast({
+        title: "Jogos removidos",
+        description: `${data.matchesDeleted} partida(s) apagada(s)${data.championshipName ? ` — ${data.championshipName}` : ""}. Grupos e clubes mantidos.`,
+        variant: "success",
+      });
+      window.location.reload();
+    } catch (e) {
+      toast({
+        title: "Erro ao apagar jogos",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "error",
+      });
+    } finally {
+      setPurgingMatches(false);
+    }
+  }
 
   async function fixRoundsFromFpf() {
     setSyncingRounds(true);
@@ -214,7 +263,17 @@ export function AdminMatchesPage() {
           <Button
             type="button"
             variant="outline"
-            disabled={syncingRounds}
+            disabled={purgingMatches || syncingRounds}
+            onClick={() => void purgeAllMatches()}
+            className="gap-2 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden />
+            {purgingMatches ? "Apagando…" : "Apagar todos os jogos"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={syncingRounds || purgingMatches}
             onClick={() => void fixRoundsFromFpf()}
             className="gap-2 shrink-0"
           >

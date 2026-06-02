@@ -1,6 +1,6 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import { revalidatePublicContent } from "@/lib/revalidate-public-content";
-import { syncFixturesFromFpfPack } from "@/services/group-fixtures-sync.service";
+import { purgeMatchesOnly } from "@/services/match-purge.service";
 import { fail, ok } from "@/utils/api-response";
 
 export const maxDuration = 300;
@@ -11,25 +11,24 @@ async function ensureAdmin() {
   if (!hasRole(role, ["SUPER_ADMIN", "ADMIN_LIGA"])) {
     throw new Error("FORBIDDEN");
   }
-  return user;
 }
 
 export async function POST(req: Request) {
   try {
-    const user = await ensureAdmin();
+    await ensureAdmin();
     const body = (await req.json().catch(() => ({}))) as {
-      category?: string;
-      dryRun?: boolean;
-      syncRosterFirst?: boolean;
       championshipId?: string;
+      dryRun?: boolean;
+      confirm?: boolean;
     };
 
-    const result = await syncFixturesFromFpfPack({
-      categoryFilter: body.category ?? null,
-      dryRun: body.dryRun === true,
-      syncRosterFirst: body.syncRosterFirst === true,
+    if (!body.confirm && !body.dryRun) {
+      return fail('Confirmação obrigatória (envie confirm: true).', 400);
+    }
+
+    const result = await purgeMatchesOnly({
       championshipId: body.championshipId,
-      createdById: user.id,
+      dryRun: body.dryRun === true,
     });
 
     if (!body.dryRun) {
@@ -41,6 +40,6 @@ export async function POST(req: Request) {
     if (e instanceof Error && e.message === "FORBIDDEN") {
       return fail("Sem permissão", 403);
     }
-    return fail(e instanceof Error ? e.message : "Erro ao atualizar jogos", 500);
+    return fail(e instanceof Error ? e.message : "Erro ao apagar jogos", 500);
   }
 }

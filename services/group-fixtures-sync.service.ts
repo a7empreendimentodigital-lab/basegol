@@ -143,7 +143,7 @@ export async function syncFixturesFromFpfPack(input: {
   }
 
   let roster: GroupFixturesSyncResult["roster"];
-  if (input.syncRosterFirst !== false) {
+  if (input.syncRosterFirst === true) {
     const rosterResult = await syncGroupTeamsFromDefaultCsv({
       categoryFilter: input.categoryFilter ?? null,
     });

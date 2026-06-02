@@ -18,7 +18,7 @@ async function main() {
   const result = await syncFixturesFromFpfPack({
     dryRun,
     categoryFilter: category ?? null,
-    syncRosterFirst: !noRoster,
+    syncRosterFirst: process.argv.includes("--with-roster"),
   });
 
   console.log(JSON.stringify(result, null, 2));

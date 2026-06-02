@@ -134,10 +134,10 @@ export function GroupsByCategoryList() {
 
   async function syncOfficialRoster() {
     const ok = await confirm({
-      title: "Sincronizar lista FPF?",
+      title: "Sincronizar lista FPF nos grupos?",
       description:
-        "Todos os grupos Sub-11 e Sub-12 serão atualizados com a lista oficial.\n\nClubes fora da lista serão removidos dos grupos e os jogos desses confrontos no grupo serão apagados.",
-      confirmLabel: "Sincronizar",
+        "Substitui os grupos pela lista oficial da federação: clubes fora da lista são removidos e podem ser movidos de grupo.\n\nNão use se você já montou os grupos manualmente. Prefira ajustar clubes em cada grupo e importar jogos por rodada.",
+      confirmLabel: "Sincronizar grupos",
       variant: "destructive",
     });
     if (!ok) return;
@@ -179,8 +179,8 @@ export function GroupsByCategoryList() {
     const ok = await confirm({
       title: "Atualizar jogos pelos grupos?",
       description:
-        "Sincroniza a lista oficial de clubes nos grupos e importa os jogos do pacote FPF (fixtures.csv).\n\nJogos novos serão cadastrados; duplicados são ignorados. Confrontos existentes são reassociados ao grupo correto.",
-      confirmLabel: "Atualizar jogos",
+        "Importa jogos do pacote FPF (fixtures.csv) sem alterar os grupos que você já ajustou.\n\nUse “Sincronizar lista FPF” apenas se quiser substituir clubes nos grupos pela lista oficial.",
+      confirmLabel: "Importar jogos",
     });
     if (!ok) return;
     setSyncingFixtures(true);
@@ -188,7 +188,7 @@ export function GroupsByCategoryList() {
       const res = await fetch("/api/admin/sync-group-fixtures", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ syncRosterFirst: true }),
+        body: JSON.stringify({ syncRosterFirst: false }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -268,7 +268,7 @@ export function GroupsByCategoryList() {
             className={`h-4 w-4 ${syncingFixtures ? "animate-pulse" : ""}`}
             aria-hidden
           />
-          {syncingFixtures ? "Importando jogos…" : "Atualizar jogos (FPF)"}
+          {syncingFixtures ? "Importando jogos…" : "Importar jogos (FPF)"}
         </Button>
         <div className="flex min-w-[200px] flex-1 gap-2">
           <Input
