@@ -1,4 +1,5 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
+import { revalidatePublicContent } from "@/lib/revalidate-public-content";
 import { syncGroupTeamsFromDefaultCsv } from "@/services/group-roster-sync.service";
 import { fail, ok } from "@/utils/api-response";
 
@@ -24,6 +25,10 @@ export async function POST(req: Request) {
       categoryFilter: body.category ?? null,
       dryRun: body.dryRun === true,
     });
+
+    if (!body.dryRun) {
+      revalidatePublicContent();
+    }
 
     return ok(result);
   } catch (e) {

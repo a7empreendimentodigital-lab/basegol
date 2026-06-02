@@ -7,6 +7,9 @@ import { listPublicClubs, listPublicGroupsByCategory } from "@/services/public.s
 
 export const metadata = { title: "Clubes" };
 
+/** Sempre lê inscrições atuais dos grupos (evita página desatualizada após sync no admin). */
+export const dynamic = "force-dynamic";
+
 export default async function ClubesPage({
   searchParams,
 }: {

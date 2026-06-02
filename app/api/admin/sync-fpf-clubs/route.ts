@@ -1,4 +1,5 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
+import { revalidatePublicContent } from "@/lib/revalidate-public-content";
 import { syncFpfClubsFromCsv } from "@/services/fpf-clubs-seed.service";
 import { syncGroupTeamsFromDefaultCsv } from "@/services/group-roster-sync.service";
 import { fail, ok } from "@/utils/api-response";
@@ -18,6 +19,8 @@ export async function POST() {
     if (clubs.stillMissing.length === 0) {
       groups = await syncGroupTeamsFromDefaultCsv();
     }
+
+    revalidatePublicContent();
 
     return ok({ clubs, groups });
   } catch (error) {

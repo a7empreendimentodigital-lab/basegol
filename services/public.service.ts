@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { clubSigla } from "@/lib/club-display";
+import { sortByGroupName } from "@/lib/sort-groups";
 import { getFeaturedNews } from "@/services/news.service";
 import { getLiveMatches, getTodayMatches } from "@/services/match.service";
 
 export type PublicGroupTeam = {
   id: string;
   name: string;
+  displayName: string;
   slug: string;
   crestUrl: string | null;
 };
@@ -35,12 +38,18 @@ export async function listPublicGroupsByCategory(): Promise<PublicCategoryGroups
         championship: true,
         groups: {
           where: { status: "ACTIVE" },
-          orderBy: { name: "asc" },
           include: {
             teams: {
               include: {
                 club: {
-                  select: { id: true, name: true, slug: true, crestUrl: true, status: true },
+                  select: {
+                    id: true,
+                    name: true,
+                    shortName: true,
+                    slug: true,
+                    crestUrl: true,
+                    status: true,
+                  },
                 },
               },
             },
@@ -57,7 +66,7 @@ export async function listPublicGroupsByCategory(): Promise<PublicCategoryGroups
         championshipName: cat.championship.name,
         championshipSlug: cat.championship.slug,
         season: cat.championship.season,
-        groups: cat.groups.map((g) => ({
+        groups: sortByGroupName(cat.groups).map((g) => ({
           id: g.id,
           name: g.name,
           teams: g.teams
@@ -65,10 +74,11 @@ export async function listPublicGroupsByCategory(): Promise<PublicCategoryGroups
             .map((t) => ({
               id: t.club.id,
               name: t.club.name,
+              displayName: clubSigla(t.club.shortName, t.club.name),
               slug: t.club.slug,
               crestUrl: t.club.crestUrl,
             }))
-            .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+            .sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR")),
         })),
       }))
       .filter((c) => c.groups.length > 0);

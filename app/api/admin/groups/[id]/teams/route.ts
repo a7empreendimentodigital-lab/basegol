@@ -1,4 +1,5 @@
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
+import { revalidatePublicContent } from "@/lib/revalidate-public-content";
 import { ensureTeamInGroup } from "@/lib/team-enrollment";
 import { prisma } from "@/lib/prisma";
 import { removeTeamFromGroup } from "@/services/group-team-admin.service";
@@ -37,6 +38,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const { id: groupId } = await params;
     const { clubId } = bodySchema.parse(await req.json());
     const team = await ensureTeamInGroup(groupId, clubId);
+    revalidatePublicContent();
     return ok(team, 201);
   } catch (e) {
     if (e instanceof Error && e.message === "FORBIDDEN") return fail("Sem permissão", 403);
@@ -56,6 +58,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     if (!teamId) return fail("teamId obrigatório", 400);
 
     const result = await removeTeamFromGroup(groupId, teamId, { force });
+    revalidatePublicContent();
     return ok(result);
   } catch (e) {
     if (e instanceof Error && e.message === "FORBIDDEN") return fail("Sem permissão", 403);

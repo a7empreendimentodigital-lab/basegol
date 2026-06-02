@@ -48,9 +48,12 @@ export function PublicGroupsView({ categories }: Props) {
                           href={`/clubes/${team.slug}`}
                           className="flex flex-col items-center gap-1.5 rounded-xl border border-transparent p-2 transition-colors hover:border-line hover:bg-graphite/50"
                         >
-                          <TeamCrest url={team.crestUrl} name={team.name} size="md" />
-                          <span className="max-w-full truncate text-center text-[11px] font-medium text-foreground">
-                            {team.name}
+                          <TeamCrest url={team.crestUrl} name={team.displayName} size="md" />
+                          <span
+                            className="max-w-full truncate text-center text-[11px] font-medium text-foreground"
+                            title={team.name}
+                          >
+                            {team.displayName}
                           </span>
                         </Link>
                       </li>
