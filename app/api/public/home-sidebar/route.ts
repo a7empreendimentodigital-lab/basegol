@@ -1,7 +1,7 @@
 import { getHomeSidebarData } from "@/services/home.service";
 import { fail, ok } from "@/utils/api-response";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

@@ -7,10 +7,21 @@ import { ensureUniqueClubSlug } from "@/lib/club-slug";
 import { formatPrismaError } from "@/lib/prisma-user-error";
 import { slugify } from "@/lib/utils";
 import { revalidateBrandConfig } from "@/lib/revalidate-brand";
+import {
+  adminEntityAffectsPublicContent,
+  revalidatePublicContent,
+} from "@/lib/revalidate-public-content";
 import { fail, ok } from "@/utils/api-response";
 import { prismaContains } from "@/lib/prisma-search";
 import { normalizePagination } from "@/utils/pagination";
 import { listClubsAdmin, listMatchesAdmin, listUsersAdmin } from "@/services/admin-crud.service";
+
+function finishPublicCreate<T>(entity: string, data: T, status = 200) {
+  if (adminEntityAffectsPublicContent(entity)) {
+    revalidatePublicContent();
+  }
+  return ok(data, status);
+}
 
 const allowed = [
   "championships",
@@ -336,13 +347,43 @@ export async function POST(req: Request, { params }: { params: Promise<{ entity:
       }
     }
 
-    if (entity === "championships") return ok(await prisma.championship.create({ data: payload as never }), 201);
-    if (entity === "categories") return ok(await prisma.category.create({ data: payload as never }), 201);
-    if (entity === "groups") return ok(await prisma.group.create({ data: payload as never }), 201);
-    if (entity === "clubs") return ok(await prisma.club.create({ data: payload as never }), 201);
+    if (entity === "championships") {
+      return finishPublicCreate(
+        entity,
+        await prisma.championship.create({ data: payload as never }),
+        201
+      );
+    }
+    if (entity === "categories") {
+      return finishPublicCreate(
+        entity,
+        await prisma.category.create({ data: payload as never }),
+        201
+      );
+    }
+    if (entity === "groups") {
+      return finishPublicCreate(
+        entity,
+        await prisma.group.create({ data: payload as never }),
+        201
+      );
+    }
+    if (entity === "clubs") {
+      return finishPublicCreate(
+        entity,
+        await prisma.club.create({ data: payload as never }),
+        201
+      );
+    }
     if (entity === "staff_members") return ok(await prisma.staffMember.create({ data: payload as never }), 201);
     if (entity === "athletes") return ok(await prisma.athlete.create({ data: payload as never }), 201);
-    if (entity === "matches") return ok(await prisma.match.create({ data: payload as never }), 201);
+    if (entity === "matches") {
+      return finishPublicCreate(
+        entity,
+        await prisma.match.create({ data: payload as never }),
+        201
+      );
+    }
     if (entity === "news") return ok(await prisma.news.create({ data: payload as never }), 201);
     if (entity === "banners") return ok(await prisma.banner.create({ data: payload as never }), 201);
     if (entity === "documents") return ok(await prisma.document.create({ data: payload as never }), 201);

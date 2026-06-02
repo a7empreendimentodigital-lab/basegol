@@ -24,18 +24,40 @@ export async function POST(req: Request) {
     const form = await req.formData();
     const action = String(form.get("action") ?? "import").toLowerCase();
     const file = form.get("file");
+    const sourceUrl = String(form.get("sourceUrl") ?? "").trim();
     const championshipId = String(form.get("championshipId") ?? "").trim();
     const categoryHint = String(form.get("categoryHint") ?? "").trim() || undefined;
 
     if (!championshipId) return fail("Selecione o campeonato.", 400);
-    if (!(file instanceof File)) return fail("Envie o arquivo CSV de resultados.", 400);
-    const lower = file.name.toLowerCase();
-    if (!lower.endsWith(".csv") && !lower.endsWith(".txt")) {
-      return fail("O arquivo deve ser CSV (.csv ou .txt).", 400);
+    let buffer: Buffer | null = null;
+    if (file instanceof File) {
+      const lower = file.name.toLowerCase();
+      if (!lower.endsWith(".csv") && !lower.endsWith(".txt")) {
+        return fail("O arquivo deve ser CSV (.csv ou .txt).", 400);
+      }
+      if (file.size > MAX_BYTES) return fail("Arquivo muito grande (máx. 8 MB).", 400);
+      buffer = Buffer.from(await file.arrayBuffer());
+    } else if (sourceUrl) {
+      if (!/^https?:\/\//i.test(sourceUrl)) {
+        return fail("Link inválido. Informe URL completa (http/https).", 400);
+      }
+      const res = await fetch(sourceUrl, {
+        method: "GET",
+        headers: { Accept: "text/csv,text/plain,application/octet-stream,*/*" },
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        return fail(`Não foi possível baixar o arquivo da Federação (HTTP ${res.status}).`, 400);
+      }
+      const arr = await res.arrayBuffer();
+      if (arr.byteLength > MAX_BYTES) {
+        return fail("Arquivo remoto muito grande (máx. 8 MB).", 400);
+      }
+      buffer = Buffer.from(arr);
+    } else {
+      return fail("Envie um CSV ou informe o link da Federação.", 400);
     }
-    if (file.size > MAX_BYTES) return fail("Arquivo muito grande (máx. 8 MB).", 400);
 
-    const buffer = Buffer.from(await file.arrayBuffer());
     const base = { buffer, championshipId, categoryHint };
 
     if (action === "preview") {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Layers, Pencil, RefreshCw, Search, Trash2 } from "lucide-react";
+import { CalendarDays, Layers, Pencil, RefreshCw, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -81,6 +81,7 @@ export function GroupsByCategoryList() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [syncingRoster, setSyncingRoster] = useState(false);
+  const [syncingFixtures, setSyncingFixtures] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<GroupRow | null>(null);
 
@@ -174,6 +175,66 @@ export function GroupsByCategoryList() {
     }
   }
 
+  async function syncFixturesFromGroups() {
+    const ok = await confirm({
+      title: "Atualizar jogos pelos grupos?",
+      description:
+        "Sincroniza a lista oficial de clubes nos grupos e importa os jogos do pacote FPF (fixtures.csv).\n\nJogos novos serão cadastrados; duplicados são ignorados. Confrontos existentes são reassociados ao grupo correto.",
+      confirmLabel: "Atualizar jogos",
+    });
+    if (!ok) return;
+    setSyncingFixtures(true);
+    try {
+      const res = await fetch("/api/admin/sync-group-fixtures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ syncRosterFirst: true }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Falha ao atualizar jogos");
+      }
+      const data = json.data as {
+        import: {
+          matchesCreated: number;
+          matchesSkippedDuplicate: number;
+          errors: number;
+        };
+        matchesReconciled: number;
+        roster?: { added: number; removed: number; moved: number };
+      };
+      const roster = data.roster;
+      toast({
+        title: "Jogos atualizados",
+        description: [
+          roster
+            ? `Grupos: +${roster.added} · ${roster.removed} removidos · ${roster.moved} movidos`
+            : null,
+          `${data.import.matchesCreated} jogo(s) importado(s)`,
+          data.import.matchesSkippedDuplicate
+            ? `${data.import.matchesSkippedDuplicate} já existiam`
+            : null,
+          data.matchesReconciled
+            ? `${data.matchesReconciled} jogo(s) reassociado(s) ao grupo`
+            : null,
+          data.import.errors ? `${data.import.errors} erro(s)` : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        variant: data.import.errors > 0 ? "error" : "success",
+      });
+      await load();
+    } catch (e) {
+      toast({
+        title: "Erro ao atualizar jogos",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "error",
+      });
+    } finally {
+      setSyncingFixtures(false);
+    }
+  }
+
   return (
     <div>
       <AdminPageHeader
@@ -189,12 +250,25 @@ export function GroupsByCategoryList() {
         <Button
           type="button"
           variant="outline"
-          disabled={syncingRoster}
+          disabled={syncingRoster || syncingFixtures}
           onClick={() => void syncOfficialRoster()}
           className="gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${syncingRoster ? "animate-spin" : ""}`} aria-hidden />
           {syncingRoster ? "Sincronizando…" : "Sincronizar lista FPF"}
+        </Button>
+        <Button
+          type="button"
+          variant="default"
+          disabled={syncingRoster || syncingFixtures}
+          onClick={() => void syncFixturesFromGroups()}
+          className="gap-2"
+        >
+          <CalendarDays
+            className={`h-4 w-4 ${syncingFixtures ? "animate-pulse" : ""}`}
+            aria-hidden
+          />
+          {syncingFixtures ? "Importando jogos…" : "Atualizar jogos (FPF)"}
         </Button>
         <div className="flex min-w-[200px] flex-1 gap-2">
           <Input

@@ -70,7 +70,9 @@ export async function listPublicGroupsByCategory(): Promise<PublicCategoryGroups
           id: g.id,
           name: g.name,
           teams: g.teams
-            .filter((t) => t.club.status === "APPROVED")
+            .filter(
+              (t) => t.club.status !== "REJECTED" && t.club.status !== "SUSPENDED"
+            )
             .map((t) => ({
               id: t.club.id,
               name: t.club.name,
@@ -93,7 +95,6 @@ export async function listPublicClubs() {
       where: { status: "APPROVED" },
       include: { _count: { select: { athletes: true } } },
       orderBy: { name: "asc" },
-      take: 100,
     });
     return clubs.map((c) => ({
       id: c.id,

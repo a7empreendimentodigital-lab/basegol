@@ -19,6 +19,7 @@ export function MatchResultsCsvImportPanel() {
   const [championshipId, setChampionshipId] = useState("");
   const [categoryHint, setCategoryHint] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [sourceUrl, setSourceUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<MatchResultsImportResult | null>(null);
   const [result, setResult] = useState<MatchResultsImportResult | null>(null);
@@ -39,9 +40,10 @@ export function MatchResultsCsvImportPanel() {
       fd.set("championshipId", championshipId);
       if (categoryHint) fd.set("categoryHint", categoryHint);
       if (file) fd.set("file", file);
+      if (sourceUrl.trim()) fd.set("sourceUrl", sourceUrl.trim());
       return fd;
     },
-    [championshipId, categoryHint, file]
+    [championshipId, categoryHint, file, sourceUrl]
   );
 
   async function runAction(action: "preview" | "import") {
@@ -49,8 +51,8 @@ export function MatchResultsCsvImportPanel() {
       setError("Selecione o campeonato.");
       return;
     }
-    if (!file) {
-      setError("Selecione um arquivo CSV.");
+    if (!file && !sourceUrl.trim()) {
+      setError("Selecione um arquivo CSV ou informe o link da Federação.");
       return;
     }
     setLoading(true);
@@ -127,15 +129,38 @@ export function MatchResultsCsvImportPanel() {
         </p>
       </div>
 
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Link direto da Federação (CSV/TXT)</label>
+        <input
+          type="url"
+          placeholder="https://..."
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          value={sourceUrl}
+          onChange={(e) => {
+            setSourceUrl(e.target.value);
+            setPreview(null);
+            setResult(null);
+          }}
+        />
+        <p className="text-xs text-muted-foreground">
+          Opcional: ao preencher o link, o sistema baixa o arquivo automaticamente no servidor.
+        </p>
+      </div>
+
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" disabled={loading || !file} onClick={() => runAction("preview")}>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={loading || (!file && !sourceUrl.trim())}
+          onClick={() => runAction("preview")}
+        >
           {loading ? "Processando…" : "Gerar prévia"}
         </Button>
         <Button
           type="button"
-          disabled={loading || !file || !preview || !championshipId}
+          disabled={loading || (!file && !sourceUrl.trim()) || !preview || !championshipId}
           onClick={() => runAction("import")}
         >
           Confirmar e recalcular classificação

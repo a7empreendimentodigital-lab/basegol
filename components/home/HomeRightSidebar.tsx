@@ -96,6 +96,8 @@ export function HomeRightSidebar({
         <HomeStandingsCard
           title="Tabela"
           categoryLabel={selected?.label}
+          tableLinkLabel="Classificação geral"
+          tableHref="/tabelas"
           rows={standings}
           layout="sidebar"
         />

@@ -7,7 +7,9 @@ import { publicSectionBlock, publicSectionDivider } from "@/lib/public-ui-classe
 type Props = {
   title: string;
   categoryLabel?: string;
-  groupLabel?: string;
+  /** Texto do link à direita (ex.: nome do grupo ou "Classificação geral"). */
+  tableLinkLabel?: string;
+  tableHref?: string;
   rows: StandingRowDisplay[];
   /** Na sidebar mobile: sem caixa, só linha de separação do bloco pai */
   layout?: "card" | "sidebar";
@@ -16,7 +18,8 @@ type Props = {
 export function HomeStandingsCard({
   title,
   categoryLabel,
-  groupLabel = "Grupo 1",
+  tableLinkLabel = "Ver tabela",
+  tableHref = "/tabelas",
   rows,
   layout = "card",
 }: Props) {
@@ -43,7 +46,7 @@ export function HomeStandingsCard({
             </span>
           ) : null}
         </h2>
-        <HomeSectionLink href="/tabela">{groupLabel}</HomeSectionLink>
+        <HomeSectionLink href={tableHref}>{tableLinkLabel}</HomeSectionLink>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

@@ -39,6 +39,20 @@ npm run sync:group-roster -- ~/Downloads/basegol_paulista_import_2026 --category
 
 O script remove inscrições fora da lista, move clubes para o grupo correto e recalcula as tabelas. Sub-11 e Sub-12 usam a mesma distribuição de grupos.
 
+### Jogos a partir dos grupos (recomendado após corrigir grupos)
+
+**Painel:** Admin → Grupos → **Atualizar jogos (FPF)** — sincroniza `group_teams.csv` + importa `fixtures.csv` de `data/fpf-2026/`.
+
+**CLI:**
+
+```bash
+npm run sync:group-fixtures
+npm run sync:group-fixtures -- --dry-run
+npm run sync:group-fixtures -- --category Sub-11
+```
+
+Arquivos em `data/fpf-2026/`: `group_teams.csv`, `fixtures.csv`, `competitions.csv` (opcional). Variável `FPF_PACK_DIR` aponta para outra pasta com os mesmos arquivos.
+
 ## Variável de ambiente
 
 Todas as importações via script usam **`DATABASE_URL`** (mesma do Prisma / Railway).

@@ -5,7 +5,18 @@ import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
 import { prepareAdminPayload } from "@/lib/admin-transform";
 import { formatPrismaError } from "@/lib/prisma-user-error";
 import { revalidateBrandConfig } from "@/lib/revalidate-brand";
+import {
+  adminEntityAffectsPublicContent,
+  revalidatePublicContent,
+} from "@/lib/revalidate-public-content";
 import { fail, ok } from "@/utils/api-response";
+
+function finishPublicMutation<T>(entity: string, data: T) {
+  if (adminEntityAffectsPublicContent(entity)) {
+    revalidatePublicContent();
+  }
+  return ok(data);
+}
 
 const allowed = [
   "championships",
@@ -99,13 +110,38 @@ export async function PATCH(
       }
     }
 
-    if (entity === "championships") return ok(await prisma.championship.update({ where: { id }, data: payload as never }));
-    if (entity === "categories") return ok(await prisma.category.update({ where: { id }, data: payload as never }));
-    if (entity === "groups") return ok(await prisma.group.update({ where: { id }, data: payload as never }));
-    if (entity === "clubs") return ok(await prisma.club.update({ where: { id }, data: payload as never }));
+    if (entity === "championships") {
+      return finishPublicMutation(
+        entity,
+        await prisma.championship.update({ where: { id }, data: payload as never })
+      );
+    }
+    if (entity === "categories") {
+      return finishPublicMutation(
+        entity,
+        await prisma.category.update({ where: { id }, data: payload as never })
+      );
+    }
+    if (entity === "groups") {
+      return finishPublicMutation(
+        entity,
+        await prisma.group.update({ where: { id }, data: payload as never })
+      );
+    }
+    if (entity === "clubs") {
+      return finishPublicMutation(
+        entity,
+        await prisma.club.update({ where: { id }, data: payload as never })
+      );
+    }
     if (entity === "staff_members") return ok(await prisma.staffMember.update({ where: { id }, data: payload as never }));
     if (entity === "athletes") return ok(await prisma.athlete.update({ where: { id }, data: payload as never }));
-    if (entity === "matches") return ok(await prisma.match.update({ where: { id }, data: payload as never }));
+    if (entity === "matches") {
+      return finishPublicMutation(
+        entity,
+        await prisma.match.update({ where: { id }, data: payload as never })
+      );
+    }
     if (entity === "news") return ok(await prisma.news.update({ where: { id }, data: payload as never }));
     if (entity === "banners") return ok(await prisma.banner.update({ where: { id }, data: payload as never }));
     if (entity === "documents") return ok(await prisma.document.update({ where: { id }, data: payload as never }));
@@ -158,6 +194,9 @@ export async function DELETE(
     else if (entity === "system_settings") await prisma.systemSetting.delete({ where: { id } });
     else if (entity === "notifications") await prisma.notification.delete({ where: { id } });
     else await prisma.user.delete({ where: { id } });
+    if (adminEntityAffectsPublicContent(entity)) {
+      revalidatePublicContent();
+    }
     return ok({ deleted: true });
   } catch (error) {
     if (

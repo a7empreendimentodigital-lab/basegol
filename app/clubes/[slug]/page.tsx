@@ -5,7 +5,6 @@ import { ClubSquadSection } from "@/components/clubes/ClubSquadSection";
 import { getClubPublicMatches } from "@/services/match.service";
 import { ClubFavoriteAction } from "@/components/favorites/ClubFavoriteAction";
 import { TeamCrest } from "@/components/matches/TeamCrest";
-import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { getPublicClubBySlug } from "@/services/public.service";
 import { notFound } from "next/navigation";
 
@@ -44,8 +43,7 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
   }));
 
   return (
-    <PublicRightSidebarLayout>
-      <main className="mx-auto w-full max-w-4xl space-y-8 px-3 py-4 sm:space-y-10 sm:px-5 sm:py-6 lg:px-8">
+    <main className="mx-auto w-full max-w-4xl space-y-8 px-3 py-4 sm:space-y-10 sm:px-5 sm:py-6 lg:px-8">
         <Link
           href="/clubes"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -114,7 +112,6 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
           <h2 className="font-display text-2xl tracking-wide text-foreground">Elenco</h2>
           <ClubSquadSection athletes={squadAthletes} categoryOrder={categoryOrder} />
         </section>
-      </main>
-    </PublicRightSidebarLayout>
+    </main>
   );
 }

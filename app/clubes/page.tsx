@@ -1,9 +1,9 @@
 import { ClubCrestCard } from "@/components/clubes/ClubCrestCard";
 import { ClubesFilterTabs } from "@/components/clubes/ClubesFilterTabs";
 import { PublicGroupsView } from "@/components/clubes/PublicGroupsView";
-import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
-import { listPublicClubs, listPublicGroupsByCategory } from "@/services/public.service";
+import { getPublicGroupsByCategory } from "@/lib/public-groups-cache";
+import { listPublicClubs } from "@/services/public.service";
 
 export const metadata = { title: "Clubes" };
 
@@ -20,11 +20,11 @@ export default async function ClubesPage({
 
   const [clubs, groupsData] = await Promise.all([
     listPublicClubs(),
-    listPublicGroupsByCategory(),
+    showGroups ? getPublicGroupsByCategory() : Promise.resolve([]),
   ]);
 
   return (
-    <PublicRightSidebarLayout>
+    <>
       <PublicPageBanner title={showGroups ? "Grupos" : "Clubes"} />
 
       <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
@@ -50,6 +50,6 @@ export default async function ClubesPage({
           </div>
         )}
       </main>
-    </PublicRightSidebarLayout>
+    </>
   );
 }
