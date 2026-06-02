@@ -1,6 +1,16 @@
+import { penaltyShootoutWinner } from "@/lib/match-penalties";
 import { prisma } from "@/lib/prisma";
 import type { MatchStatus } from "@prisma/client";
 import type { StandingRowDisplay } from "@/types";
+
+type FinishedMatchForStandings = {
+  homeTeamId: string;
+  awayTeamId: string;
+  homeScore: number;
+  awayScore: number;
+  homePenaltyScore: number;
+  awayPenaltyScore: number;
+};
 
 type MutableStanding = {
   teamId: string;
@@ -74,6 +84,52 @@ function applyResult(
   }
 }
 
+/** +1 ponto na classificação para o vencedor da disputa de pênaltis (Paulista de base). */
+function applyPenaltyBonus(
+  stats: Map<string, MutableStanding>,
+  homeTeamId: string,
+  awayTeamId: string,
+  homePenaltyScore: number,
+  awayPenaltyScore: number
+) {
+  if (homePenaltyScore + awayPenaltyScore <= 0) return;
+  const result = penaltyShootoutWinner(homePenaltyScore, awayPenaltyScore);
+  const winnerId =
+    result === "home" ? homeTeamId : result === "away" ? awayTeamId : null;
+  if (!winnerId) return;
+  const row = stats.get(winnerId);
+  if (row) row.points += 1;
+}
+
+function applyFinishedMatch(
+  stats: Map<string, MutableStanding>,
+  match: FinishedMatchForStandings
+) {
+  applyResult(
+    stats,
+    match.homeTeamId,
+    match.awayTeamId,
+    match.homeScore,
+    match.awayScore
+  );
+  applyPenaltyBonus(
+    stats,
+    match.homeTeamId,
+    match.awayTeamId,
+    match.homePenaltyScore,
+    match.awayPenaltyScore
+  );
+}
+
+const matchStandingsSelect = {
+  homeTeamId: true,
+  awayTeamId: true,
+  homeScore: true,
+  awayScore: true,
+  homePenaltyScore: true,
+  awayPenaltyScore: true,
+} as const;
+
 function sortRows(rows: MutableStanding[]): MutableStanding[] {
   return [...rows].sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
@@ -121,12 +177,12 @@ export async function computeStandingsForGroup(groupId: string): Promise<Standin
   const stats = initStats(group.teams.map((t) => t.id));
   const matches = await prisma.match.findMany({
     where: { groupId, status: { in: COUNTED } },
-    select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true },
+    select: matchStandingsSelect,
     orderBy: { scheduledAt: "asc" },
   });
 
   for (const m of matches) {
-    applyResult(stats, m.homeTeamId, m.awayTeamId, m.homeScore, m.awayScore);
+    applyFinishedMatch(stats, m);
   }
 
   return mutableToDisplayRows(sortRows([...stats.values()]));
@@ -142,12 +198,12 @@ async function buildCategoryStandingsSorted(categoryId: string): Promise<Mutable
   const stats = initStats(teams.map((t) => t.id));
   const matches = await prisma.match.findMany({
     where: { group: { categoryId }, status: { in: COUNTED } },
-    select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true },
+    select: matchStandingsSelect,
     orderBy: { scheduledAt: "asc" },
   });
 
   for (const m of matches) {
-    applyResult(stats, m.homeTeamId, m.awayTeamId, m.homeScore, m.awayScore);
+    applyFinishedMatch(stats, m);
   }
 
   return sortRows([...stats.values()]);
@@ -219,12 +275,12 @@ export async function recalculateStandingsForGroup(groupId: string): Promise<{ s
 
   const matches = await prisma.match.findMany({
     where: { groupId, status: { in: COUNTED } },
-    select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, scheduledAt: true },
+    select: matchStandingsSelect,
     orderBy: { scheduledAt: "asc" },
   });
 
   for (const m of matches) {
-    applyResult(stats, m.homeTeamId, m.awayTeamId, m.homeScore, m.awayScore);
+    applyFinishedMatch(stats, m);
   }
 
   const sorted = sortRows([...stats.values()]);

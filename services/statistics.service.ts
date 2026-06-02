@@ -65,17 +65,6 @@ export async function getLatestStandings(): Promise<StandingRowDisplay[]> {
 
 export async function getStandingsForCategory(categoryId: string): Promise<StandingRowDisplay[]> {
   try {
-    const standing = await prisma.standing.findFirst({
-      where: { categoryId, groupId: null },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        rows: {
-          orderBy: { position: "asc" },
-          include: { team: { include: { club: true } } },
-        },
-      },
-    });
-    if (standing?.rows.length) return mapStandingRows(standing.rows);
     return await computeStandingsForCategory(categoryId);
   } catch {
     return [];
@@ -84,17 +73,6 @@ export async function getStandingsForCategory(categoryId: string): Promise<Stand
 
 export async function getStandingsForGroup(groupId: string): Promise<StandingRowDisplay[]> {
   try {
-    const standing = await prisma.standing.findFirst({
-      where: { groupId },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        rows: {
-          orderBy: { position: "asc" },
-          include: { team: { include: { club: true } } },
-        },
-      },
-    });
-    if (standing?.rows.length) return mapStandingRows(standing.rows);
     return await computeStandingsForGroup(groupId);
   } catch {
     return [];

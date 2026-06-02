@@ -68,9 +68,9 @@ export function TablesCategoryPanel({ category }: Props) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="geral" className="mt-0 focus-visible:ring-0">
-            {hasGeneral ? (
-              <StandingTable rows={category.generalStandings} />
+            <TabsContent value="geral" className="mt-0 focus-visible:ring-0">
+              {hasGeneral ? (
+                <StandingTable rows={category.generalStandings} />
             ) : (
               <ChampionshipEmptyPanel
                 icon={ListOrdered}

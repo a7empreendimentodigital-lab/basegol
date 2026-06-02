@@ -7,6 +7,7 @@ import {
 } from "@/lib/match-live";
 import { penaltyShootoutWinner } from "@/lib/match-penalties";
 import { resolveTotalPeriods } from "@/lib/match-phase";
+import { applyCategoryMatchTime } from "@/lib/category-match-times";
 import {
   enrichMatchForApi,
   repairLiveClockIfNeeded,
@@ -126,7 +127,10 @@ function mapMatch(
     periodLengthMin: m.periodLengthMin,
     periodCount: periods,
     inPenaltyShootout: inPenalties,
-    scheduledAt: m.scheduledAt,
+    scheduledAt:
+      m.status === "SCHEDULED" || m.status === "POSTPONED"
+        ? applyCategoryMatchTime(m.scheduledAt, m.group?.category?.name ?? null)
+        : m.scheduledAt,
     venue: m.venue,
     round: m.round,
     championshipName: m.group?.category?.championship?.name ?? null,
