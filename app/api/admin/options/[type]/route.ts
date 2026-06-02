@@ -45,6 +45,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ type: s
 
     if (type === "clubs") {
       const items = await prisma.club.findMany({
+        where: { status: { notIn: ["SUSPENDED", "REJECTED"] } },
         orderBy: { name: "asc" },
         select: { id: true, name: true, crestUrl: true },
       });

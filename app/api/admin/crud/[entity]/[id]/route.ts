@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
 import { prepareAdminPayload } from "@/lib/admin-transform";
 import { formatPrismaError } from "@/lib/prisma-user-error";
+import { deleteClubAsAdmin } from "@/services/club-admin-delete.service";
 import { revalidateBrandConfig } from "@/lib/revalidate-brand";
 import {
   adminEntityAffectsPublicContent,
@@ -177,7 +178,17 @@ export async function DELETE(
     if (entity === "championships") await prisma.championship.delete({ where: { id } });
     else if (entity === "categories") await prisma.category.delete({ where: { id } });
     else if (entity === "groups") await prisma.group.delete({ where: { id } });
-    else if (entity === "clubs") await prisma.club.delete({ where: { id } });
+    else if (entity === "clubs") {
+      const result = await deleteClubAsAdmin(id);
+      revalidatePublicContent();
+      return ok({
+        deleted: true,
+        hardDeleted: result.hardDeleted,
+        softDeleted: result.softDeleted,
+        teamsRemoved: result.teamsRemoved,
+        matchesDeleted: result.matchesDeleted,
+      });
+    }
     else if (entity === "staff_members") await prisma.staffMember.delete({ where: { id } });
     else if (entity === "athletes") await prisma.athlete.delete({ where: { id } });
     else if (entity === "matches") await prisma.match.delete({ where: { id } });

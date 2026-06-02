@@ -2,6 +2,7 @@ import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import { revalidatePublicContent } from "@/lib/revalidate-public-content";
 import { ensureTeamInGroup } from "@/lib/team-enrollment";
 import { prisma } from "@/lib/prisma";
+import { cleanupInactiveClubEnrollmentsInGroup } from "@/services/club-admin-delete.service";
 import { removeTeamFromGroup } from "@/services/group-team-admin.service";
 import { fail, ok } from "@/utils/api-response";
 import { z } from "zod";
@@ -18,8 +19,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   try {
     await ensureAdmin();
     const { id: groupId } = await params;
+    await cleanupInactiveClubEnrollmentsInGroup(groupId);
     const teams = await prisma.team.findMany({
-      where: { groupId },
+      where: {
+        groupId,
+        club: { status: { notIn: ["SUSPENDED", "REJECTED"] } },
+      },
       orderBy: { club: { name: "asc" } },
       include: { club: { select: { id: true, name: true, crestUrl: true } } },
     });

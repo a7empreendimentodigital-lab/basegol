@@ -132,11 +132,30 @@ export function AdminGroupedListPage<T extends { id: string }>({
     if (!ok) return;
     try {
       const res = await fetch(`${deleteBase}/${row.id}`, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
         throw new Error((json as { error?: string }).error || "Falha ao excluir");
       }
-      toast({ title: "Registro excluído", variant: "success" });
+      const data = (json as { data?: Record<string, unknown> }).data;
+      if (entity === "clubs" && data?.softDeleted) {
+        const removed = Number(data.teamsRemoved ?? 0);
+        toast({
+          title: "Clube suspenso",
+          description:
+            removed > 0
+              ? `Removido da lista de clubes. ${removed} inscrição(ões) em grupos foram retiradas.`
+              : "Removido da lista de clubes (ainda há vínculos no sistema).",
+          variant: "success",
+        });
+      } else if (entity === "clubs" && Number(data?.teamsRemoved ?? 0) > 0) {
+        toast({
+          title: "Clube excluído",
+          description: `Também removido de ${data?.teamsRemoved} grupo(s).`,
+          variant: "success",
+        });
+      } else {
+        toast({ title: "Registro excluído", variant: "success" });
+      }
       await load();
     } catch (e) {
       toast({

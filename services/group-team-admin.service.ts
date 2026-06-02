@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { deleteMatchesWithDependents } from "@/services/match-delete.service";
 import { recalculateStandingsForGroup } from "@/services/standings.service";
 
 export type RemoveTeamFromGroupResult = {
@@ -41,14 +42,7 @@ export async function removeTeamFromGroup(
   const matchIds = matches.map((m) => m.id);
 
   await prisma.$transaction(async (tx) => {
-    if (matchIds.length > 0) {
-      await tx.matchEvent.deleteMany({ where: { matchId: { in: matchIds } } });
-      await tx.lineup.deleteMany({ where: { matchId: { in: matchIds } } });
-      await tx.matchOperator.deleteMany({ where: { matchId: { in: matchIds } } });
-      await tx.matchStatistic.deleteMany({ where: { matchId: { in: matchIds } } });
-      await tx.match.deleteMany({ where: { id: { in: matchIds } } });
-    }
-
+    await deleteMatchesWithDependents(tx, matchIds);
     await tx.standingRow.deleteMany({ where: { teamId } });
     await tx.team.delete({ where: { id: teamId } });
   });
