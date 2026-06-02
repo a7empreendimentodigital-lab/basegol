@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminFormFeedback } from "@/components/admin/forms/admin-form-feedback";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +22,7 @@ export function UserForm({ initial, onSuccess, onCancel }: EntityFormProps) {
   const isEdit = !!id;
   const { options: clubs } = useAdminOptions("clubs");
   const { options: matches } = useAdminOptions("matches");
+    const { onSaveError } = useAdminFormFeedback();
   const [saving, setSaving] = useState(false);
   const [selectedMatches, setSelectedMatches] = useState<string[]>(
     Array.isArray(initial?.assignedMatchIds) ? (initial.assignedMatchIds as string[]) : []
@@ -82,7 +84,7 @@ export function UserForm({ initial, onSuccess, onCancel }: EntityFormProps) {
           if (!res.ok || json.ok === false) throw new Error(json.error || "Erro");
           onSuccess();
         } catch (e) {
-          alert(e instanceof Error ? e.message : "Erro");
+          onSaveError(e);
         } finally {
           setSaving(false);
         }

@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import { FormField } from "@/components/admin/forms/FormField";
 import { ImageUpload } from "@/components/admin/shared/ImageUpload";
 import { championshipSchema } from "@/utils/zod-schemas/admin-entities";
+import { useAdminFormFeedback } from "@/components/admin/forms/admin-form-feedback";
 import { submitEntity } from "@/components/admin/forms/submit-entity";
 import { CHAMPIONSHIP_STATUS_LABELS } from "@/lib/admin-labels";
 import { type AdminFormProps, str } from "@/components/admin/forms/types";
@@ -19,6 +20,7 @@ type FormData = z.infer<typeof championshipSchema>;
 
 export function ChampionshipForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
+  const { onSaveError, onValidationError } = useAdminFormFeedback();
   const [saving, setSaving] = useState(false);
   const {
     register,
@@ -49,7 +51,7 @@ export function ChampionshipForm({ initial, onSuccess, onCancel }: AdminFormProp
       await submitEntity("championships", data, id || undefined);
       onSuccess();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Erro ao salvar");
+      onSaveError(e);
     } finally {
       setSaving(false);
     }
@@ -59,7 +61,7 @@ export function ChampionshipForm({ initial, onSuccess, onCancel }: AdminFormProp
     <form
       onSubmit={handleSubmit(onSubmit, (fieldErrors) => {
         const first = Object.values(fieldErrors)[0];
-        if (first?.message) alert(String(first.message));
+        if (first?.message) onValidationError(String(first.message));
       })}
       className="space-y-4"
     >

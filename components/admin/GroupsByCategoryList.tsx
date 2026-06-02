@@ -9,6 +9,7 @@ import { AdminPageHeader } from "@/components/admin/shared/AdminPageHeader";
 import { GroupForm } from "@/components/admin/forms/GroupForm";
 import { GROUP_STATUS_LABELS } from "@/lib/admin-labels";
 import { parseApiResponse } from "@/lib/api-client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toaster";
 export type GroupRow = {
   id: string;
@@ -75,6 +76,7 @@ function groupByCategory(items: GroupRow[]): CategorySection[] {
 
 export function GroupsByCategoryList() {
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const [items, setItems] = useState<GroupRow[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,13 @@ export function GroupsByCategoryList() {
   const totalGroups = items.length;
 
   async function handleDelete(row: GroupRow) {
-    if (!confirm(`Excluir o grupo "${row.name}"?`)) return;
+    const ok = await confirm({
+      title: `Excluir ${row.name}?`,
+      description: "Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/admin/crud/groups/${row.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Falha ao excluir");
@@ -124,13 +132,14 @@ export function GroupsByCategoryList() {
   }
 
   async function syncOfficialRoster() {
-    if (
-      !confirm(
-        "Sincronizar todos os grupos Sub-11 e Sub-12 com a lista oficial FPF?\n\nClubes fora da lista serão removidos dos grupos (e jogos desses confrontos no grupo serão apagados)."
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Sincronizar lista FPF?",
+      description:
+        "Todos os grupos Sub-11 e Sub-12 serão atualizados com a lista oficial.\n\nClubes fora da lista serão removidos dos grupos e os jogos desses confrontos no grupo serão apagados.",
+      confirmLabel: "Sincronizar",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setSyncingRoster(true);
     try {
       const res = await fetch("/api/admin/sync-group-roster", {

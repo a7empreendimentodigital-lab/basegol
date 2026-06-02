@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { AdminPageHeader } from "@/components/admin/shared/AdminPageHeader";
 import { parseApiResponse } from "@/lib/api-client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { MEDIA_CATEGORIES } from "@/lib/upload-config";
 
@@ -24,6 +25,7 @@ type MediaItem = {
 
 export function MediaManager() {
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -74,7 +76,13 @@ export function MediaManager() {
   }
 
   async function remove(id: string) {
-    if (!confirm("Excluir esta mídia?")) return;
+    const ok = await confirm({
+      title: "Excluir mídia?",
+      description: "O arquivo será removido da biblioteca.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
     const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE" });
     if (res.ok) {
       toast({ title: "Mídia excluída", variant: "success" });

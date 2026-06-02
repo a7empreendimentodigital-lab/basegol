@@ -9,6 +9,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AdminPageHeader } from "@/components/admin/shared/AdminPageHeader";
 import { AdminDataTable, type AdminColumn } from "@/components/admin/shared/AdminDataTable";
 import { parseApiResponse } from "@/lib/api-client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { DEFAULT_PAGE_SIZE } from "@/utils/pagination";
 
@@ -54,6 +55,7 @@ export function EntityPage<T extends { id: string }>({
   FormComponent,
 }: Props<T>) {
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const [items, setItems] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -109,7 +111,13 @@ export function EntityPage<T extends { id: string }>({
   }
 
   async function handleDelete(row: T) {
-    if (!confirm("Excluir este registro? Esta ação não pode ser desfeita.")) return;
+    const ok = await confirm({
+      title: "Excluir registro?",
+      description: "Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       const base = entity ? `${apiBase}/${entity}` : apiBase;
       const res = await fetch(`${base}/${row.id}`, { method: "DELETE" });

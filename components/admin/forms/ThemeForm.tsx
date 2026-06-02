@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminFormFeedback } from "@/components/admin/forms/admin-form-feedback";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +17,7 @@ type FormData = z.infer<typeof themeConfigSchema>;
 
 export function ThemeForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
+    const { onSaveError } = useAdminFormFeedback();
   const [saving, setSaving] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(themeConfigSchema),
@@ -40,7 +42,7 @@ export function ThemeForm({ initial, onSuccess, onCancel }: AdminFormProps) {
           await submitEntity("theme_configs", data, id || undefined);
           onSuccess();
         } catch (e) {
-          alert(e instanceof Error ? e.message : "Erro");
+          onSaveError(e);
         } finally {
           setSaving(false);
         }

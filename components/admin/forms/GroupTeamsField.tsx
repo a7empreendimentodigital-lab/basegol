@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/select";
 import { parseApiResponse } from "@/lib/api-client";
 import { useAdminOptions } from "@/hooks/use-admin-options";
 import { notifySaveError, notifySaveSuccess } from "@/components/admin/forms/admin-form-feedback";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 
@@ -20,6 +21,7 @@ type Props = {
 
 export function GroupTeamsField({ groupId }: Props) {
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const { options: clubs, loading: clubsLoading } = useAdminOptions("clubs");
   const [enrolled, setEnrolled] = useState<EnrolledTeam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,10 +72,15 @@ export function GroupTeamsField({ groupId }: Props) {
   }
 
   async function removeTeam(teamId: string, clubName: string, force = false) {
-    const msg = force
-      ? `Remover "${clubName}" e APAGAR todos os jogos deste clube neste grupo? Esta ação não pode ser desfeita.`
-      : `Remover "${clubName}" deste grupo?`;
-    if (!confirm(msg)) return;
+    const ok = await confirm({
+      title: force ? `Remover ${clubName} e apagar jogos?` : `Remover ${clubName}?`,
+      description: force
+        ? "Todos os jogos deste clube neste grupo serão excluídos. Esta ação não pode ser desfeita."
+        : "O clube deixará de participar deste grupo.",
+      confirmLabel: force ? "Remover e apagar jogos" : "Remover",
+      variant: "destructive",
+    });
+    if (!ok) return;
 
     try {
       const qs = new URLSearchParams({ teamId });
@@ -85,9 +92,12 @@ export function GroupTeamsField({ groupId }: Props) {
       if (!res.ok) {
         const err = (json as { error?: string }).error ?? "";
         if (res.status === 409 && err.includes("jogo(s)")) {
-          const okForce = confirm(
-            `${err}\n\nDeseja remover o clube e apagar esses jogos do grupo?`
-          );
+          const okForce = await confirm({
+            title: "Este clube tem jogos no grupo",
+            description: `${err}\n\nDeseja remover o clube e apagar esses jogos?`,
+            confirmLabel: "Remover e apagar jogos",
+            variant: "destructive",
+          });
           if (okForce) return removeTeam(teamId, clubName, true);
           return;
         }

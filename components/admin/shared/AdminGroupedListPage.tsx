@@ -12,6 +12,7 @@ import type { EntityFormProps } from "@/components/crud/EntityPage";
 import type { ListGroup } from "@/lib/admin-list-groups";
 import { parseApiResponse } from "@/lib/api-client";
 import { categoryPillActive, categoryPillBase } from "@/lib/public-ui-classes";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,7 @@ export function AdminGroupedListPage<T extends { id: string }>({
   canCreate = true,
 }: Props<T>) {
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const [items, setItems] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -121,7 +123,13 @@ export function AdminGroupedListPage<T extends { id: string }>({
   }, [groups, activeGroup]);
 
   async function handleDelete(row: T) {
-    if (!confirm(deleteConfirm(row))) return;
+    const ok = await confirm({
+      title: "Excluir registro?",
+      description: deleteConfirm(row),
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`${deleteBase}/${row.id}`, { method: "DELETE" });
       if (!res.ok) {

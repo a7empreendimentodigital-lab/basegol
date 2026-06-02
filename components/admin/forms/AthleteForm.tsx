@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminFormFeedback } from "@/components/admin/forms/admin-form-feedback";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,6 +41,7 @@ function buildDefaults(initial?: Record<string, unknown> | null): FormData {
 export function AthleteForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
   const { options: clubs, loading: clubsLoading } = useAdminOptions("clubs");
+    const { onSaveError } = useAdminFormFeedback();
   const [saving, setSaving] = useState(false);
 
   const defaultValues = useMemo(() => buildDefaults(initial), [initial?.id, initial]);
@@ -61,7 +63,7 @@ export function AthleteForm({ initial, onSuccess, onCancel }: AdminFormProps) {
           await submitEntity("athletes", data, id || undefined);
           onSuccess();
         } catch (e) {
-          alert(e instanceof Error ? e.message : "Erro");
+          onSaveError(e);
         } finally {
           setSaving(false);
         }

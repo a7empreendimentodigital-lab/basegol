@@ -1,6 +1,7 @@
 import path from "node:path";
 import { findExistingClub } from "@/lib/club-lookup";
 import { normalizeAthleteCategory } from "@/lib/athlete-category";
+import { isLikelySameClub, normalizeClubName } from "@/lib/normalize-name";
 import { ensureTeamInGroup } from "@/lib/team-enrollment";
 import { prisma } from "@/lib/prisma";
 import { formatPaulistaGroupName } from "@/services/paulista-pack-import/paulista-pack-convert";
@@ -35,14 +36,107 @@ export type GroupRosterSyncResult = {
 export async function resolveClubByOfficialName(
   officialName: string
 ): Promise<{ id: string; name: string } | null> {
-  let club = await findExistingClub(officialName);
-  if (club) return club;
+  const sourceName = officialName.trim();
+  let club = await findExistingClub(sourceName);
+  if (club) {
+    return pickPreferredClubVariant(sourceName, club);
+  }
   const parts = officialName.trim().split(/\s+/);
   for (let drop = 1; drop <= 4 && parts.length - drop >= 3; drop++) {
     club = await findExistingClub(parts.slice(0, -drop).join(" "));
-    if (club) return club;
+    if (club) {
+      return pickPreferredClubVariant(sourceName, club);
+    }
   }
   return null;
+}
+
+function clubVariantScore(club: {
+  name: string;
+  _count: {
+    teams: number;
+    athletes: number;
+    registrations: number;
+    clubUsers: number;
+    staffMembers: number;
+  };
+}): number {
+  const normalized = normalizeClubName(club.name);
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  const suffixPenalty = tokens.length >= 4 ? 1 : 0;
+  return (
+    club._count.athletes * 100 +
+    club._count.registrations * 40 +
+    club._count.clubUsers * 20 +
+    club._count.teams * 12 +
+    club._count.staffMembers * 5 -
+    suffixPenalty
+  );
+}
+
+async function pickPreferredClubVariant(
+  rosterName: string,
+  preferred: { id: string; name: string }
+): Promise<{ id: string; name: string }> {
+  const rosterNorm = normalizeClubName(rosterName);
+  const preferredNorm = normalizeClubName(preferred.name);
+  const areCloseVariants = (candidateName: string) => {
+    const candidateNorm = normalizeClubName(candidateName);
+    const prefixMatch =
+      candidateNorm.startsWith(rosterNorm) ||
+      rosterNorm.startsWith(candidateNorm) ||
+      candidateNorm.startsWith(preferredNorm) ||
+      preferredNorm.startsWith(candidateNorm);
+    if (prefixMatch) return true;
+    return (
+      isLikelySameClub(rosterName, candidateName) &&
+      isLikelySameClub(preferred.name, candidateName)
+    );
+  };
+
+  const candidates = await prisma.club.findMany({
+    select: {
+      id: true,
+      name: true,
+      _count: {
+        select: {
+          teams: true,
+          athletes: true,
+          registrations: true,
+          clubUsers: true,
+          staffMembers: true,
+        },
+      },
+    },
+  });
+
+  const related = candidates.filter(
+    (c) =>
+      c.id === preferred.id ||
+      areCloseVariants(c.name)
+  );
+
+  if (related.length <= 1) return preferred;
+
+  const sorted = related.sort((a, b) => clubVariantScore(b) - clubVariantScore(a));
+  const best = sorted[0];
+  const current = related.find((c) => c.id === preferred.id) ?? best;
+
+  if (best.id === current.id) return preferred;
+
+  const currentScore = clubVariantScore(current);
+  const bestScore = clubVariantScore(best);
+  const currentHasCoreData =
+    current._count.athletes > 0 || current._count.clubUsers > 0 || current._count.registrations > 0;
+  const bestHasCoreData =
+    best._count.athletes > 0 || best._count.clubUsers > 0 || best._count.registrations > 0;
+
+  // Só troca automaticamente quando o clube atual é claramente um duplicado "vazio".
+  if (!currentHasCoreData && bestHasCoreData && bestScore >= currentScore + 20) {
+    return { id: best.id, name: best.name };
+  }
+
+  return preferred;
 }
 
 async function resolveExpectedClubIds(

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { FormField } from "@/components/admin/forms/FormField";
 import { matchFormSchema } from "@/utils/zod-schemas/admin-entities";
+import { useAdminFormFeedback } from "@/components/admin/forms/admin-form-feedback";
 import { submitEntity } from "@/components/admin/forms/submit-entity";
 import { useAdminOptions } from "@/hooks/use-admin-options";
 import { MATCH_STATUS_LABELS } from "@/lib/admin-labels";
@@ -21,6 +22,7 @@ type MatchFormOutput = z.output<typeof matchFormSchema>;
 
 export function MatchForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
+  const { onSaveError, onValidationError } = useAdminFormFeedback();
   const [saving, setSaving] = useState(false);
   function buildDefaults(source?: Record<string, unknown> | null): MatchFormInput {
     const { scheduledDate, scheduledTime } = dateTimeToInputValues(
@@ -65,7 +67,7 @@ export function MatchForm({ initial, onSuccess, onCancel }: AdminFormProps) {
       onSubmit={handleSubmit(async () => {
         const parsed = matchFormSchema.parse(getValues()) as MatchFormOutput;
         if (parsed.homeTeamId === parsed.awayTeamId) {
-          alert("Mandante e visitante devem ser equipes diferentes.");
+          onValidationError("Mandante e visitante devem ser equipes diferentes.");
           return;
         }
 
@@ -74,13 +76,13 @@ export function MatchForm({ initial, onSuccess, onCancel }: AdminFormProps) {
           await submitEntity("matches", parsed, id || undefined);
           onSuccess();
         } catch (e) {
-          alert(e instanceof Error ? e.message : "Erro");
+          onSaveError(e);
         } finally {
           setSaving(false);
         }
       }, (fieldErrors) => {
         const first = Object.values(fieldErrors)[0];
-        if (first?.message) alert(String(first.message));
+        if (first?.message) onValidationError(String(first.message));
       })}
       className="space-y-4"
     >
