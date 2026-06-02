@@ -1,17 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   BarChart3,
-  Calendar,
   ClipboardList,
-  Hash,
   ListOrdered,
-  MapPin,
-  Tag,
-  Trophy,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChampionshipEmptyPanel } from "@/components/campeonatos/ChampionshipEmptyPanel";
@@ -19,12 +13,12 @@ import { LiveBadge } from "@/components/layout/LiveBadge";
 import { StatisticBar } from "@/components/matches/StatisticBar";
 import { StandingTable } from "@/components/matches/StandingTable";
 import { normalizeImageSrc } from "@/lib/image-url";
-import { TeamCrest } from "@/components/matches/TeamCrest";
 import { LiveMatchClockDisplay } from "@/components/matches/LiveMatchClockDisplay";
 import { PenaltyShootoutPanel } from "@/components/matches/PenaltyShootoutPanel";
 import { penaltyShootoutWinner } from "@/lib/match-penalties";
 import { MATCH_EVENT_LABELS } from "@/lib/admin-labels";
-import { formatMatchDateTime, formatRoundLabel } from "@/lib/match-display";
+import { MatchDetailMeta } from "@/components/matches/MatchDetailMeta";
+import { MatchDetailScoreHeader } from "@/components/matches/MatchDetailScoreHeader";
 import {
   dedupeTimelineEvents,
   formatTimelineMinute,
@@ -85,21 +79,6 @@ function eventIcon(type: string) {
   }
 }
 
-function MatchMetaRow({
-  icon: Icon,
-  children,
-}: {
-  icon: typeof Calendar;
-  children: ReactNode;
-}) {
-  return (
-    <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-      <Icon className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
-      <span>{children}</span>
-    </p>
-  );
-}
-
 export function LiveMatchView({ match, events = [], stats, standings = [] }: LiveMatchViewProps) {
   const timelineEvents = dedupeTimelineEvents(events);
   const homeName = match.homeTeam.club.shortName ?? match.homeTeam.club.name;
@@ -141,34 +120,12 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
           </div>
         ) : null}
 
-        <div className="flex items-center justify-center gap-5 sm:gap-10">
-          <div className="flex min-w-0 max-w-[9rem] flex-1 flex-col items-center gap-2.5">
-            <TeamCrest url={match.homeTeam.club.crestUrl} name={homeName} size="xl" />
-            <p className="line-clamp-2 w-full text-center text-sm font-semibold leading-tight text-foreground sm:text-base">
-              {homeName}
-            </p>
-          </div>
-
-          <div className="shrink-0 text-center px-2">
-            {showPenalties ? (
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                Tempo regulamentar
-              </p>
-            ) : null}
-            <p className="font-display text-4xl tracking-wider text-foreground tabular-nums sm:text-5xl">
-              {match.homeScore}
-              <span className="mx-1 text-muted-foreground">:</span>
-              {match.awayScore}
-            </p>
-          </div>
-
-          <div className="flex min-w-0 max-w-[9rem] flex-1 flex-col items-center gap-2.5">
-            <TeamCrest url={match.awayTeam.club.crestUrl} name={awayName} size="xl" />
-            <p className="line-clamp-2 w-full text-center text-sm font-semibold leading-tight text-foreground sm:text-base">
-              {awayName}
-            </p>
-          </div>
-        </div>
+        <MatchDetailScoreHeader
+          match={match}
+          homeName={homeName}
+          awayName={awayName}
+          showRegulationLabel={showPenalties}
+        />
 
         {showPenalties ? (
           <div className="w-full max-w-lg mx-auto space-y-3">
@@ -194,21 +151,7 @@ export function LiveMatchView({ match, events = [], stats, standings = [] }: Liv
           </div>
         ) : null}
 
-        <div className="space-y-1.5 border-t border-line/60 pt-4">
-          <MatchMetaRow icon={Calendar}>{formatMatchDateTime(match.scheduledAt)}</MatchMetaRow>
-          {match.championshipName ? (
-            <MatchMetaRow icon={Trophy}>
-              {match.championshipName}
-              {match.categoryName ? ` · ${match.categoryName}` : ""}
-            </MatchMetaRow>
-          ) : match.categoryName ? (
-            <MatchMetaRow icon={Tag}>{match.categoryName}</MatchMetaRow>
-          ) : null}
-          {match.round ? (
-            <MatchMetaRow icon={Hash}>{formatRoundLabel(match.round)}</MatchMetaRow>
-          ) : null}
-          {match.venue ? <MatchMetaRow icon={MapPin}>{match.venue}</MatchMetaRow> : null}
-        </div>
+        <MatchDetailMeta match={match} />
       </div>
 
       <Tabs defaultValue="eventos" className="w-full">

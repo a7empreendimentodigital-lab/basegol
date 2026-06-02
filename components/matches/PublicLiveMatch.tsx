@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { applyCategoryMatchTime } from "@/lib/category-match-times";
 import { parseApiResponse } from "@/lib/api-client";
 import { LiveMatchView } from "@/components/matches/LiveMatchView";
 import type { MatchWithTeams } from "@/types";
@@ -99,7 +100,13 @@ function toMatchView(m: MatchPayload): MatchWithTeams {
     inPenaltyShootout: m.inPenaltyShootout,
     hasPenaltyShootout: m.hasPenaltyShootout,
     penaltyKicks: m.penaltyKicks,
-    scheduledAt: new Date(m.scheduledAt),
+    scheduledAt:
+      m.status === "SCHEDULED" || m.status === "POSTPONED"
+        ? applyCategoryMatchTime(
+            new Date(m.scheduledAt),
+            m.group?.category?.name ?? null
+          )
+        : new Date(m.scheduledAt),
     venue: m.venue,
     round: m.round,
     championshipName: m.group?.category?.championship?.name ?? null,
