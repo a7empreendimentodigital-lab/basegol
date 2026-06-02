@@ -8,7 +8,7 @@ import type {
   PaulistaPack,
 } from "@/services/paulista-pack-import/paulista-pack.types";
 
-function parseGroupTeamsCsv(buffer: Buffer): PaulistaGroupTeam[] {
+export function parseGroupTeamsCsv(buffer: Buffer): PaulistaGroupTeam[] {
   return parseCsvBuffer(buffer).map((row) => ({
     competition_category: pickColumn(row, "competition_category", "category"),
     group: Number(pickColumn(row, "group")),
@@ -80,6 +80,10 @@ export function loadPaulistaPackFromJsonFile(filePath: string): PaulistaPack {
   const season = competitions[0]?.season ?? 2026;
 
   return { season, competitions, groupTeams, fixtures };
+}
+
+export function loadGroupTeamsCsvFile(filePath: string): PaulistaGroupTeam[] {
+  return parseGroupTeamsCsv(readFileSync(filePath));
 }
 
 export function loadPaulistaPack(source: string): PaulistaPack {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Layers, Pencil, Search, Trash2 } from "lucide-react";
+import { Layers, Pencil, RefreshCw, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -78,6 +78,7 @@ export function GroupsByCategoryList() {
   const [items, setItems] = useState<GroupRow[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [syncingRoster, setSyncingRoster] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<GroupRow | null>(null);
 
@@ -122,6 +123,48 @@ export function GroupsByCategoryList() {
     }
   }
 
+  async function syncOfficialRoster() {
+    if (
+      !confirm(
+        "Sincronizar todos os grupos Sub-11 e Sub-12 com a lista oficial FPF?\n\nClubes fora da lista serão removidos dos grupos (e jogos desses confrontos no grupo serão apagados)."
+      )
+    ) {
+      return;
+    }
+    setSyncingRoster(true);
+    try {
+      const res = await fetch("/api/admin/sync-group-roster", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Falha na sincronização");
+      }
+      const data = json.data as {
+        added: number;
+        removed: number;
+        moved: number;
+        missingClub: number;
+      };
+      toast({
+        title: "Grupos sincronizados",
+        description: `+${data.added} inscrições · ${data.removed} removidos · ${data.moved} movidos${data.missingClub ? ` · ${data.missingClub} clube(s) não encontrado(s)` : ""}`,
+        variant: "success",
+      });
+      await load();
+    } catch (e) {
+      toast({
+        title: "Erro ao sincronizar",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "error",
+      });
+    } finally {
+      setSyncingRoster(false);
+    }
+  }
+
   return (
     <div>
       <AdminPageHeader
@@ -134,6 +177,16 @@ export function GroupsByCategoryList() {
       />
 
       <div className="glass-card mb-4 flex flex-wrap items-center gap-3 p-4">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={syncingRoster}
+          onClick={() => void syncOfficialRoster()}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncingRoster ? "animate-spin" : ""}`} aria-hidden />
+          {syncingRoster ? "Sincronizando…" : "Sincronizar lista FPF"}
+        </Button>
         <div className="flex min-w-[200px] flex-1 gap-2">
           <Input
             placeholder="Buscar grupo ou categoria..."
