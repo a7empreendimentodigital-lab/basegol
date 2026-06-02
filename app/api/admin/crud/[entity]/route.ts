@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { adminListQuerySchema } from "@/utils/zod-schemas";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
 import { prepareAdminPayload } from "@/lib/admin-transform";
+import { ensureUniqueClubSlug } from "@/lib/club-slug";
+import { formatPrismaError } from "@/lib/prisma-user-error";
+import { slugify } from "@/lib/utils";
 import { revalidateBrandConfig } from "@/lib/revalidate-brand";
 import { fail, ok } from "@/utils/api-response";
 import { prismaContains } from "@/lib/prisma-search";
@@ -296,7 +299,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
     ]);
     return ok({ items, total });
   } catch (error) {
-    return fail("Falha ao listar", 400, error instanceof Error ? error.message : undefined);
+    return fail(formatPrismaError(error), 400);
   }
 }
 
@@ -312,6 +315,26 @@ export async function POST(req: Request, { params }: { params: Promise<{ entity:
     const raw = await req.json();
     const parsed = schema.parse(raw);
     const payload = prepareAdminPayload(entity, parsed as Record<string, unknown>);
+
+    if (entity === "clubs") {
+      const baseSlug =
+        (typeof payload.slug === "string" && payload.slug) ||
+        (typeof payload.name === "string" ? slugify(payload.name) : "clube");
+      payload.slug = await ensureUniqueClubSlug(baseSlug);
+      const normalizedName = payload.normalizedName as string | undefined;
+      if (normalizedName) {
+        const duplicate = await prisma.club.findFirst({
+          where: { normalizedName },
+          select: { name: true },
+        });
+        if (duplicate) {
+          return fail(
+            `Já existe outro clube cadastrado com este nome (${duplicate.name}).`,
+            409
+          );
+        }
+      }
+    }
 
     if (entity === "championships") return ok(await prisma.championship.create({ data: payload as never }), 201);
     if (entity === "categories") return ok(await prisma.category.create({ data: payload as never }), 201);
@@ -338,6 +361,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ entity:
     if (entity === "notifications") return ok(await prisma.notification.create({ data: payload as never }), 201);
     return ok(await prisma.user.create({ data: payload as never }), 201);
   } catch (error) {
-    return fail("Falha ao criar", 400, error instanceof Error ? error.message : undefined);
+    return fail(formatPrismaError(error), 400);
   }
 }

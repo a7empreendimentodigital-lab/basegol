@@ -13,6 +13,8 @@ import { groupSchema } from "@/utils/zod-schemas/admin-entities";
 import { GROUP_STATUS_LABELS } from "@/lib/admin-labels";
 import { relationIdFromInitial } from "@/lib/admin-form-relations";
 import { submitEntity } from "@/components/admin/forms/submit-entity";
+import { notifySaveError, notifySaveSuccess } from "@/components/admin/forms/admin-form-feedback";
+import { useToast } from "@/components/ui/toaster";
 import { useAdminOptions } from "@/hooks/use-admin-options";
 import { type AdminFormProps, str } from "@/components/admin/forms/types";
 import { GroupTeamsField } from "@/components/admin/forms/GroupTeamsField";
@@ -29,6 +31,7 @@ function buildDefaults(initial?: Record<string, unknown> | null): FormData {
 
 export function GroupForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const id = str(initial?.id);
+  const { toast } = useToast();
   const { options: categories, loading: categoriesLoading } = useAdminOptions("categories");
   const [saving, setSaving] = useState(false);
 
@@ -48,9 +51,10 @@ export function GroupForm({ initial, onSuccess, onCancel }: AdminFormProps) {
         setSaving(true);
         try {
           await submitEntity("groups", data, id || undefined);
+          notifySaveSuccess(toast, id ? "Grupo atualizado" : "Grupo criado");
           onSuccess();
         } catch (e) {
-          alert(e instanceof Error ? e.message : "Erro");
+          notifySaveError(toast, e);
         } finally {
           setSaving(false);
         }

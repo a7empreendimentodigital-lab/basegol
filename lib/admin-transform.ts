@@ -22,7 +22,7 @@ export function prepareAdminPayload(entity: string, data: Record<string, unknown
     delete out.slug;
   }
 
-  if (typeof out.name === "string" && !out.slug) {
+  if (typeof out.name === "string" && !out.slug && entity !== "clubs") {
     out.slug = slugify(out.name);
   }
   if (entity === "clubs" && typeof out.name === "string") {

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { parseApiResponse } from "@/lib/api-client";
 import { useAdminOptions } from "@/hooks/use-admin-options";
+import { notifySaveError, notifySaveSuccess } from "@/components/admin/forms/admin-form-feedback";
+import { useToast } from "@/components/ui/toaster";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 
 type EnrolledTeam = {
@@ -17,6 +19,7 @@ type Props = {
 };
 
 export function GroupTeamsField({ groupId }: Props) {
+  const { toast } = useToast();
   const { options: clubs, loading: clubsLoading } = useAdminOptions("clubs");
   const [enrolled, setEnrolled] = useState<EnrolledTeam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +63,7 @@ export function GroupTeamsField({ groupId }: Props) {
       setClubToAdd("");
       await load();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Erro ao inscrever clube");
+      notifySaveError(toast, e);
     } finally {
       setSaving(false);
     }
@@ -92,11 +95,16 @@ export function GroupTeamsField({ groupId }: Props) {
       }
       const data = json.data as { matchesDeleted?: number } | undefined;
       if (data?.matchesDeleted && data.matchesDeleted > 0) {
-        alert(`Clube removido. ${data.matchesDeleted} jogo(s) do grupo foram excluídos.`);
+        notifySaveSuccess(
+          toast,
+          `Clube removido (${data.matchesDeleted} jogo(s) excluídos do grupo)`
+        );
+      } else {
+        notifySaveSuccess(toast, "Clube removido do grupo");
       }
       await load();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Não foi possível remover o clube do grupo.");
+      notifySaveError(toast, e);
     }
   }
 

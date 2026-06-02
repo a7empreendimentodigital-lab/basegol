@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
 import { prepareAdminPayload } from "@/lib/admin-transform";
+import { formatPrismaError } from "@/lib/prisma-user-error";
 import { revalidateBrandConfig } from "@/lib/revalidate-brand";
 import { fail, ok } from "@/utils/api-response";
 
@@ -80,6 +81,24 @@ export async function PATCH(
     const raw = await req.json();
     const parsed = schema.partial().parse(raw);
     const payload = prepareAdminPayload(entity, parsed as Record<string, unknown>);
+
+    if (entity === "clubs") {
+      delete payload.slug;
+      const normalizedName = payload.normalizedName as string | undefined;
+      if (normalizedName) {
+        const duplicate = await prisma.club.findFirst({
+          where: { normalizedName, NOT: { id } },
+          select: { id: true, name: true },
+        });
+        if (duplicate) {
+          return fail(
+            `Já existe outro clube cadastrado com este nome (${duplicate.name}).`,
+            409
+          );
+        }
+      }
+    }
+
     if (entity === "championships") return ok(await prisma.championship.update({ where: { id }, data: payload as never }));
     if (entity === "categories") return ok(await prisma.category.update({ where: { id }, data: payload as never }));
     if (entity === "groups") return ok(await prisma.group.update({ where: { id }, data: payload as never }));
@@ -105,7 +124,7 @@ export async function PATCH(
     if (entity === "notifications") return ok(await prisma.notification.update({ where: { id }, data: payload as never }));
     return ok(await prisma.user.update({ where: { id }, data: payload as never }));
   } catch (error) {
-    return fail("Falha ao atualizar", 400, error instanceof Error ? error.message : undefined);
+    return fail(formatPrismaError(error), 400);
   }
 }
 
@@ -156,6 +175,6 @@ export async function DELETE(
       }
       return fail("Registro possui vínculos e não pode ser excluído fisicamente", 409);
     }
-    return fail("Falha ao excluir", 400, error instanceof Error ? error.message : undefined);
+    return fail(formatPrismaError(error), 400);
   }
 }

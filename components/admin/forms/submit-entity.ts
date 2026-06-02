@@ -12,8 +12,7 @@ export async function submitEntity<T>(entity: string, data: unknown, id?: string
       error?: string;
       details?: string | null;
     };
-    const detail = typeof json.details === "string" ? json.details : null;
-    throw new Error(detail || json.error || "Erro ao salvar");
+    throw new Error(json.error || "Erro ao salvar");
   }
   return parseApiResponse<T>(res);
 }
