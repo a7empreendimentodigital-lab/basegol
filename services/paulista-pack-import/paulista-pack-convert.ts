@@ -45,7 +45,7 @@ function participantFromGroupTeam(gt: PaulistaGroupTeam): ParsedParticipantClub 
   };
 }
 
-function fixtureToMatch(
+export function fixtureToMatch(
   f: PaulistaFixture,
   seasonYear: number,
   categoryHint: string,

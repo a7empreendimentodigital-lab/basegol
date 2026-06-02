@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { findExistingClub } from "@/lib/club-lookup";
 import { applyCategoryMatchTime } from "@/lib/category-match-times";
 import { prisma } from "@/lib/prisma";
+import { ensurePaulistaCompetitionRound } from "@/services/competition-round.service";
 import { normalizeEntityName } from "@/lib/normalize-name";
 import {
   parseFpfRoundResultsPdfText,
@@ -98,53 +99,6 @@ async function findOrCreateVenue(venueName: string, city: string) {
   return created.id;
 }
 
-async function ensureCompetitionRound(
-  championshipId: string,
-  roundNumber: number
-) {
-  const phaseSlug = "fase-01";
-  const turnSlug = "primeiro-turno";
-  let phase = await prisma.competitionPhase.findFirst({
-    where: { championshipId, slug: phaseSlug },
-  });
-  if (!phase) {
-    phase = await prisma.competitionPhase.create({
-      data: { championshipId, name: "FASE 01", slug: phaseSlug },
-    });
-  }
-  let turn = await prisma.competitionTurn.findFirst({
-    where: { phaseId: phase.id, slug: turnSlug },
-  });
-  if (!turn) {
-    turn = await prisma.competitionTurn.create({
-      data: { phaseId: phase.id, name: "PRIMEIRO TURNO", slug: turnSlug },
-    });
-  }
-  const label = `Rodada ${String(roundNumber).padStart(2, "0")}`;
-  let round = await prisma.competitionRound.findUnique({
-    where: {
-      championshipId_phaseId_turnId_number: {
-        championshipId,
-        phaseId: phase.id,
-        turnId: turn.id,
-        number: roundNumber,
-      },
-    },
-  });
-  if (!round) {
-    round = await prisma.competitionRound.create({
-      data: {
-        championshipId,
-        phaseId: phase.id,
-        turnId: turn.id,
-        number: roundNumber,
-        label,
-      },
-    });
-  }
-  return round;
-}
-
 async function findExistingMatch(
   championshipId: string,
   row: ParsedFpfRoundMatch,
@@ -223,7 +177,7 @@ async function processRow(
       const venueId = row.venueName
         ? await findOrCreateVenue(row.venueName, row.city)
         : existing.venueId;
-      const competitionRound = await ensureCompetitionRound(
+      const { phase, turn, round: competitionRound } = await ensurePaulistaCompetitionRound(
         championshipId,
         row.roundNumber
       );
@@ -244,8 +198,8 @@ async function processRow(
           venue: row.venueName || existing.venue,
           venueId,
           competitionRoundId: competitionRound.id,
-          phaseId: competitionRound.phaseId,
-          turnId: competitionRound.turnId,
+          phaseId: phase.id,
+          turnId: turn.id,
         },
       });
     }
@@ -256,7 +210,10 @@ async function processRow(
     const venueId = row.venueName
       ? await findOrCreateVenue(row.venueName, row.city)
       : null;
-    const competitionRound = await ensureCompetitionRound(championshipId, row.roundNumber);
+    const { phase, turn, round: competitionRound } = await ensurePaulistaCompetitionRound(
+      championshipId,
+      row.roundNumber
+    );
     await prisma.match.create({
       data: {
         championshipId,
@@ -265,8 +222,8 @@ async function processRow(
         awayTeamId: enrollment.awayTeamId,
         homeClubId: home.id,
         awayClubId: away.id,
-        phaseId: competitionRound.phaseId,
-        turnId: competitionRound.turnId,
+        phaseId: phase.id,
+        turnId: turn.id,
         competitionRoundId: competitionRound.id,
         matchNumber: row.matchNumber,
         round: row.roundNumber,

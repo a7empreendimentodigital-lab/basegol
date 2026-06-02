@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { CalendarDays } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { CalendarDays, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { AdminGroupedListPage } from "@/components/admin/shared/AdminGroupedListPage";
 import { AdminListRowActions } from "@/components/admin/shared/AdminListRowActions";
@@ -14,6 +14,7 @@ import { clubSigla } from "@/lib/club-display";
 import { formatRoundLabel } from "@/lib/match-display";
 import { formatDate, formatTime } from "@/lib/utils";
 import { useAdminOptions } from "@/hooks/use-admin-options";
+import { useToast } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 
@@ -124,28 +125,80 @@ function MatchListRow({
 }
 
 export function AdminMatchesPage() {
+  const { toast } = useToast();
   const [categoryId, setCategoryId] = useState("");
+  const [roundNumber, setRoundNumber] = useState("");
+  const [clubId, setClubId] = useState("");
+  const [syncingRounds, setSyncingRounds] = useState(false);
   const { options: categories } = useAdminOptions("categories");
+  const { options: clubs } = useAdminOptions("clubs");
+  const { options: rounds } = useAdminOptions("match-rounds", {
+    categoryId: categoryId || undefined,
+  });
+
+  useEffect(() => {
+    setRoundNumber("");
+  }, [categoryId]);
+
   const extraParams = useMemo(
-    () => ({ categoryId: categoryId || undefined }),
-    [categoryId]
+    () => ({
+      categoryId: categoryId || undefined,
+      roundNumber: roundNumber || undefined,
+      clubId: clubId || undefined,
+    }),
+    [categoryId, roundNumber, clubId]
   );
 
   const buildGroups = useCallback(
     (items: Row[]) =>
       groupItemsByKey(items, (r) => r.group?.category?.name ?? "Sem categoria", {
-        sortItems: (a, b) =>
-          new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
+        sortItems: (a, b) => {
+          const roundDiff = (a.round ?? 0) - (b.round ?? 0);
+          if (roundDiff !== 0) return roundDiff;
+          return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
+        },
       }),
     []
   );
+
+  async function fixRoundsFromFpf() {
+    setSyncingRounds(true);
+    try {
+      const res = await fetch("/api/admin/sync-match-rounds", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryId: categoryId || undefined }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Falha ao corrigir rodadas");
+      }
+      const data = json.data as { updated: number; alreadyCorrect: number; missingMatch: number };
+      toast({
+        title: "Rodadas corrigidas",
+        description: `${data.updated} jogo(s) atualizado(s) · ${data.alreadyCorrect} já estavam certos${data.missingMatch ? ` · ${data.missingMatch} sem jogo no sistema` : ""}`,
+        variant: "success",
+      });
+      window.location.reload();
+    } catch (e) {
+      toast({
+        title: "Erro ao corrigir rodadas",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "error",
+      });
+    } finally {
+      setSyncingRounds(false);
+    }
+  }
 
   return (
     <AdminGroupedListPage<Row>
       entity="matches"
       title="Jogos"
       description="Agende partidas por categoria, mandante, visitante, local e status."
-      searchPlaceholder="Buscar clube ou local..."
+      searchPlaceholder={
+        clubId ? "Buscar local..." : "Buscar clube ou local..."
+      }
       emptyMessage="Nenhum jogo encontrado."
       filterAriaLabel="Filtrar por categoria"
       pillAllLabel="Todas"
@@ -157,19 +210,60 @@ export function AdminMatchesPage() {
       FormComponent={MatchForm}
       buildGroups={buildGroups}
       toolbarExtras={
-        <Select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="min-w-[200px]"
-          aria-label="Filtrar por categoria"
-        >
-          <option value="">Todas as categorias</option>
-          {categories.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </Select>
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={syncingRounds}
+            onClick={() => void fixRoundsFromFpf()}
+            className="gap-2 shrink-0"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${syncingRounds ? "animate-spin" : ""}`}
+              aria-hidden
+            />
+            {syncingRounds ? "Corrigindo…" : "Corrigir rodadas (FPF)"}
+          </Button>
+          <Select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="min-w-[180px] flex-1 sm:flex-none sm:max-w-[220px]"
+            aria-label="Filtrar por categoria"
+          >
+            <option value="">Todas as categorias</option>
+            {categories.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </Select>
+          <Select
+            value={roundNumber}
+            onChange={(e) => setRoundNumber(e.target.value)}
+            className="min-w-[160px] flex-1 sm:flex-none"
+            aria-label="Filtrar por rodada"
+          >
+            <option value="">Todas as rodadas</option>
+            {rounds.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </Select>
+          <Select
+            value={clubId}
+            onChange={(e) => setClubId(e.target.value)}
+            className="min-w-[200px] flex-1 sm:flex-none sm:max-w-[280px]"
+            aria-label="Filtrar por clube"
+          >
+            <option value="">Todos os clubes</option>
+            {clubs.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       }
       renderDesktopHeader={() => (
         <div className="hidden sm:grid sm:grid-cols-[1fr_auto_5.5rem_auto] sm:gap-4 sm:items-center px-4 py-2 bg-secondary/30 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">

@@ -18,6 +18,14 @@ export const adminListQuerySchema = z.object({
       const trimmed = s?.trim();
       return trimmed ? trimmed : undefined;
     }),
+  clubId: z
+    .string()
+    .optional()
+    .transform((s) => {
+      const trimmed = s?.trim();
+      return trimmed ? trimmed : undefined;
+    }),
+  roundNumber: z.coerce.number().int().min(1).max(99).optional().catch(undefined),
 });
 
 export const adminCrudPayloadSchema = z.record(z.unknown());

@@ -581,6 +581,24 @@ async function importParsedSchedule(
 
       if (fastMode && knownFingerprints) {
         if (knownFingerprints.has(fingerprint)) {
+          if (m.matchNumber != null) {
+            const byNumber = await prisma.match.findFirst({
+              where: { championshipId, matchNumber: m.matchNumber },
+              select: { id: true, round: true, competitionRoundId: true },
+            });
+            if (byNumber && byNumber.round !== m.roundNumber) {
+              await prisma.match.update({
+                where: { id: byNumber.id },
+                data: {
+                  round: m.roundNumber,
+                  competitionRoundId: round.id,
+                  phaseId: phase.id,
+                  turnId: turn.id,
+                },
+              });
+              counters.summary.matchesUpdated++;
+            }
+          }
           counters.summary.matchesIgnored++;
           counters.summary.matchesSkippedDuplicate++;
           continue;

@@ -48,21 +48,36 @@ export async function listClubsAdmin(page: number, pageSize: number, q?: string)
 export async function listMatchesAdmin(
   page: number,
   pageSize: number,
-  filters?: { categoryId?: string; q?: string }
+  filters?: { categoryId?: string; clubId?: string; roundNumber?: number; q?: string }
 ) {
   const skip = (page - 1) * pageSize;
 
+  const clubFilter = filters?.clubId
+    ? {
+        OR: [{ homeClubId: filters.clubId }, { awayClubId: filters.clubId }],
+      }
+    : {};
+
+  const textFilter = filters?.q
+    ? {
+        OR: [
+          { homeTeam: { club: { name: prismaContains(filters.q) } } },
+          { awayTeam: { club: { name: prismaContains(filters.q) } } },
+          { venue: prismaContains(filters.q) },
+        ],
+      }
+    : {};
+
   const where = {
     ...(filters?.categoryId ? { group: { categoryId: filters.categoryId } } : {}),
-    ...(filters?.q
-      ? {
-          OR: [
-            { homeTeam: { club: { name: prismaContains(filters.q) } } },
-            { awayTeam: { club: { name: prismaContains(filters.q) } } },
-            { venue: prismaContains(filters.q) },
-          ],
-        }
-      : {}),
+    ...(filters?.roundNumber != null ? { round: filters.roundNumber } : {}),
+    ...(filters?.clubId && filters?.q
+      ? { AND: [clubFilter, textFilter] }
+      : filters?.clubId
+        ? clubFilter
+        : filters?.q
+          ? textFilter
+          : {}),
   };
 
   const [rows, total] = await Promise.all([
@@ -87,7 +102,9 @@ export async function listMatchesAdmin(
           },
         },
       },
-      orderBy: { scheduledAt: "desc" },
+      orderBy: filters?.roundNumber != null
+        ? [{ scheduledAt: "asc" }]
+        : [{ round: "asc" }, { scheduledAt: "asc" }],
       skip,
       take: pageSize,
     }),

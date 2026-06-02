@@ -75,6 +75,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       page: url.searchParams.get("page") ?? 1,
       pageSize: url.searchParams.get("pageSize") ?? undefined,
       categoryId: url.searchParams.get("categoryId") ?? undefined,
+      clubId: url.searchParams.get("clubId") ?? undefined,
+      roundNumber: url.searchParams.get("roundNumber") ?? undefined,
     });
     const { skip, pageSize } = normalizePagination(parsed);
     const contains = parsed.q ? prismaContains(parsed.q) : undefined;
@@ -162,6 +164,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       try {
         const data = await listMatchesAdmin(parsed.page, pageSize, {
           categoryId: parsed.categoryId,
+          clubId: parsed.clubId,
+          roundNumber: parsed.roundNumber,
           q: parsed.q,
         });
         return ok(data);

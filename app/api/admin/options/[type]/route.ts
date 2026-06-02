@@ -77,6 +77,25 @@ export async function GET(_req: Request, { params }: { params: Promise<{ type: s
       return ok(items.map((i) => ({ value: i.id, label: i.name, slug: i.slug })));
     }
 
+    if (type === "match-rounds") {
+      const categoryId = new URL(_req.url).searchParams.get("categoryId");
+      const grouped = await prisma.match.groupBy({
+        by: ["round"],
+        where: {
+          round: { gt: 0 },
+          ...(categoryId ? { group: { categoryId } } : {}),
+        },
+        _count: { _all: true },
+        orderBy: { round: "asc" },
+      });
+      return ok(
+        grouped.map((g) => ({
+          value: String(g.round),
+          label: `Rodada ${String(g.round).padStart(2, "0")} (${g._count._all})`,
+        }))
+      );
+    }
+
     if (type === "matches") {
       const items = await prisma.match.findMany({
         orderBy: { scheduledAt: "desc" },

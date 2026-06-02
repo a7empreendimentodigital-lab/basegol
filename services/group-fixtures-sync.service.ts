@@ -2,11 +2,13 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { normalizeAthleteCategory } from "@/lib/athlete-category";
 import { resolveFpfPackDir } from "@/lib/fpf-pack-paths";
+import { resolveDefaultPaulistaChampionshipId } from "@/lib/resolve-paulista-championship";
 import { prisma } from "@/lib/prisma";
 import { runPaulistaPackImport } from "@/services/paulista-pack-import/paulista-pack-import.service";
 import { loadPaulistaPack } from "@/services/paulista-pack-import/paulista-pack-loader";
 import { previewPaulistaPack } from "@/services/paulista-pack-import/paulista-pack-preview";
 import { syncGroupTeamsFromDefaultCsv } from "@/services/group-roster-sync.service";
+import { backfillMatchRoundsFromFpfPack } from "@/services/match-round-backfill.service";
 import { recalculateStandingsForCategory } from "@/services/standings.service";
 import type { ScheduleImportSummary } from "@/services/schedule-import/schedule-import.service";
 
@@ -23,39 +25,14 @@ export type GroupFixturesSyncResult = {
     byCategory: ScheduleImportSummary["byCategory"];
   };
   matchesReconciled: number;
+  roundsBackfill?: {
+    updated: number;
+    alreadyCorrect: number;
+    missingMatch: number;
+  };
 };
 
-export async function resolveDefaultPaulistaChampionshipId(): Promise<{
-  id: string;
-  name: string;
-}> {
-  const championships = await prisma.championship.findMany({
-    where: { status: { in: ["ACTIVE", "REGISTRATION"] } },
-    include: {
-      categories: { where: { status: "ACTIVE" }, select: { name: true } },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
-
-  const paulista =
-    championships.find(
-      (c) =>
-        c.name.toLowerCase().includes("paulista") &&
-        (c.season === "2026" || c.season.includes("2026"))
-    ) ??
-    championships.find((c) =>
-      c.categories.some((cat) => /sub-?1[12]/i.test(cat.name))
-    ) ??
-    championships[0];
-
-  if (!paulista) {
-    throw new Error(
-      "Nenhum campeonato ativo encontrado. Cadastre o Campeonato Paulista de Base 2026 no admin."
-    );
-  }
-
-  return { id: paulista.id, name: paulista.name };
-}
+export { resolveDefaultPaulistaChampionshipId } from "@/lib/resolve-paulista-championship";
 
 /** Ajusta groupId e times dos jogos conforme inscrições atuais nos grupos. */
 export async function reconcileMatchesWithGroups(
@@ -216,6 +193,12 @@ export async function syncFixturesFromFpfPack(input: {
     await recalculateStandingsForCategory(cat.id);
   }
 
+  const roundsBackfill = await backfillMatchRoundsFromFpfPack({
+    championshipId: championship.id,
+    packDir,
+    categoryFilter: input.categoryFilter ?? null,
+  });
+
   return {
     championshipId: championship.id,
     championshipName: championship.name,
@@ -229,5 +212,10 @@ export async function syncFixturesFromFpfPack(input: {
       byCategory: summary.byCategory,
     },
     matchesReconciled,
+    roundsBackfill: {
+      updated: roundsBackfill.updated,
+      alreadyCorrect: roundsBackfill.alreadyCorrect,
+      missingMatch: roundsBackfill.missingMatch,
+    },
   };
 }
