@@ -1,35 +1,37 @@
 import Link from "next/link";
 import { CalendarClock, CalendarDays, Radio } from "lucide-react";
+import { buildJogosHref } from "@/lib/jogos-category-filter";
 import { cn } from "@/lib/utils";
 
 type Props = {
   isLive: boolean;
   isUpcoming: boolean;
+  activeCategory?: string | null;
 };
 
 const tabs = [
   {
-    href: "/jogos?status=LIVE",
+    path: "/jogos?status=LIVE" as const,
     label: "Ao vivo",
     icon: Radio,
     isActive: (p: Props) => p.isLive,
   },
   {
-    href: "/jogos?status=upcoming",
+    path: "/jogos?status=upcoming" as const,
     label: "Próximos",
     icon: CalendarClock,
     isActive: (p: Props) => p.isUpcoming,
   },
   {
-    href: "/jogos",
+    path: "/jogos" as const,
     label: "Hoje",
     icon: CalendarDays,
     isActive: (p: Props) => !p.isLive && !p.isUpcoming,
   },
 ] as const;
 
-export function JogosFilterTabs({ isLive, isUpcoming }: Props) {
-  const props = { isLive, isUpcoming };
+export function JogosFilterTabs({ isLive, isUpcoming, activeCategory = null }: Props) {
+  const props = { isLive, isUpcoming, activeCategory };
 
   return (
     <nav
@@ -39,10 +41,11 @@ export function JogosFilterTabs({ isLive, isUpcoming }: Props) {
       {tabs.map((tab) => {
         const active = tab.isActive(props);
         const Icon = tab.icon;
+        const href = buildJogosHref(tab.path, activeCategory);
         return (
           <Link
-            key={tab.href}
-            href={tab.href}
+            key={tab.path}
+            href={href}
             className={cn(
               "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
               active
