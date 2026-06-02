@@ -27,6 +27,18 @@ npm run import:paulista-pack -- ~/Downloads/basegol_paulista_import_2026 <champi
 4. **Resultados** — `/admin/importacao-resultados` (CSV) ou `npx tsx scripts/run-match-results-import.ts`.
 5. **Classificação** — recalculada automaticamente após resultados; manual: `npx tsx scripts/recalculate-standings.ts`.
 
+### Corrigir grupos (lista oficial FPF)
+
+Quando clubes estiverem no grupo errado, use o PDF de participantes ou `group_teams.csv` do pacote:
+
+```bash
+npm run sync:group-roster -- ~/Downloads/Sub-11-1-2.pdf
+npm run sync:group-roster -- ~/Downloads/basegol_paulista_import_2026 --dry-run
+npm run sync:group-roster -- ~/Downloads/basegol_paulista_import_2026 --category Sub-11
+```
+
+O script remove inscrições fora da lista, move clubes para o grupo correto e recalcula as tabelas. Sub-11 e Sub-12 usam a mesma distribuição de grupos.
+
 ## Variável de ambiente
 
 Todas as importações via script usam **`DATABASE_URL`** (mesma do Prisma / Railway).
