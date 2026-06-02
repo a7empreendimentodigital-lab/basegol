@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
-import { Shield } from "lucide-react";
+import { useCallback, useState } from "react";
+import { RefreshCw, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/components/ui/toaster";
 import { Thumb } from "@/components/admin/shared/AdminDataTable";
 import { AdminGroupedListPage } from "@/components/admin/shared/AdminGroupedListPage";
 import { AdminListRowActions } from "@/components/admin/shared/AdminListRowActions";
@@ -60,6 +63,54 @@ function ClubListRow({
 }
 
 export function AdminClubsPage() {
+  const { toast } = useToast();
+  const { confirm } = useConfirm();
+  const [syncing, setSyncing] = useState(false);
+
+  async function syncFpfClubs() {
+    const ok = await confirm({
+      title: "Completar lista FPF?",
+      description:
+        "Cadastra ou corrige clubes para atingir os 79 participantes oficiais (Sub-11/Sub-12). Clubes já existentes com sigla correta serão atualizados, não duplicados.",
+      confirmLabel: "Sincronizar clubes",
+    });
+    if (!ok) return;
+
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/admin/sync-fpf-clubs", { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Falha na sincronização");
+      }
+      const data = json.data as {
+        clubs: {
+          beforeCount: number;
+          afterCount: number;
+          created: number;
+          updated: number;
+          stillMissing: string[];
+          officialTotal: number;
+        };
+      };
+      const c = data.clubs;
+      toast({
+        title: "Clubes sincronizados",
+        description: `${c.afterCount} no cadastro · ${c.created} criados · ${c.updated} corrigidos${c.stillMissing.length ? ` · ${c.stillMissing.length} pendente(s)` : ""}`,
+        variant: c.stillMissing.length ? "error" : "success",
+      });
+      window.location.reload();
+    } catch (e) {
+      toast({
+        title: "Erro ao sincronizar clubes",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "error",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   const buildGroups = useCallback(
     (items: Row[]) =>
       groupItemsByKey(items, (r) => r.status, {
@@ -74,12 +125,27 @@ export function AdminClubsPage() {
     <AdminGroupedListPage<Row>
       entity="clubs"
       title="Clubes"
-      description="Cadastro de clubes, escudos, banners e status de aprovação."
+      description="Cadastro de clubes, escudos, banners e status de aprovação (lista oficial: 79 participantes FPF)."
+      pageSize={120}
+      toolbarExtras={
+        <Button
+          type="button"
+          variant="outline"
+          disabled={syncing}
+          onClick={() => void syncFpfClubs()}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} aria-hidden />
+          {syncing ? "Sincronizando…" : "Completar lista FPF (79)"}
+        </Button>
+      }
       searchPlaceholder="Buscar clube..."
       emptyMessage="Nenhum clube encontrado."
       filterAriaLabel="Filtrar por status"
       sectionIcon={Shield}
-      countLabel={(n) => `${n} ${n === 1 ? "clube" : "clubes"}`}
+      countLabel={(n) =>
+        `${n} ${n === 1 ? "clube" : "clubes"} · 79 participantes FPF`
+      }
       dialogTitles={{ new: "Novo clube", edit: "Editar clube" }}
       deleteConfirm={(r) => `Excluir o clube "${r.name}"? Esta ação não pode ser desfeita.`}
       FormComponent={ClubForm}

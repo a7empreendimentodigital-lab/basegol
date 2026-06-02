@@ -30,17 +30,25 @@ export async function findExistingClub(
   }
 
   const clubs = await prisma.club.findMany({
-    select: { id: true, name: true, normalizedName: true },
+    select: { id: true, name: true, normalizedName: true, shortName: true },
   });
 
   let best: { id: string; name: string; score: number } | null = null;
 
   for (const club of clubs) {
+    const labels = [club.name, club.shortName].filter(Boolean) as string[];
     for (const name of candidates) {
-      if (!isLikelySameClub(name, club.name)) continue;
-      const score = distinctiveClubOverlap(name, club.name) + club.name.length / 1000;
-      if (!best || score > best.score) {
-        best = { id: club.id, name: club.name, score };
+      const norm = normalizeClubName(name);
+      if (labels.some((label) => normalizeClubName(label) === norm)) {
+        return { id: club.id, name: club.name };
+      }
+      for (const label of labels) {
+        if (!isLikelySameClub(name, label)) continue;
+        const score =
+          distinctiveClubOverlap(name, label) + label.length / 1000 + (label === club.name ? 0.01 : 0);
+        if (!best || score > best.score) {
+          best = { id: club.id, name: club.name, score };
+        }
       }
     }
   }
