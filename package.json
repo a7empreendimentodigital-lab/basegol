@@ -26,6 +26,7 @@
     "db:update-match-times": "tsx scripts/update-category-match-times.ts",
     "sync:group-roster": "tsx scripts/sync-group-teams-from-roster.ts",
     "sync:group-fixtures": "tsx scripts/sync-group-fixtures.ts",
+    "import:round-pdf": "tsx scripts/run-round-results-pdf-import.ts",
     "sync:fpf-clubs": "tsx scripts/seed-missing-fpf-clubs.ts",
     "audit:fpf-clubs": "tsx scripts/audit-fpf-clubs.ts",
     "import:paulista-pack": "tsx scripts/run-paulista-pack-import.ts",
