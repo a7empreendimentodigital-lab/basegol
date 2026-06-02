@@ -31,8 +31,18 @@ function CategoryCircle({
   );
 }
 
-export function HomeCategoriesRow({ categories }: { categories: HomeCategoryCircle[] }) {
+type CategoriesRowProps = {
+  categories: HomeCategoryCircle[];
+  /** Quando definido, links apontam para a página da categoria neste campeonato. */
+  championshipSlug?: string;
+};
+
+export function HomeCategoriesRow({ categories, championshipSlug }: CategoriesRowProps) {
   if (categories.length === 0) return null;
+
+  const verTodasHref = championshipSlug
+    ? `/campeonatos/${championshipSlug}`
+    : "/campeonatos";
 
   return (
     <section className="space-y-4">
@@ -41,13 +51,17 @@ export function HomeCategoriesRow({ categories }: { categories: HomeCategoryCirc
           <Layers className="h-4 w-4 text-muted-foreground" aria-hidden />
           Categorias
         </h2>
-        <HomeSectionLink href="/campeonatos">Ver todas</HomeSectionLink>
+        <HomeSectionLink href={verTodasHref}>Ver todas</HomeSectionLink>
       </div>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {categories.map((cat) => (
           <Link
             key={cat.id}
-            href={`/campeonatos/${cat.championshipSlug}`}
+            href={
+              championshipSlug
+                ? `/campeonatos/${championshipSlug}/categorias/${cat.categorySlug}`
+                : `/campeonatos/${cat.championshipSlug}`
+            }
             className="group flex min-w-[80px] shrink-0 flex-col items-center gap-2"
           >
             <CategoryCircle label={cat.label} imageUrl={cat.imageUrl} />

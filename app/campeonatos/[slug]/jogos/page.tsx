@@ -1,5 +1,7 @@
 import { JogosCategoryTabs } from "@/components/jogos/JogosCategoryTabs";
 import { JogosFilterTabs } from "@/components/jogos/JogosFilterTabs";
+import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
+import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
 import { MatchList } from "@/components/matches/MatchList";
 import {
   extractCategoriesFromMatches,
@@ -40,24 +42,24 @@ export default async function ChampionshipJogosPage({ params, searchParams }: Pa
   const activeCategory = resolveActiveCategorySlug(categoriaParam, categories);
   const matches = filterMatchesByCategorySlug(allMatches, activeCategory ?? undefined);
 
-  const statusFilter = isLive ? "LIVE" : isUpcoming ? "upcoming" : undefined;
+  const bannerTitle = isLive ? "Ao vivo" : isUpcoming ? "Próximos jogos" : "Jogos de hoje";
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <JogosFilterTabs
-        isLive={isLive}
-        isUpcoming={isUpcoming}
-        activeCategory={activeCategory}
-        basePath={basePath}
-      />
-      <JogosCategoryTabs
-        categories={categories}
-        activeSlug={activeCategory}
-        pathname={basePath}
-        status={statusFilter}
-        embedded
-      />
-      <div className="mt-6">
+    <PublicRightSidebarLayout championshipSlug={slug}>
+      <PublicPageBanner title={bannerTitle} />
+      <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+        <JogosFilterTabs
+          isLive={isLive}
+          isUpcoming={isUpcoming}
+          activeCategory={activeCategory}
+          basePath={basePath}
+        />
+        <JogosCategoryTabs
+          categories={categories}
+          activeSlug={activeCategory}
+          pathname={basePath}
+          status={isLive ? "LIVE" : isUpcoming ? "upcoming" : undefined}
+        />
         <MatchList
           matches={matches}
           emptyMessage={
@@ -68,7 +70,7 @@ export default async function ChampionshipJogosPage({ params, searchParams }: Pa
                 : "Nenhum jogo hoje neste campeonato."
           }
         />
-      </div>
-    </main>
+      </main>
+    </PublicRightSidebarLayout>
   );
 }

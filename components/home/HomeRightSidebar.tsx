@@ -17,6 +17,8 @@ type Props = {
   standingsByCategory: Record<string, StandingRowDisplay[]>;
   scorersByCategory: Record<string, TopScorerRow[]>;
   rightBanner?: PublicBannerDto | null;
+  competitionsLink?: string;
+  tableHref?: string;
 };
 
 function RightSidebarPatrocinio({
@@ -43,6 +45,8 @@ export function HomeRightSidebar({
   standingsByCategory,
   scorersByCategory,
   rightBanner,
+  competitionsLink = "/campeonatos",
+  tableHref = "/tabela",
 }: Props) {
   const [selectedId, setSelectedId] = useState(categories[0]?.id ?? "");
 
@@ -73,7 +77,7 @@ export function HomeRightSidebar({
             <Trophy className="h-4 w-4 text-muted-foreground" aria-hidden />
             Competições
           </h2>
-          <HomeSectionLink href="/campeonatos">Ver todas</HomeSectionLink>
+          <HomeSectionLink href={competitionsLink}>Ver todas</HomeSectionLink>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {categories.map((cat) => {
@@ -97,7 +101,7 @@ export function HomeRightSidebar({
           title="Tabela"
           categoryLabel={selected?.label}
           tableLinkLabel="Classificação geral"
-          tableHref="/tabelas"
+          tableHref={tableHref}
           rows={standings}
           layout="sidebar"
         />

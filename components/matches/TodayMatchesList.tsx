@@ -10,9 +10,19 @@ type Props = {
   matches: MatchWithTeams[];
   categories: JogosCategoryOption[];
   activeCategory: string | null;
+  /** Rota base para filtros de categoria (padrão: `/`). */
+  pathname?: string;
+  /** Link "Ver todos" (padrão: `/jogos`). */
+  allMatchesHref?: string;
 };
 
-export function TodayMatchesSection({ matches, categories, activeCategory }: Props) {
+export function TodayMatchesSection({
+  matches,
+  categories,
+  activeCategory,
+  pathname = "/",
+  allMatchesHref = "/jogos",
+}: Props) {
   const activeCategoryName =
     activeCategory != null
       ? categories.find((c) => c.slug === activeCategory)?.name ?? null
@@ -30,7 +40,9 @@ export function TodayMatchesSection({ matches, categories, activeCategory }: Pro
           <CalendarDays className="h-5 w-5 text-muted-foreground" aria-hidden />
           <h2 className="font-display text-2xl tracking-wide text-foreground">Jogos de hoje</h2>
         </div>
-        <HomeSectionLink href={buildCategoryFilterHref("/jogos", { categorySlug: activeCategory })}>
+        <HomeSectionLink
+          href={buildCategoryFilterHref(allMatchesHref, { categorySlug: activeCategory })}
+        >
           Ver todos
         </HomeSectionLink>
       </div>
@@ -38,7 +50,7 @@ export function TodayMatchesSection({ matches, categories, activeCategory }: Pro
       <JogosCategoryTabs
         categories={categories}
         activeSlug={activeCategory}
-        pathname="/"
+        pathname={pathname}
         embedded
       />
 

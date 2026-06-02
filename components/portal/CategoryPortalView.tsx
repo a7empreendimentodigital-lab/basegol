@@ -1,5 +1,7 @@
+import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { championshipPublicBase } from "@/lib/championship-public-nav";
 import { ChampionshipCategorySection } from "@/components/campeonatos/ChampionshipCategorySection";
 import { ClubCrestCard } from "@/components/clubes/ClubCrestCard";
 import { LiveMatchesSection } from "@/components/matches/LiveMatchesSection";
@@ -22,21 +24,19 @@ export function CategoryPortalView({ data }: Props) {
       ? upcomingMatches
       : todayMatches.filter((m) => !liveMatches.some((l) => l.id === m.id));
 
+  const base = championshipPublicBase(championship.slug);
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 space-y-8">
-      <div>
-        <Link
-          href={`/campeonatos/${championship.slug}`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Voltar ao campeonato
-        </Link>
-        <h1 className="mt-3 font-display text-2xl tracking-wide text-foreground sm:text-3xl">
-          {category.name}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{championship.name}</p>
-      </div>
+    <>
+      <PublicPageBanner title={category.name} subtitle={championship.name} />
+      <main className="min-w-0 flex-1 space-y-6 overflow-x-hidden p-4 md:p-5 lg:p-6">
+      <Link
+        href={base}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Voltar ao campeonato
+      </Link>
 
       {liveMatches.length > 0 ? (
         <section>
@@ -100,6 +100,7 @@ export function CategoryPortalView({ data }: Props) {
           </div>
         </section>
       ) : null}
-    </main>
+      </main>
+    </>
   );
 }

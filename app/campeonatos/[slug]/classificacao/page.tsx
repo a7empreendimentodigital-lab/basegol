@@ -1,4 +1,6 @@
 import { ChampionshipCategorySection } from "@/components/campeonatos/ChampionshipCategorySection";
+import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
+import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
 import { getChampionshipPublicDetail } from "@/services/championship-public.service";
 import { getTopScorersForCategory } from "@/services/statistics.service";
 import { notFound } from "next/navigation";
@@ -18,28 +20,31 @@ export default async function ChampionshipClassificacaoPage({ params }: PageProp
   );
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      {championship.categories.length === 0 ? (
-        <p className="rounded-xl border border-line/60 bg-graphite/30 px-6 py-12 text-center text-sm text-muted-foreground">
-          Nenhuma classificação disponível para este campeonato.
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {championship.categories.map((cat) => {
-            const scorers =
-              scorersByCategory.find((s) => s.categoryId === cat.id)?.scorers ?? [];
-            return (
-              <ChampionshipCategorySection
-                key={cat.id}
-                categoryName={cat.name}
-                generalStandings={cat.generalStandings}
-                groups={cat.groups}
-                scorers={scorers}
-              />
-            );
-          })}
-        </div>
-      )}
-    </main>
+    <PublicRightSidebarLayout championshipSlug={slug}>
+      <PublicPageBanner title="Tabelas" />
+      <main className="w-full space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+        {championship.categories.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground border-t border-line/60">
+            Nenhuma classificação disponível para este campeonato.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {championship.categories.map((cat) => {
+              const scorers =
+                scorersByCategory.find((s) => s.categoryId === cat.id)?.scorers ?? [];
+              return (
+                <ChampionshipCategorySection
+                  key={cat.id}
+                  categoryName={cat.name}
+                  generalStandings={cat.generalStandings}
+                  groups={cat.groups}
+                  scorers={scorers}
+                />
+              );
+            })}
+          </div>
+        )}
+      </main>
+    </PublicRightSidebarLayout>
   );
 }

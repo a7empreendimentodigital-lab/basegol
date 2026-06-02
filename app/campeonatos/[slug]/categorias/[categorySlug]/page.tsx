@@ -1,4 +1,5 @@
 import { CategoryPortalView } from "@/components/portal/CategoryPortalView";
+import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { getCategoryPortalDetail } from "@/services/championship-portal.service";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -17,5 +18,9 @@ export default async function CategoryPortalPage({ params }: PageProps) {
   const data = await getCategoryPortalDetail(slug, categorySlug);
   if (!data) notFound();
 
-  return <CategoryPortalView data={data} />;
+  return (
+    <PublicRightSidebarLayout championshipSlug={slug}>
+      <CategoryPortalView data={data} />
+    </PublicRightSidebarLayout>
+  );
 }

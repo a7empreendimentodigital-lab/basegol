@@ -16,9 +16,10 @@ type SidebarPayload = {
 
 type Props = {
   rightBanner?: PublicBannerDto | null;
+  championshipSlug?: string;
 };
 
-export function HomeRightSidebarMobile({ rightBanner }: Props) {
+export function HomeRightSidebarMobile({ rightBanner, championshipSlug }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<SidebarPayload | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,10 @@ export function HomeRightSidebarMobile({ rightBanner }: Props) {
       if (fetched.current) return;
       fetched.current = true;
       setLoading(true);
-      void fetch("/api/public/home-sidebar")
+      const qs = championshipSlug
+        ? `?championshipSlug=${encodeURIComponent(championshipSlug)}`
+        : "";
+      void fetch(`/api/public/home-sidebar${qs}`)
         .then(async (res) => {
           if (!res.ok) return null;
           return parseApiResponse<SidebarPayload>(res);
@@ -59,7 +63,7 @@ export function HomeRightSidebarMobile({ rightBanner }: Props) {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [championshipSlug]);
 
   return (
     <div
@@ -72,7 +76,16 @@ export function HomeRightSidebarMobile({ rightBanner }: Props) {
           <div className="h-40 rounded-2xl bg-graphite-light/60" />
         </div>
       ) : data ? (
-        <HomeRightSidebar {...data} rightBanner={rightBanner} />
+        <HomeRightSidebar
+          {...data}
+          rightBanner={rightBanner}
+          competitionsLink={championshipSlug ? "/" : "/campeonatos"}
+          tableHref={
+            championshipSlug
+              ? `/campeonatos/${championshipSlug}/classificacao`
+              : "/tabela"
+          }
+        />
       ) : null}
     </div>
   );

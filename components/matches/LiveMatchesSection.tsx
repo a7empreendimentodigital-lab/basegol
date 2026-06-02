@@ -3,7 +3,13 @@ import type { MatchWithTeams } from "@/types";
 import { LiveMatchesPoller } from "@/components/matches/LiveMatchesPoller";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 
-export function LiveMatchesSection({ matches }: { matches: MatchWithTeams[] }) {
+export function LiveMatchesSection({
+  matches,
+  verTodosHref = "/jogos?status=LIVE",
+}: {
+  matches: MatchWithTeams[];
+  verTodosHref?: string;
+}) {
   if (!matches.length) return null;
 
   return (
@@ -16,7 +22,7 @@ export function LiveMatchesSection({ matches }: { matches: MatchWithTeams[] }) {
             Live
           </span>
         </div>
-        <HomeSectionLink href="/jogos?status=LIVE">Ver todos</HomeSectionLink>
+        <HomeSectionLink href={verTodosHref}>Ver todos</HomeSectionLink>
       </div>
 
       <LiveMatchesPoller initialMatches={matches} />
