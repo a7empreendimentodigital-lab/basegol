@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import {
+  computeStandingsForCategory,
+  computeStandingsForGroup,
+} from "@/services/standings.service";
 import type { StandingRowDisplay } from "@/types";
 
 export type TopScorer = {
@@ -71,8 +75,8 @@ export async function getStandingsForCategory(categoryId: string): Promise<Stand
         },
       },
     });
-    if (!standing) return [];
-    return mapStandingRows(standing.rows);
+    if (standing?.rows.length) return mapStandingRows(standing.rows);
+    return await computeStandingsForCategory(categoryId);
   } catch {
     return [];
   }
@@ -82,6 +86,7 @@ export async function getStandingsForGroup(groupId: string): Promise<StandingRow
   try {
     const standing = await prisma.standing.findFirst({
       where: { groupId },
+      orderBy: { updatedAt: "desc" },
       include: {
         rows: {
           orderBy: { position: "asc" },
@@ -89,8 +94,8 @@ export async function getStandingsForGroup(groupId: string): Promise<StandingRow
         },
       },
     });
-    if (!standing) return [];
-    return mapStandingRows(standing.rows);
+    if (standing?.rows.length) return mapStandingRows(standing.rows);
+    return await computeStandingsForGroup(groupId);
   } catch {
     return [];
   }

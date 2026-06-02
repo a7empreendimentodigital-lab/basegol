@@ -1,3 +1,4 @@
+import { sortByGroupName } from "@/lib/sort-groups";
 import { prisma } from "@/lib/prisma";
 import { getStandingsForCategory, getStandingsForGroup } from "@/services/statistics.service";
 import type { StandingRowDisplay } from "@/types";
@@ -26,7 +27,7 @@ export async function getPublicTablesPageData(): Promise<TablesCategoryPublic[]>
       },
       include: {
         championship: true,
-        groups: { orderBy: { name: "asc" } },
+        groups: true,
       },
       orderBy: [{ championship: { name: "asc" } }, { name: "asc" }],
     });
@@ -34,8 +35,9 @@ export async function getPublicTablesPageData(): Promise<TablesCategoryPublic[]>
     return Promise.all(
       categories.map(async (cat) => {
         const generalStandings = await getStandingsForCategory(cat.id);
+        const sortedGroups = sortByGroupName(cat.groups);
         const groups = await Promise.all(
-          cat.groups.map(async (g) => ({
+          sortedGroups.map(async (g) => ({
             id: g.id,
             name: g.name,
             standings: await getStandingsForGroup(g.id),

@@ -20,7 +20,7 @@ export function StandingTable({ rows }: { rows: StandingRowDisplay[] }) {
         <tbody>
           {rows.map((row) => (
             <tr
-              key={row.position}
+              key={`${row.position}-${row.teamName}`}
               className="border-b border-[#a1a1aa17] last:border-0 hover:bg-graphite/60 transition-colors"
             >
               <td className="p-3 font-mono text-muted-foreground tabular-nums">{row.position}</td>

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { MatchStatus } from "@prisma/client";
+import type { StandingRowDisplay } from "@/types";
 
 type MutableStanding = {
   teamId: string;
@@ -84,6 +85,127 @@ function sortRows(rows: MutableStanding[]): MutableStanding[] {
   });
 }
 
+async function mutableToDisplayRows(sorted: MutableStanding[]): Promise<StandingRowDisplay[]> {
+  if (sorted.length === 0) return [];
+  const teams = await prisma.team.findMany({
+    where: { id: { in: sorted.map((s) => s.teamId) } },
+    include: { club: { select: { name: true, crestUrl: true } } },
+  });
+  const teamMap = new Map(teams.map((t) => [t.id, t]));
+  return sorted.map((s, index) => {
+    const team = teamMap.get(s.teamId);
+    return {
+      position: index + 1,
+      teamName: team?.club.name ?? "—",
+      crestUrl: team?.club.crestUrl ?? null,
+      played: s.played,
+      won: s.won,
+      drawn: s.drawn,
+      lost: s.lost,
+      goalsFor: s.goalsFor,
+      goalsAgainst: s.goalsAgainst,
+      points: s.points,
+      form: s.form.slice(-5).join("") || null,
+    };
+  });
+}
+
+/** Calcula classificação de um grupo a partir dos jogos finalizados (sem gravar). */
+export async function computeStandingsForGroup(groupId: string): Promise<StandingRowDisplay[]> {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { teams: { select: { id: true } } },
+  });
+  if (!group) return [];
+
+  const stats = initStats(group.teams.map((t) => t.id));
+  const matches = await prisma.match.findMany({
+    where: { groupId, status: { in: COUNTED } },
+    select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true },
+    orderBy: { scheduledAt: "asc" },
+  });
+
+  for (const m of matches) {
+    applyResult(stats, m.homeTeamId, m.awayTeamId, m.homeScore, m.awayScore);
+  }
+
+  return mutableToDisplayRows(sortRows([...stats.values()]));
+}
+
+async function buildCategoryStandingsSorted(categoryId: string): Promise<MutableStanding[]> {
+  const teams = await prisma.team.findMany({
+    where: { group: { categoryId } },
+    select: { id: true },
+  });
+  if (teams.length === 0) return [];
+
+  const stats = initStats(teams.map((t) => t.id));
+  const matches = await prisma.match.findMany({
+    where: { group: { categoryId }, status: { in: COUNTED } },
+    select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true },
+    orderBy: { scheduledAt: "asc" },
+  });
+
+  for (const m of matches) {
+    applyResult(stats, m.homeTeamId, m.awayTeamId, m.homeScore, m.awayScore);
+  }
+
+  return sortRows([...stats.values()]);
+}
+
+/** Classificação geral da categoria (todos os grupos e jogos finalizados). */
+export async function computeStandingsForCategory(categoryId: string): Promise<StandingRowDisplay[]> {
+  return mutableToDisplayRows(await buildCategoryStandingsSorted(categoryId));
+}
+
+async function persistStandingRows(
+  standingId: string,
+  sorted: MutableStanding[]
+): Promise<void> {
+  const sortedTeamIds = new Set(sorted.map((s) => s.teamId));
+
+  for (let i = 0; i < sorted.length; i++) {
+    const s = sorted[i];
+    const form = s.form.slice(-5).join("");
+    await prisma.standingRow.upsert({
+      where: {
+        standingId_teamId: { standingId, teamId: s.teamId },
+      },
+      create: {
+        standingId,
+        teamId: s.teamId,
+        position: i + 1,
+        played: s.played,
+        won: s.won,
+        drawn: s.drawn,
+        lost: s.lost,
+        goalsFor: s.goalsFor,
+        goalsAgainst: s.goalsAgainst,
+        points: s.points,
+        form: form || null,
+      },
+      update: {
+        position: i + 1,
+        played: s.played,
+        won: s.won,
+        drawn: s.drawn,
+        lost: s.lost,
+        goalsFor: s.goalsFor,
+        goalsAgainst: s.goalsAgainst,
+        points: s.points,
+        form: form || null,
+      },
+    });
+  }
+
+  await prisma.standingRow.deleteMany({
+    where: {
+      standingId,
+      teamId: { notIn: [...sortedTeamIds] },
+    },
+  });
+}
+
 /** Recalcula a tabela de um grupo a partir dos jogos finalizados. */
 export async function recalculateStandingsForGroup(groupId: string): Promise<{ standingId: string; teams: number }> {
   const group = await prisma.group.findUnique({
@@ -117,49 +239,37 @@ export async function recalculateStandingsForGroup(groupId: string): Promise<{ s
     update: { name: group.name },
   });
 
-  const sortedTeamIds = new Set(sorted.map((s) => s.teamId));
+  await persistStandingRows(standing.id, sorted);
 
-  for (let i = 0; i < sorted.length; i++) {
-    const s = sorted[i];
-    const form = s.form.slice(-5).join("");
-    await prisma.standingRow.upsert({
-      where: {
-        standingId_teamId: { standingId: standing.id, teamId: s.teamId },
+  return { standingId: standing.id, teams: sorted.length };
+}
+
+/** Recalcula a classificação geral (todos os grupos) de uma categoria. */
+export async function recalculateGeneralStandingsForCategory(
+  categoryId: string
+): Promise<{ standingId: string; teams: number }> {
+  const sorted = await buildCategoryStandingsSorted(categoryId);
+
+  let standing = await prisma.standing.findFirst({
+    where: { categoryId, groupId: null },
+    orderBy: { updatedAt: "desc" },
+  });
+  if (!standing) {
+    standing = await prisma.standing.create({
+      data: {
+        categoryId,
+        groupId: null,
+        name: "Classificação geral",
       },
-      create: {
-        standingId: standing.id,
-        teamId: s.teamId,
-        position: i + 1,
-        played: s.played,
-        won: s.won,
-        drawn: s.drawn,
-        lost: s.lost,
-        goalsFor: s.goalsFor,
-        goalsAgainst: s.goalsAgainst,
-        points: s.points,
-        form: form || null,
-      },
-      update: {
-        position: i + 1,
-        played: s.played,
-        won: s.won,
-        drawn: s.drawn,
-        lost: s.lost,
-        goalsFor: s.goalsFor,
-        goalsAgainst: s.goalsAgainst,
-        points: s.points,
-        form: form || null,
-      },
+    });
+  } else {
+    standing = await prisma.standing.update({
+      where: { id: standing.id },
+      data: { name: "Classificação geral" },
     });
   }
 
-  await prisma.standingRow.deleteMany({
-    where: {
-      standingId: standing.id,
-      teamId: { notIn: [...sortedTeamIds] },
-    },
-  });
-
+  await persistStandingRows(standing.id, sorted);
   return { standingId: standing.id, teams: sorted.length };
 }
 
@@ -173,7 +283,8 @@ export async function recalculateStandingsForCategory(categoryId: string) {
   for (const g of groups) {
     results.push({ groupId: g.id, groupName: g.name, ...(await recalculateStandingsForGroup(g.id)) });
   }
-  return results;
+  const general = await recalculateGeneralStandingsForCategory(categoryId);
+  return { groups: results, general };
 }
 
 /** Recalcula tabelas de todos os grupos de um campeonato. */
@@ -182,12 +293,16 @@ export async function recalculateStandingsForChampionship(championshipId: string
     where: { championshipId },
     select: { id: true, name: true },
   });
-  const out: { categoryId: string; categoryName: string; groups: Awaited<ReturnType<typeof recalculateStandingsForCategory>> }[] = [];
+  const out: {
+    categoryId: string;
+    categoryName: string;
+    standings: Awaited<ReturnType<typeof recalculateStandingsForCategory>>;
+  }[] = [];
   for (const cat of categories) {
     out.push({
       categoryId: cat.id,
       categoryName: cat.name,
-      groups: await recalculateStandingsForCategory(cat.id),
+      standings: await recalculateStandingsForCategory(cat.id),
     });
   }
   return out;

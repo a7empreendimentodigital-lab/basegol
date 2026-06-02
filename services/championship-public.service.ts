@@ -1,3 +1,4 @@
+import { sortByGroupName } from "@/lib/sort-groups";
 import { prisma } from "@/lib/prisma";
 import { getStandingsForCategory, getStandingsForGroup } from "@/services/statistics.service";
 
@@ -19,7 +20,7 @@ export async function getChampionshipPublicDetail(slug: string) {
     championship.categories.map(async (cat) => {
       const general = await getStandingsForCategory(cat.id);
       const groups = await Promise.all(
-        cat.groups.map(async (g) => ({
+        sortByGroupName(cat.groups).map(async (g) => ({
           id: g.id,
           name: g.name,
           standings: await getStandingsForGroup(g.id),
