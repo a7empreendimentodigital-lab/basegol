@@ -50,7 +50,9 @@ async function resolveExpectedClubIds(
 ): Promise<Set<string>> {
   const ids = new Set<string>();
   for (const row of expectedRows) {
-    const club = await resolveClubByOfficialName(row.official_name);
+    const club =
+      (await resolveClubByOfficialName(row.official_name)) ||
+      (row.alias ? await resolveClubByOfficialName(row.alias) : null);
     if (club) ids.add(club.id);
   }
   return ids;
@@ -131,11 +133,15 @@ export async function syncGroupTeamsFromRoster(
       }
 
       for (const row of expectedRows) {
-        const club = await resolveClubByOfficialName(row.official_name);
+        const club =
+          (await resolveClubByOfficialName(row.official_name)) ||
+          (row.alias ? await resolveClubByOfficialName(row.alias) : null);
         if (!club) {
           result.missingClub += 1;
           if (result.missingClubNames.length < 30) {
-            result.missingClubNames.push(row.official_name);
+            result.missingClubNames.push(
+              row.alias ? `${row.official_name} (${row.alias})` : row.official_name
+            );
           }
           continue;
         }
