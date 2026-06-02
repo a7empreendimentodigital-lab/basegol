@@ -6,6 +6,7 @@ import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
 import {
   extractCategoriesFromMatches,
   filterMatchesByCategorySlug,
+  resolveActiveCategorySlug,
 } from "@/lib/jogos-category-filter";
 import { getLiveMatches, getTodayMatches, getUpcomingMatches } from "@/services/match.service";
 
@@ -27,9 +28,7 @@ export default async function JogosPage({
       : await getTodayMatches();
 
   const categories = extractCategoriesFromMatches(allMatches);
-  const validSlugs = new Set(categories.map((c) => c.slug));
-  const activeCategory =
-    categoriaParam && validSlugs.has(categoriaParam) ? categoriaParam : null;
+  const activeCategory = resolveActiveCategorySlug(categoriaParam, categories);
 
   const matches = filterMatchesByCategorySlug(allMatches, activeCategory ?? undefined);
 
@@ -38,11 +37,7 @@ export default async function JogosPage({
       ? categories.find((c) => c.slug === activeCategory)?.name ?? null
       : null;
 
-  const statusPath = isLive
-    ? "/jogos?status=LIVE"
-    : isUpcoming
-      ? "/jogos?status=upcoming"
-      : "/jogos";
+  const statusFilter = isLive ? "LIVE" : isUpcoming ? "upcoming" : undefined;
 
   const bannerTitle = isLive
     ? "Ao vivo"
@@ -75,7 +70,7 @@ export default async function JogosPage({
         <JogosCategoryTabs
           categories={categories}
           activeSlug={activeCategory}
-          statusPath={statusPath}
+          status={statusFilter}
         />
 
         <MatchList

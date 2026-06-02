@@ -3,14 +3,25 @@ import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebar
 import { HomeCategoriesRow } from "@/components/home/HomeCategoriesRow";
 import { LiveMatchesSection } from "@/components/matches/LiveMatchesSection";
 import { TodayMatchesSection } from "@/components/matches/TodayMatchesList";
+import {
+  extractCategoriesFromMatches,
+  filterMatchesByCategorySlug,
+  resolveActiveCategorySlug,
+} from "@/lib/jogos-category-filter";
 import { getLiveMatches, getTodayMatches } from "@/services/match.service";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { getPublicSiteConfig } from "@/lib/site-config";
 import { getHomeCategoryCircles } from "@/services/home.service";
 import { getHomeBanners } from "@/services/banner.service";
 
-export default async function HomePage() {
-  const [liveMatches, todayMatches, publicConfig, categoryCircles, homeBanners] =
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ categoria?: string }>;
+}) {
+  const { categoria: categoriaParam } = await searchParams;
+
+  const [liveMatches, todayMatchesAll, publicConfig, categoryCircles, homeBanners] =
     await Promise.all([
       getLiveMatches(),
       getTodayMatches(),
@@ -18,6 +29,13 @@ export default async function HomePage() {
       getHomeCategoryCircles(),
       getHomeBanners(),
     ]);
+
+  const todayCategories = extractCategoriesFromMatches(todayMatchesAll);
+  const activeTodayCategory = resolveActiveCategorySlug(categoriaParam, todayCategories);
+  const todayMatches = filterMatchesByCategorySlug(
+    todayMatchesAll,
+    activeTodayCategory ?? undefined
+  );
 
   const heroTitle =
     publicConfig.texts.find((t) => t.key === "home.hero.title")?.value ??
@@ -35,7 +53,13 @@ export default async function HomePage() {
 
         <LiveMatchesSection matches={liveMatches} />
 
-        <TodayMatchesSection matches={todayMatches} />
+        {todayMatchesAll.length > 0 ? (
+          <TodayMatchesSection
+            matches={todayMatches}
+            categories={todayCategories}
+            activeCategory={activeTodayCategory}
+          />
+        ) : null}
 
         <HomeCategoriesRow categories={categoryCircles} />
 

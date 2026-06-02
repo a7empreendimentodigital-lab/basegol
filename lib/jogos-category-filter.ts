@@ -41,14 +41,42 @@ export function filterMatchesByCategorySlug(
   });
 }
 
+export type MatchCategoryFilterStatus = "LIVE" | "upcoming";
+
+export function buildCategoryFilterHref(
+  pathname: string,
+  options?: {
+    status?: MatchCategoryFilterStatus;
+    categorySlug?: string | null;
+  }
+): string {
+  const params = new URLSearchParams();
+  if (options?.status === "LIVE") params.set("status", "LIVE");
+  else if (options?.status === "upcoming") params.set("status", "upcoming");
+  if (options?.categorySlug) params.set("categoria", options.categorySlug);
+  const qs = params.toString();
+  return qs ? `${pathname}?${qs}` : pathname;
+}
+
+export function resolveActiveCategorySlug(
+  categoriaParam: string | undefined,
+  categories: JogosCategoryOption[]
+): string | null {
+  if (!categoriaParam) return null;
+  const valid = new Set(categories.map((c) => c.slug));
+  return valid.has(categoriaParam) ? categoriaParam : null;
+}
+
 export function buildJogosHref(
   path: "/jogos" | "/jogos?status=LIVE" | "/jogos?status=upcoming",
   categorySlug?: string | null
 ): string {
   const [pathname, query = ""] = path.split("?");
   const params = new URLSearchParams(query);
-  if (categorySlug) params.set("categoria", categorySlug);
-  else params.delete("categoria");
-  const qs = params.toString();
-  return qs ? `${pathname}?${qs}` : pathname;
+  const status = params.get("status");
+  return buildCategoryFilterHref(pathname, {
+    status:
+      status === "LIVE" ? "LIVE" : status === "upcoming" ? "upcoming" : undefined,
+    categorySlug,
+  });
 }

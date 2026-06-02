@@ -115,7 +115,7 @@ export function MatchListRowReference({ match }: Props) {
 
       <div className="flex items-center gap-2 sm:gap-3">
         <span
-          className="min-w-0 flex-1 truncate text-left text-base font-semibold text-foreground"
+          className="min-w-0 flex-1 truncate text-left text-xs font-medium text-foreground sm:text-sm"
           title={homeName}
         >
           {homeName}
@@ -124,7 +124,7 @@ export function MatchListRowReference({ match }: Props) {
         <CenterBox match={match} isLive={isLive} isFinished={isFinished} />
         <TeamCrest url={match.awayTeam.club.crestUrl} name={awayName} size="md" />
         <span
-          className="min-w-0 flex-1 truncate text-right text-base font-semibold text-foreground"
+          className="min-w-0 flex-1 truncate text-right text-xs font-medium text-foreground sm:text-sm"
           title={awayName}
         >
           {awayName}
