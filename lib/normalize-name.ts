@@ -160,13 +160,27 @@ export function distinctiveClubTokens(value: string): string[] {
     .filter((t) => t.length > 2 && !GENERIC_CLUB_TOKENS.has(t));
 }
 
+/** Evita falso positivo quando um token aparece no meio de outro (ex.: "linense" em "paulinense"). */
+export function clubDistinctiveTokensAlign(a: string, b: string): boolean {
+  if (a === b) return true;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  if (short.length < 4) return false;
+  if (long.length - short.length > 2) return false;
+  return (
+    long.startsWith(short) ||
+    long.endsWith(short) ||
+    short.startsWith(long) ||
+    short.endsWith(long)
+  );
+}
+
 export function distinctiveClubOverlap(a: string, b: string): number {
   const ta = distinctiveClubTokens(a);
   const tb = distinctiveClubTokens(b);
   if (ta.length === 0 || tb.length === 0) return 0;
   let overlap = 0;
   for (const t of ta) {
-    if (tb.some((u) => u === t || (t.length >= 4 && (u.includes(t) || t.includes(u))))) overlap++;
+    if (tb.some((u) => clubDistinctiveTokensAlign(t, u))) overlap++;
   }
   return overlap / Math.min(ta.length, tb.length);
 }
@@ -198,7 +212,7 @@ export function isLikelySameClub(a: string, b: string): boolean {
   const short = da.length <= db.length ? da : db;
   const long = da.length > db.length ? da : db;
   const allShortInLong = short.every((t) =>
-    long.some((u) => u === t || (t.length >= 5 && (u.includes(t) || t.includes(u))))
+    long.some((u) => u === t || (t.length >= 5 && clubDistinctiveTokensAlign(t, u)))
   );
   if (allShortInLong && short.length >= 2) return true;
   if (allShortInLong && short.length === 1 && short[0].length >= 7) return true;
