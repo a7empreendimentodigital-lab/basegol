@@ -73,18 +73,12 @@ export default async function JogosPage({
           status={statusFilter}
         />
 
-        <div
-          className={
-            isLive ? undefined : "overflow-hidden rounded-xl border border-line/50"
-          }
-        >
-          <MatchList
-            matches={matches}
-            showFullDate={isUpcoming}
-            emptyMessage={emptyMessage}
-            variant={isLive ? "live" : isUpcoming ? "upcoming" : "today"}
-          />
-        </div>
+        <MatchList
+          matches={matches}
+          showFullDate={isUpcoming}
+          emptyMessage={emptyMessage}
+          variant={isLive ? "live" : isUpcoming ? "upcoming" : "today"}
+        />
       </main>
     </PublicRightSidebarLayout>
   );

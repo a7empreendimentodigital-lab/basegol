@@ -42,9 +42,7 @@ export function TodayMatchesSection({ matches, categories, activeCategory }: Pro
         embedded
       />
 
-      <div className="overflow-hidden rounded-xl border border-line/50">
-        <MatchList matches={matches} emptyMessage={emptyMessage} variant="today" />
-      </div>
+      <MatchList matches={matches} emptyMessage={emptyMessage} variant="today" />
     </section>
   );
 }
