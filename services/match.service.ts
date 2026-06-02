@@ -404,6 +404,101 @@ export async function getUpcomingMatches(limit = 40): Promise<MatchWithTeams[]> 
   }
 }
 
+function championshipScopeWhere(
+  championshipId: string,
+  categoryId?: string
+): Prisma.MatchWhereInput {
+  const base: Prisma.MatchWhereInput = {
+    OR: [{ championshipId }, { group: { category: { championshipId } } }],
+  };
+  if (!categoryId) return base;
+  return {
+    AND: [base, { group: { categoryId } }],
+  };
+}
+
+export async function getLiveMatchesForChampionship(
+  championshipId: string,
+  categoryId?: string
+): Promise<MatchWithTeams[]> {
+  try {
+    const live = await prisma.match.findMany({
+      where: {
+        ...championshipScopeWhere(championshipId, categoryId),
+        status: { in: ["LIVE", "HALFTIME"] },
+      },
+      select: { id: true },
+    });
+    await Promise.all(live.map((m) => syncMatchClockToNow(m.id)));
+
+    const matches = await prisma.match.findMany({
+      where: {
+        ...championshipScopeWhere(championshipId, categoryId),
+        status: { in: ["LIVE", "HALFTIME"] },
+      },
+      include: { ...matchInclude, events: periodEventsInclude },
+      orderBy: { scheduledAt: "asc" },
+      take: 20,
+    });
+
+    for (const m of matches) {
+      await repairMatchPeriodIfNeeded(m);
+      await repairLiveClockIfNeeded(m);
+    }
+
+    return matches.map((m) => mapMatch(m)!);
+  } catch {
+    return [];
+  }
+}
+
+export async function getTodayMatchesForChampionship(
+  championshipId: string,
+  categoryId?: string
+): Promise<MatchWithTeams[]> {
+  try {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const matches = await prisma.match.findMany({
+      where: {
+        ...championshipScopeWhere(championshipId, categoryId),
+        scheduledAt: { gte: start, lte: end },
+      },
+      include: matchInclude,
+      orderBy: { scheduledAt: "asc" },
+    });
+    return matches.map((m) => mapMatch(m)!);
+  } catch {
+    return [];
+  }
+}
+
+export async function getUpcomingMatchesForChampionship(
+  championshipId: string,
+  categoryId?: string,
+  limit = 40
+): Promise<MatchWithTeams[]> {
+  try {
+    const now = new Date();
+    const matches = await prisma.match.findMany({
+      where: {
+        ...championshipScopeWhere(championshipId, categoryId),
+        scheduledAt: { gte: now },
+        status: { in: ["SCHEDULED", "POSTPONED"] },
+      },
+      include: matchInclude,
+      orderBy: { scheduledAt: "asc" },
+      take: limit,
+    });
+    return matches.map((m) => mapMatch(m)!);
+  } catch {
+    return [];
+  }
+}
+
 export async function getAllMatches(status?: string) {
   try {
     return await prisma.match.findMany({

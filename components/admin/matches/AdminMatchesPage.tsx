@@ -125,7 +125,9 @@ function MatchListRow({
   );
 }
 
-export function AdminMatchesPage() {
+type PageProps = { championshipId?: string };
+
+export function AdminMatchesPage({ championshipId }: PageProps = {}) {
   const { toast } = useToast();
   const { confirm } = useConfirm();
   const [categoryId, setCategoryId] = useState("");
@@ -133,7 +135,9 @@ export function AdminMatchesPage() {
   const [clubId, setClubId] = useState("");
   const [syncingRounds, setSyncingRounds] = useState(false);
   const [purgingMatches, setPurgingMatches] = useState(false);
-  const { options: categories } = useAdminOptions("categories");
+  const { options: categories } = useAdminOptions("categories", {
+    championshipId: championshipId || undefined,
+  });
   const { options: championships } = useAdminOptions("championships");
   const { options: clubs } = useAdminOptions("clubs");
   const { options: rounds } = useAdminOptions("match-rounds", {
@@ -146,11 +150,12 @@ export function AdminMatchesPage() {
 
   const extraParams = useMemo(
     () => ({
+      championshipId: championshipId || undefined,
       categoryId: categoryId || undefined,
       roundNumber: roundNumber || undefined,
       clubId: clubId || undefined,
     }),
-    [categoryId, roundNumber, clubId]
+    [championshipId, categoryId, roundNumber, clubId]
   );
 
   const buildGroups = useCallback(

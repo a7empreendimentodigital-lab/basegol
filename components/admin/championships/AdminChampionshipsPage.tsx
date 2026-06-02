@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { Trophy } from "lucide-react";
+import Link from "next/link";
+import { Settings, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Thumb } from "@/components/admin/shared/AdminDataTable";
 import { AdminGroupedListPage } from "@/components/admin/shared/AdminGroupedListPage";
 import { AdminListRowActions } from "@/components/admin/shared/AdminListRowActions";
@@ -32,7 +34,7 @@ function ChampionshipListRow({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 px-3 py-3 sm:grid sm:grid-cols-[auto_1fr_6rem_5.5rem_6rem_auto] sm:gap-4 sm:items-center sm:px-4">
+    <div className="flex flex-wrap items-center gap-3 px-3 py-3 sm:grid sm:grid-cols-[auto_1fr_6rem_5.5rem_6rem_auto_auto] sm:gap-4 sm:items-center sm:px-4">
       <Thumb src={row.logoUrl} alt={row.name} />
       <div className="min-w-0 flex-1">
         <p className="font-medium text-foreground leading-snug">{row.name}</p>
@@ -51,6 +53,12 @@ function ChampionshipListRow({
       <p className="hidden sm:block text-sm text-muted-foreground tabular-nums">
         {row.startDate ? formatDate(row.startDate) : "—"}
       </p>
+      <Link href={`/admin/campeonatos/${row.id}`}>
+        <Button type="button" variant="outline" size="sm" className="gap-1.5 shrink-0">
+          <Settings className="h-3.5 w-3.5" aria-hidden />
+          Gerenciar
+        </Button>
+      </Link>
       <AdminListRowActions
         onEdit={onEdit}
         onDelete={onDelete}
@@ -77,6 +85,14 @@ export function AdminChampionshipsPage() {
       entity="championships"
       title="Campeonatos"
       description="Gerencie competições, temporadas, status e identidade visual."
+      canCreate={false}
+      toolbarExtras={
+        <Link href="/admin/campeonatos/novo">
+          <Button type="button" size="sm">
+            Novo campeonato
+          </Button>
+        </Link>
+      }
       searchPlaceholder="Buscar por nome..."
       emptyMessage="Nenhum campeonato encontrado."
       filterAriaLabel="Filtrar por status"

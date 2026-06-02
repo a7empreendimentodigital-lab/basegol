@@ -1,37 +1,47 @@
 import Link from "next/link";
 import { CalendarClock, CalendarDays, Radio } from "lucide-react";
-import { buildJogosHref } from "@/lib/jogos-category-filter";
+import { buildCategoryFilterHref } from "@/lib/jogos-category-filter";
 import { cn } from "@/lib/utils";
 
 type Props = {
   isLive: boolean;
   isUpcoming: boolean;
   activeCategory?: string | null;
+  /** Padrão: `/jogos` */
+  basePath?: string;
 };
 
-const tabs = [
-  {
-    path: "/jogos?status=LIVE" as const,
-    label: "Ao vivo",
-    icon: Radio,
-    isActive: (p: Props) => p.isLive,
-  },
-  {
-    path: "/jogos?status=upcoming" as const,
-    label: "Próximos",
-    icon: CalendarClock,
-    isActive: (p: Props) => p.isUpcoming,
-  },
-  {
-    path: "/jogos" as const,
-    label: "Hoje",
-    icon: CalendarDays,
-    isActive: (p: Props) => !p.isLive && !p.isUpcoming,
-  },
-] as const;
+function buildTabs(basePath: string, categorySlug?: string | null) {
+  return [
+    {
+      href: buildCategoryFilterHref(basePath, { status: "LIVE", categorySlug }),
+      label: "Ao vivo",
+      icon: Radio,
+      isActive: (p: Props) => p.isLive,
+    },
+    {
+      href: buildCategoryFilterHref(basePath, { status: "upcoming", categorySlug }),
+      label: "Próximos",
+      icon: CalendarClock,
+      isActive: (p: Props) => p.isUpcoming,
+    },
+    {
+      href: buildCategoryFilterHref(basePath, { categorySlug }),
+      label: "Hoje",
+      icon: CalendarDays,
+      isActive: (p: Props) => !p.isLive && !p.isUpcoming,
+    },
+  ] as const;
+}
 
-export function JogosFilterTabs({ isLive, isUpcoming, activeCategory = null }: Props) {
+export function JogosFilterTabs({
+  isLive,
+  isUpcoming,
+  activeCategory = null,
+  basePath = "/jogos",
+}: Props) {
   const props = { isLive, isUpcoming, activeCategory };
+  const tabs = buildTabs(basePath, activeCategory);
 
   return (
     <nav
@@ -41,10 +51,10 @@ export function JogosFilterTabs({ isLive, isUpcoming, activeCategory = null }: P
       {tabs.map((tab) => {
         const active = tab.isActive(props);
         const Icon = tab.icon;
-        const href = buildJogosHref(tab.path, activeCategory);
+        const href = tab.href;
         return (
           <Link
-            key={tab.path}
+            key={tab.label}
             href={href}
             className={cn(
               "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",

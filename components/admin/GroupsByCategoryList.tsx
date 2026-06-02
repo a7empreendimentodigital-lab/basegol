@@ -74,7 +74,9 @@ function groupByCategory(items: GroupRow[]): CategorySection[] {
     });
 }
 
-export function GroupsByCategoryList() {
+type Props = { championshipId?: string };
+
+export function GroupsByCategoryList({ championshipId }: Props = {}) {
   const { toast } = useToast();
   const { confirm } = useConfirm();
   const [items, setItems] = useState<GroupRow[]>([]);
@@ -100,7 +102,7 @@ export function GroupsByCategoryList() {
     } finally {
       setLoading(false);
     }
-  }, [q, toast]);
+  }, [q, toast, championshipId]);
 
   useEffect(() => {
     const timer = setTimeout(() => void load(), 300);

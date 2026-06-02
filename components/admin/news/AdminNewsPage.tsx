@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type ComponentProps } from "react";
 import { Newspaper } from "lucide-react";
 import { Thumb } from "@/components/admin/shared/AdminDataTable";
 import { AdminGroupedListPage } from "@/components/admin/shared/AdminGroupedListPage";
@@ -67,13 +67,32 @@ function NewsListRow({
   );
 }
 
-export function AdminNewsPage() {
+type PageProps = { championshipId?: string };
+
+function NewsFormForChampionship({
+  championshipId,
+  ...props
+}: ComponentProps<typeof NewsForm> & { championshipId?: string }) {
+  const mergedInitial = championshipId
+    ? { ...(props.initial ?? {}), championshipId }
+    : props.initial;
+  return <NewsForm {...props} initial={mergedInitial} />;
+}
+
+export function AdminNewsPage({ championshipId }: PageProps = {}) {
   const buildGroups = useCallback((items: Row[]) => buildNewsGroups(items), []);
+
+  const Form = championshipId
+    ? (props: ComponentProps<typeof NewsForm>) => (
+        <NewsFormForChampionship {...props} championshipId={championshipId} />
+      )
+    : NewsForm;
 
   return (
     <AdminGroupedListPage<Row>
       entity="news"
-      title="Notícias"
+      title={championshipId ? "Notícias do campeonato" : "Notícias"}
+      extraParams={championshipId ? { championshipId } : undefined}
       description="Publicações, destaques e capa das matérias."
       searchPlaceholder="Buscar notícia..."
       emptyMessage="Nenhuma notícia encontrada."
@@ -83,7 +102,7 @@ export function AdminNewsPage() {
       countLabel={(n) => `${n} ${n === 1 ? "notícia" : "notícias"}`}
       dialogTitles={{ new: "Nova notícia", edit: "Editar notícia" }}
       deleteConfirm={(r) => `Excluir "${r.title}"? Esta ação não pode ser desfeita.`}
-      FormComponent={NewsForm}
+      FormComponent={Form}
       buildGroups={buildGroups}
       renderDesktopHeader={() => (
         <div className="hidden sm:grid sm:grid-cols-[auto_1fr_6.5rem_5.5rem_auto] sm:gap-4 sm:items-center px-4 py-2 bg-secondary/30 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">

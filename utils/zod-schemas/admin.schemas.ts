@@ -26,6 +26,13 @@ export const adminListQuerySchema = z.object({
       return trimmed ? trimmed : undefined;
     }),
   roundNumber: z.coerce.number().int().min(1).max(99).optional().catch(undefined),
+  championshipId: z
+    .string()
+    .optional()
+    .transform((s) => {
+      const trimmed = s?.trim();
+      return trimmed ? trimmed : undefined;
+    }),
 });
 
 export const adminCrudPayloadSchema = z.record(z.unknown());

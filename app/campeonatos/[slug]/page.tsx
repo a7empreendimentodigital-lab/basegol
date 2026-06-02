@@ -1,8 +1,8 @@
-import { ChampionshipCategorySection } from "@/components/campeonatos/ChampionshipCategorySection";
-import { ChampionshipDetailHeader } from "@/components/campeonatos/ChampionshipDetailHeader";
-import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
-import { getChampionshipPublicDetail } from "@/services/championship-public.service";
-import { getTopScorersForCategory } from "@/services/statistics.service";
+import { CategoryCard } from "@/components/portal/CategoryCard";
+import {
+  getChampionshipCategoriesForPortal,
+  getChampionshipPortalBase,
+} from "@/services/championship-portal.service";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -10,55 +10,48 @@ type PageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const championship = await getChampionshipPublicDetail(slug);
-  if (!championship) return { title: "Campeonato" };
-  return { title: championship.name };
+  const ch = await getChampionshipPortalBase(slug);
+  if (!ch) return { title: "Campeonato" };
+  return { title: `${ch.name} — BaseGol` };
 }
 
-export default async function ChampionshipPage({ params }: PageProps) {
+export default async function ChampionshipHomePage({ params }: PageProps) {
   const { slug } = await params;
-  const championship = await getChampionshipPublicDetail(slug);
+  const championship = await getChampionshipPortalBase(slug);
   if (!championship) notFound();
 
-  const scorersByCategory = await Promise.all(
-    championship.categories.map(async (cat) => ({
-      categoryId: cat.id,
-      scorers: await getTopScorersForCategory(cat.id, 10),
-    }))
-  );
+  const categories = await getChampionshipCategoriesForPortal(championship.id);
 
   return (
-    <PublicRightSidebarLayout>
-    <main className="w-full space-y-6 px-3 py-4 sm:space-y-8 sm:px-5 sm:py-6 lg:px-8">
-      <ChampionshipDetailHeader
-        name={championship.name}
-        season={championship.season}
-        logoUrl={championship.logoUrl}
-        description={championship.description}
-      />
+    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mb-6">
+        <h2 className="font-display text-xl tracking-wide text-foreground sm:text-2xl">
+          Escolha uma categoria
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Jogos, classificação e clubes são exibidos por categoria.
+        </p>
+      </div>
 
-      {championship.categories.length === 0 ? (
-        <p className="border-t border-line/60 py-10 text-center text-sm text-muted-foreground">
-          Nenhuma categoria cadastrada para este campeonato.
+      {categories.length === 0 ? (
+        <p className="rounded-xl border border-line/60 bg-graphite/30 px-6 py-12 text-center text-sm text-muted-foreground">
+          Nenhuma categoria publicada para este campeonato.
         </p>
       ) : (
-        <div className="space-y-5 sm:space-y-6">
-          {championship.categories.map((cat) => {
-            const scorers =
-              scorersByCategory.find((s) => s.categoryId === cat.id)?.scorers ?? [];
-            return (
-              <ChampionshipCategorySection
-                key={cat.id}
-                categoryName={cat.name}
-                generalStandings={cat.generalStandings}
-                groups={cat.groups}
-                scorers={scorers}
-              />
-            );
-          })}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {categories.map((cat) => (
+            <CategoryCard
+              key={cat.id}
+              championshipSlug={slug}
+              name={cat.name}
+              slug={cat.slug}
+              imageUrl={cat.imageUrl}
+              ageGroup={cat.ageGroup}
+              groupCount={cat._count.groups}
+            />
+          ))}
         </div>
       )}
     </main>
-    </PublicRightSidebarLayout>
   );
 }

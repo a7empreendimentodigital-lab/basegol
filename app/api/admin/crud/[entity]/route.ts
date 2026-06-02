@@ -77,6 +77,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       categoryId: url.searchParams.get("categoryId") ?? undefined,
       clubId: url.searchParams.get("clubId") ?? undefined,
       roundNumber: url.searchParams.get("roundNumber") ?? undefined,
+      championshipId: url.searchParams.get("championshipId") ?? undefined,
     });
     const { skip, pageSize } = normalizePagination(parsed);
     const contains = parsed.q ? prismaContains(parsed.q) : undefined;
@@ -94,27 +95,39 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       return ok({ items, total });
     }
     if (entity === "categories") {
+      const categoryWhere = {
+        ...(parsed.championshipId ? { championshipId: parsed.championshipId } : {}),
+        ...(contains ? { name: contains } : {}),
+      };
       const [items, total] = await Promise.all([
         prisma.category.findMany({
-          where: contains ? { name: contains } : undefined,
+          where: Object.keys(categoryWhere).length ? categoryWhere : undefined,
           orderBy: { createdAt: "desc" },
           skip,
           take: pageSize,
           include: { championship: true },
         }),
-        prisma.category.count({ where: contains ? { name: contains } : undefined }),
+        prisma.category.count({
+          where: Object.keys(categoryWhere).length ? categoryWhere : undefined,
+        }),
       ]);
       return ok({ items, total });
     }
     if (entity === "groups") {
-      const groupWhere = contains
-        ? {
-            OR: [{ name: contains }, { category: { name: contains } }],
-          }
-        : undefined;
+      const groupWhere = {
+        ...(parsed.championshipId
+          ? { category: { championshipId: parsed.championshipId } }
+          : {}),
+        ...(contains
+          ? {
+              OR: [{ name: contains }, { category: { name: contains } }],
+            }
+          : {}),
+      };
+      const groupWhereFinal = Object.keys(groupWhere).length ? groupWhere : undefined;
       const [items, total] = await Promise.all([
         prisma.group.findMany({
-          where: groupWhere,
+          where: groupWhereFinal,
           orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
           skip,
           take: pageSize,
@@ -122,7 +135,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
             category: { include: { championship: { select: { id: true, name: true, season: true } } } },
           },
         }),
-        prisma.group.count({ where: groupWhere }),
+        prisma.group.count({ where: groupWhereFinal }),
       ]);
       return ok({ items, total });
     }
@@ -166,6 +179,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
           categoryId: parsed.categoryId,
           clubId: parsed.clubId,
           roundNumber: parsed.roundNumber,
+          championshipId: parsed.championshipId,
           q: parsed.q,
         });
         return ok(data);
@@ -181,14 +195,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       }
     }
     if (entity === "news") {
+      const newsWhere = {
+        ...(parsed.championshipId ? { championshipId: parsed.championshipId } : {}),
+        ...(contains ? { title: contains } : {}),
+      };
+      const newsWhereFinal = Object.keys(newsWhere).length ? newsWhere : undefined;
       const [items, total] = await Promise.all([
         prisma.news.findMany({
-          where: contains ? { title: contains } : undefined,
+          where: newsWhereFinal,
           orderBy: { createdAt: "desc" },
           skip,
           take: pageSize,
         }),
-        prisma.news.count({ where: contains ? { title: contains } : undefined }),
+        prisma.news.count({ where: newsWhereFinal }),
       ]);
       return ok({ items, total });
     }
