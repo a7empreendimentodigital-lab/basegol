@@ -5,6 +5,7 @@ import {
   namesMatch,
 } from "@/lib/normalize-name";
 import { buildClubAliasKeys } from "@/lib/match-import-fingerprint";
+import { applyCategoryMatchTime } from "@/lib/category-match-times";
 import { slugify } from "@/lib/utils";
 
 const MONTHS: Record<string, number> = {
@@ -388,12 +389,17 @@ function parseFpPaulistaScheduleLines(
     );
   }
 
+  const matchesWithCategoryTime = matches.map((m) => ({
+    ...m,
+    scheduledAt: applyCategoryMatchTime(m.scheduledAt, categoryHint),
+  }));
+
   return {
     championshipTitle,
     seasonYear,
     categoryHint,
     participants,
-    matches,
+    matches: matchesWithCategoryTime,
     warnings,
   };
 }

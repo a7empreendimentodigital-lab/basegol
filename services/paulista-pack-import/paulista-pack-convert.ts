@@ -1,5 +1,6 @@
 import { buildClubAliasKeys } from "@/lib/match-import-fingerprint";
 import { normalizeAthleteCategory } from "@/lib/athlete-category";
+import { applyCategoryMatchTime } from "@/lib/category-match-times";
 import type { PaulistaFixture, PaulistaGroupTeam, PaulistaPack } from "@/services/paulista-pack-import/paulista-pack.types";
 import type { ParsedFpSchedule, ParsedParticipantClub, ParsedScheduleMatch } from "@/services/schedule-import/fp-paulista-parser";
 
@@ -44,12 +45,18 @@ function participantFromGroupTeam(gt: PaulistaGroupTeam): ParsedParticipantClub 
   };
 }
 
-function fixtureToMatch(f: PaulistaFixture, seasonYear: number, warnings: string[]): ParsedScheduleMatch | null {
-  const scheduledAt = parseFixtureDateTime(f.date, f.time, seasonYear);
-  if (!scheduledAt) {
+function fixtureToMatch(
+  f: PaulistaFixture,
+  seasonYear: number,
+  categoryHint: string,
+  warnings: string[]
+): ParsedScheduleMatch | null {
+  const parsed = parseFixtureDateTime(f.date, f.time, seasonYear);
+  if (!parsed) {
     warnings.push(`Data/hora inválida no jogo #${f.match_number}: ${f.date} ${f.time}`);
     return null;
   }
+  const scheduledAt = applyCategoryMatchTime(parsed, categoryHint);
   return {
     matchNumber: f.match_number,
     roundNumber: f.round,
@@ -80,7 +87,7 @@ export function paulistaPackToSchedules(pack: PaulistaPack): ParsedFpSchedule[] 
     const matches: ParsedScheduleMatch[] = [];
     for (const f of pack.fixtures) {
       if (normalizeAthleteCategory(f.category) !== categoryHint) continue;
-      const m = fixtureToMatch(f, pack.season, warnings);
+      const m = fixtureToMatch(f, pack.season, categoryHint, warnings);
       if (m) matches.push(m);
     }
 
