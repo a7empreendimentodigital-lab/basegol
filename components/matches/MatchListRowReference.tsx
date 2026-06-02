@@ -107,8 +107,10 @@ export function MatchListRowReference({ match }: Props) {
               year: "numeric",
             })}
           </p>
-          {match.round != null ? (
-            <p className="mt-0.5 whitespace-nowrap"># {formatRoundLabel(match.round)}</p>
+          {match.round != null && match.round > 0 ? (
+            <p className="mt-0.5 whitespace-nowrap font-medium text-foreground/80">
+              {formatRoundLabel(match.round)}
+            </p>
           ) : null}
         </div>
       </header>

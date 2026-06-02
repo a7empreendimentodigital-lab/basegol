@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select";
 import { MATCH_STATUS_LABELS } from "@/lib/admin-labels";
 import { groupItemsByKey } from "@/lib/admin-list-groups";
 import { clubSigla } from "@/lib/club-display";
+import { formatRoundLabel } from "@/lib/match-display";
 import { formatDate, formatTime } from "@/lib/utils";
 import { useAdminOptions } from "@/hooks/use-admin-options";
 import { Button } from "@/components/ui/button";
@@ -20,13 +21,24 @@ type Row = {
   id: string;
   status: string;
   scheduledAt: string;
+  round?: number;
+  matchNumber?: number | null;
   venue?: string | null;
   homeScore?: number;
   awayScore?: number;
+  competitionRound?: { number: number; label: string | null } | null;
   group?: { name: string; category?: { name: string } };
   homeTeam?: { club: { name: string; shortName?: string | null } };
   awayTeam?: { club: { name: string; shortName?: string | null } };
 };
+
+function formatAdminRoundLabel(row: Row): string | null {
+  const label = row.competitionRound?.label?.trim();
+  if (label) return label;
+  const n = row.competitionRound?.number ?? row.round;
+  if (n != null && n > 0) return formatRoundLabel(n);
+  return null;
+}
 
 function MatchListRow({
   row,
@@ -46,6 +58,14 @@ function MatchListRow({
   const isFinished = row.status === "FINISHED";
   const isLive = row.status === "LIVE" || row.status === "HALFTIME";
   const showScore = isFinished || isLive;
+  const roundLabel = formatAdminRoundLabel(row);
+
+  const metaParts = [
+    formatDate(row.scheduledAt),
+    formatTime(row.scheduledAt),
+    roundLabel,
+    row.group?.name ?? null,
+  ].filter(Boolean);
 
   return (
     <div className="flex flex-wrap items-center gap-3 px-3 py-3 sm:grid sm:grid-cols-[1fr_auto_5.5rem_auto] sm:gap-4 sm:items-center sm:px-4">
@@ -55,10 +75,10 @@ function MatchListRow({
           <span className="text-muted-foreground font-normal mx-1.5">×</span>
           {away}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {formatDate(row.scheduledAt)} · {formatTime(row.scheduledAt)}
-          {row.group?.name ? ` · ${row.group.name}` : ""}
-        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">{metaParts.join(" · ")}</p>
+        {row.matchNumber != null ? (
+          <p className="text-[10px] text-muted-foreground/70 mt-0.5">Jogo nº {row.matchNumber}</p>
+        ) : null}
         {row.venue ? (
           <p className="text-xs text-muted-foreground/80 truncate mt-0.5">{row.venue}</p>
         ) : null}

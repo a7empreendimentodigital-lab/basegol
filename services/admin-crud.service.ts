@@ -72,6 +72,7 @@ export async function listMatchesAdmin(
         homeTeam: { include: { club: true } },
         awayTeam: { include: { club: true } },
         group: { include: { category: { include: { championship: true } } } },
+        competitionRound: { select: { number: true, label: true } },
         events: {
           where: {
             type: { in: ["GOAL", "PENALTY_GOAL", "PENALTY_MISS", "KICKOFF"] },
