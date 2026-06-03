@@ -1,4 +1,5 @@
 import { HomeChampionshipPicker } from "@/components/portal/HomeChampionshipPicker";
+import { PortalInstitutionalShell } from "@/components/portal/PortalInstitutionalShell";
 import { listPortalChampionships } from "@/services/championship-portal.service";
 
 export const metadata = {
@@ -15,15 +16,17 @@ export default async function HomePage({
   const championships = await listPortalChampionships();
 
   return (
-    <HomeChampionshipPicker
-      championships={championships.map((c) => ({
-        slug: c.slug,
-        name: c.name,
-        season: c.season,
-        logoUrl: c.logoUrl,
-        description: c.description,
-      }))}
-      initialQuery={q?.trim() ?? ""}
-    />
+    <PortalInstitutionalShell activePath="/">
+      <HomeChampionshipPicker
+        championships={championships.map((c) => ({
+          slug: c.slug,
+          name: c.name,
+          season: c.season,
+          logoUrl: c.logoUrl,
+          description: c.description,
+        }))}
+        initialQuery={q?.trim() ?? ""}
+      />
+    </PortalInstitutionalShell>
   );
 }

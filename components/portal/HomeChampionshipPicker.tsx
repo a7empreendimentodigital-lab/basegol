@@ -1,9 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Trophy } from "lucide-react";
-import { PortalEntryHeader } from "@/components/portal/PortalEntryHeader";
-import { PortalEntryFooter } from "@/components/portal/PortalEntryFooter";
+import { Search, Trophy } from "lucide-react";
 import {
   ChampionshipPickerGrid,
   type ChampionshipPickerItem,
@@ -14,7 +12,10 @@ type Props = {
   initialQuery?: string;
 };
 
-export function HomeChampionshipPicker({ championships, initialQuery = "" }: Props) {
+export function HomeChampionshipPicker({
+  championships,
+  initialQuery = "",
+}: Props) {
   const [query, setQuery] = useState(initialQuery);
 
   const filtered = useMemo(() => {
@@ -29,38 +30,34 @@ export function HomeChampionshipPicker({ championships, initialQuery = "" }: Pro
   }, [championships, query]);
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-pitch text-foreground">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.08),transparent_70%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-pitch/40 via-pitch/85 to-pitch"
-        aria-hidden
-      />
+    <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
+      <div className="text-center">
+        <Trophy className="mx-auto h-8 w-8 text-[#22c55e]" aria-hidden />
+        <h1 className="mt-4 font-display text-3xl tracking-wide text-white sm:text-4xl">
+          Escolha um <span className="text-[#22c55e]">campeonato</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-lg text-sm text-neutral-400">
+          Acompanhe os principais campeonatos de futebol de base.
+        </p>
+      </div>
 
-      <PortalEntryHeader
-        activePath="/"
-        onSearch={(q) => setQuery(q)}
-      />
+      <div className="relative mx-auto mt-8 max-w-md">
+        <Search
+          className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500"
+          aria-hidden
+        />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar campeonato..."
+          className="h-11 w-full rounded-full border border-white/15 bg-black/50 pl-11 pr-4 text-sm text-white placeholder:text-neutral-500 focus:border-[#22c55e]/50 focus:outline-none focus:ring-1 focus:ring-[#22c55e]/30"
+        />
+      </div>
 
-      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
-        <div className="text-center">
-          <Trophy className="mx-auto h-8 w-8 text-primary/80" aria-hidden />
-          <h1 className="mt-4 font-display text-3xl tracking-wide text-foreground sm:text-4xl">
-            Escolha um <span className="text-primary">campeonato</span>
-          </h1>
-          <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
-            Acompanhe os principais campeonatos de futebol de base.
-          </p>
-        </div>
-
-        <div className="mt-10">
-          <ChampionshipPickerGrid championships={filtered} />
-        </div>
-      </main>
-
-      <PortalEntryFooter />
-    </div>
+      <div className="mt-10">
+        <ChampionshipPickerGrid championships={filtered} />
+      </div>
+    </main>
   );
 }

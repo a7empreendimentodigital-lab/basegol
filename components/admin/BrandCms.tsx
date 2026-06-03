@@ -97,6 +97,9 @@ export function BrandCms() {
         <FormField label="Slogan">
           <Input {...register("slogan")} />
         </FormField>
+        <p className="text-xs text-muted-foreground -mt-2">
+          O logo mobile é usado no menu e rodapé das páginas Início, Sobre e Contato.
+        </p>
         <div className="grid gap-6 sm:grid-cols-2">
           <ImageUpload
             label="Logo do sistema (desktop / sidebar)"
@@ -105,7 +108,7 @@ export function BrandCms() {
             onChange={(v) => setValue("logoUrl", v, { shouldDirty: true, shouldValidate: true })}
           />
           <ImageUpload
-            label="Logo do sistema (mobile)"
+            label="Logo mobile (menu e rodapé institucional)"
             category="logo"
             value={watch("mobileLogoUrl")}
             onChange={(v) => setValue("mobileLogoUrl", v, { shouldDirty: true, shouldValidate: true })}
@@ -128,12 +131,20 @@ export function BrandCms() {
             value={watch("splashScreenUrl")}
             onChange={(v) => setValue("splashScreenUrl", v, { shouldDirty: true, shouldValidate: true })}
           />
+        </div>
+        <div className="space-y-2">
           <ImageUpload
-            label="Hero da home"
+            label="Fundo da tela inicial (escolha de campeonato)"
             category="banner"
             value={watch("homeHeroBackgroundUrl")}
-            onChange={(v) => setValue("homeHeroBackgroundUrl", v, { shouldDirty: true, shouldValidate: true })}
+            onChange={(v) =>
+              setValue("homeHeroBackgroundUrl", v, { shouldDirty: true, shouldValidate: true })
+            }
           />
+          <p className="text-xs text-muted-foreground">
+            Usada como fundo em Início, Sobre e Contato. Recomendado: imagem escura (estádio), em
+            alta resolução.
+          </p>
         </div>
         <Button type="submit" disabled={saving}>
           {saving ? "Salvando..." : "Salvar personalização"}

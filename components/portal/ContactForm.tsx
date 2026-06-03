@@ -51,8 +51,11 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-line/60 bg-graphite/40 p-5 sm:p-6">
-      <h2 className="font-display text-lg tracking-wide text-foreground">Envie sua mensagem</h2>
+    <form
+      onSubmit={onSubmit}
+      className="space-y-4 rounded-2xl border border-white/10 bg-black/50 p-5 sm:p-6 backdrop-blur-sm"
+    >
+      <h2 className="font-display text-lg tracking-wide text-white">Envie sua mensagem</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="text-xs text-muted-foreground mb-1 block" htmlFor="contact-name">
@@ -89,7 +92,7 @@ export function ContactForm() {
           required
           rows={5}
           placeholder="Escreva sua mensagem..."
-          className="w-full rounded-lg border border-line bg-graphite-light/80 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+          className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:border-[#22c55e]/50 focus:outline-none focus:ring-1 focus:ring-[#22c55e]/30"
         />
       </div>
       <Button type="submit" disabled={sending} className="w-full gap-2">
