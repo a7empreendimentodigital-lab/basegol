@@ -2,9 +2,11 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequestWithAuth } from "next-auth/middleware";
 import { toCanonicalUrl } from "@/lib/app-origin";
+import { isPortalEntryRoute } from "@/lib/portal-routes";
 import {
   normalizePortalChampionshipSlug,
   parseChampionshipSlugFromPath,
+  PORTAL_CHAMPIONSHIP_COOKIE,
   portalChampionshipCookieOptions,
 } from "@/lib/portal-championship-slug";
 import { canAccessRoute } from "@/lib/rbac";
@@ -12,13 +14,21 @@ import { isClubPortalRoute } from "@/lib/public-routes";
 
 function nextWithPathname(req: NextRequestWithAuth) {
   const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-pathname", req.nextUrl.pathname);
+  const pathname = req.nextUrl.pathname;
+  requestHeaders.set("x-pathname", pathname);
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   const slug = normalizePortalChampionshipSlug(
-    parseChampionshipSlugFromPath(req.nextUrl.pathname)
+    parseChampionshipSlugFromPath(pathname)
   );
   if (slug) {
     res.cookies.set(portalChampionshipCookieOptions(slug));
+  } else if (isPortalEntryRoute(pathname)) {
+    res.cookies.set({
+      name: PORTAL_CHAMPIONSHIP_COOKIE,
+      value: "",
+      path: "/",
+      maxAge: 0,
+    });
   }
   return res;
 }

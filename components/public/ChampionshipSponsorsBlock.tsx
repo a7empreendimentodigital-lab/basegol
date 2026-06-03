@@ -32,6 +32,7 @@ export function ChampionshipSponsorsBlock({
   const [items, setItems] = useState<RotatorSponsor[] | null>(null);
 
   useEffect(() => {
+    setItems(null);
     let cancelled = false;
     void (async () => {
       const res = await fetch(
@@ -64,6 +65,7 @@ export function ChampionshipSponsorsBlock({
         </p>
       ) : null}
       <ChampionshipSponsorsRotator
+        key={`${championshipSlug}-${placement}`}
         championshipSlug={championshipSlug}
         items={items}
         variant={variant}

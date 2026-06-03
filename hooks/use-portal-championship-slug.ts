@@ -2,24 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import {
-  parseChampionshipSlugFromPath,
-  readPortalChampionshipSlugFromDocumentCookie,
-} from "@/lib/portal-championship-slug";
+import { resolvePortalChampionshipSlug } from "@/lib/portal-championship-scope";
+import { readPortalChampionshipSlugFromDocumentCookie } from "@/lib/portal-championship-slug";
 
-/** Slug do campeonato no portal público (URL ou cookie da última visita). */
+/** Slug do campeonato no portal público (URL ou cookie em rotas permitidas). */
 export function usePortalChampionshipSlug(): string | null {
   const pathname = usePathname() ?? "/";
-  const fromPath = parseChampionshipSlugFromPath(pathname);
-  const [fromCookie, setFromCookie] = useState<string | null>(null);
+  const [cookieSlug, setCookieSlug] = useState<string | null>(null);
 
   useEffect(() => {
-    if (fromPath) {
-      setFromCookie(null);
-      return;
-    }
-    setFromCookie(readPortalChampionshipSlugFromDocumentCookie());
-  }, [pathname, fromPath]);
+    setCookieSlug(readPortalChampionshipSlugFromDocumentCookie());
+  }, [pathname]);
 
-  return fromPath ?? fromCookie;
+  return resolvePortalChampionshipSlug(pathname, cookieSlug);
 }
