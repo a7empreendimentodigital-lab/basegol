@@ -31,6 +31,7 @@
     "db:purge-matches": "tsx scripts/purge-matches.ts",
     "sync:fpf-clubs": "tsx scripts/seed-missing-fpf-clubs.ts",
     "audit:fpf-clubs": "tsx scripts/audit-fpf-clubs.ts",
+    "audit:championship-isolation": "tsx scripts/audit-championship-isolation.ts",
     "import:paulista-pack": "tsx scripts/run-paulista-pack-import.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"

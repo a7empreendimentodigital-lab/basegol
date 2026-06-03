@@ -27,12 +27,16 @@ export type PublicCategoryGroups = {
   groups: PublicGroupItem[];
 };
 
-export async function listPublicGroupsByCategory(): Promise<PublicCategoryGroups[]> {
+export async function listPublicGroupsByCategory(
+  championshipId?: string
+): Promise<PublicCategoryGroups[]> {
   try {
     const categories = await prisma.category.findMany({
       where: {
         status: "ACTIVE",
-        championship: { status: { in: ["ACTIVE", "REGISTRATION"] } },
+        ...(championshipId
+          ? { championshipId }
+          : { championship: { status: { in: ["ACTIVE", "REGISTRATION"] } } }),
       },
       include: {
         championship: true,

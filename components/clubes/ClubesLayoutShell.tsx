@@ -1,10 +1,15 @@
 import { Suspense } from "react";
 import { ClubesRightSidebar } from "@/components/clubes/ClubesRightSidebar";
-import { getPublicGroupsByCategory } from "@/lib/public-groups-cache";
+import {
+  getPublicGroupsByCategory,
+  getPublicGroupsByChampionship,
+} from "@/lib/public-groups-cache";
 import { getActiveBannersByPlacement } from "@/services/banner.service";
 
 type Props = {
   children: React.ReactNode;
+  championshipId?: string | null;
+  championshipSlug?: string | null;
 };
 
 function SidebarSkeleton() {
@@ -16,11 +21,19 @@ function SidebarSkeleton() {
   );
 }
 
-/** Layout de /clubes: sidebar mostra os mesmos grupos do conteúdo central. */
-export async function ClubesLayoutShell({ children }: Props) {
+/** Layout de /clubes/[slug]: sidebar só com grupos do campeonato em contexto. */
+export async function ClubesLayoutShell({
+  children,
+  championshipId,
+  championshipSlug,
+}: Props) {
   const [groupsData, rightBanners] = await Promise.all([
-    getPublicGroupsByCategory(),
-    getActiveBannersByPlacement("SIDEBAR_RIGHT"),
+    championshipId
+      ? getPublicGroupsByChampionship(championshipId)
+      : Promise.resolve([]),
+    championshipSlug
+      ? Promise.resolve([])
+      : getActiveBannersByPlacement("SIDEBAR_RIGHT"),
   ]);
   const rightBanner = rightBanners[0] ?? null;
 
@@ -31,7 +44,11 @@ export async function ClubesLayoutShell({ children }: Props) {
           {children}
           <div className="xl:hidden border-t border-line">
             <div className="px-4 py-4 sm:px-5">
-              <ClubesRightSidebar categories={groupsData} rightBanner={rightBanner} />
+              <ClubesRightSidebar
+                categories={groupsData}
+                rightBanner={rightBanner}
+                championshipSlug={championshipSlug}
+              />
             </div>
           </div>
         </div>
@@ -39,7 +56,11 @@ export async function ClubesLayoutShell({ children }: Props) {
         <aside className="hidden border-l border-line bg-graphite/40 xl:fixed xl:right-0 xl:top-16 xl:z-30 xl:flex xl:h-[calc(100dvh-4rem)] xl:w-[300px] xl:flex-col xl:overflow-y-auto 2xl:w-[320px]">
           <div className="p-4">
             <Suspense fallback={<SidebarSkeleton />}>
-              <ClubesRightSidebar categories={groupsData} rightBanner={rightBanner} />
+              <ClubesRightSidebar
+                categories={groupsData}
+                rightBanner={rightBanner}
+                championshipSlug={championshipSlug}
+              />
             </Suspense>
           </div>
         </aside>

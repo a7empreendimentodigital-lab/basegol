@@ -34,13 +34,25 @@ export async function GET(_req: Request, { params }: { params: Promise<{ type: s
     }
 
     if (type === "groups") {
-      const categoryId = new URL(_req.url).searchParams.get("categoryId");
+      const url = new URL(_req.url);
+      const categoryId = url.searchParams.get("categoryId");
+      const championshipId = url.searchParams.get("championshipId");
       const items = await prisma.group.findMany({
-        where: categoryId ? { categoryId } : undefined,
+        where: {
+          ...(categoryId ? { categoryId } : {}),
+          ...(championshipId ? { category: { championshipId } } : {}),
+        },
         orderBy: { name: "asc" },
-        include: { category: true },
+        include: { category: { include: { championship: { select: { name: true } } } } },
       });
-      return ok(items.map((i) => ({ value: i.id, label: `${i.name} — ${i.category.name}` })));
+      return ok(
+        items.map((i) => ({
+          value: i.id,
+          label: championshipId
+            ? `${i.name} — ${i.category.name}`
+            : `${i.name} — ${i.category.name} (${i.category.championship.name})`,
+        }))
+      );
     }
 
     if (type === "clubs") {

@@ -1,8 +1,5 @@
 import { getChampionshipPortalBase } from "@/services/championship-portal.service";
-import {
-  getHomeSidebarData,
-  getHomeSidebarDataForChampionship,
-} from "@/services/home.service";
+import { getHomeSidebarDataForChampionship } from "@/services/home.service";
 import { fail, ok } from "@/utils/api-response";
 
 export const dynamic = "force-dynamic";
@@ -18,8 +15,11 @@ export async function GET(req: Request) {
       const data = await getHomeSidebarDataForChampionship(championship.id, 4);
       return ok(data);
     }
-    const data = await getHomeSidebarData(4);
-    return ok(data);
+    return ok({
+      categories: [],
+      standingsByCategory: {},
+      scorersByCategory: {},
+    });
   } catch {
     return fail("Não foi possível carregar dados da sidebar", 500);
   }

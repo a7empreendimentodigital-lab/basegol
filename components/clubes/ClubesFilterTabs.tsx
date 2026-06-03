@@ -8,14 +8,16 @@ type Tab = "clubes" | "grupos";
 
 type Props = {
   active: Tab;
+  /** Padrão: `/clubes` (global legado) */
+  basePath?: string;
 };
 
-const tabs: { id: Tab; href: string; label: string; icon: typeof Shield }[] = [
-  { id: "clubes", href: "/clubes", label: "Clubes", icon: Shield },
-  { id: "grupos", href: "/clubes?tab=grupos", label: "Grupos", icon: Layers },
-];
+export function ClubesFilterTabs({ active, basePath = "/clubes" }: Props) {
+  const tabs: { id: Tab; href: string; label: string; icon: typeof Shield }[] = [
+    { id: "clubes", href: basePath, label: "Clubes", icon: Shield },
+    { id: "grupos", href: `${basePath}?tab=grupos`, label: "Grupos", icon: Layers },
+  ];
 
-export function ClubesFilterTabs({ active }: Props) {
   return (
     <nav className="flex flex-wrap gap-2" aria-label="Seção de clubes">
       {tabs.map((tab) => {

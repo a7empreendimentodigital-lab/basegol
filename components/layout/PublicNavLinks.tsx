@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import {
   buildChampionshipPublicNav,
   isChampionshipPublicNavActive,
-  parseChampionshipSlugFromPath,
 } from "@/lib/championship-public-nav";
+import { usePortalChampionshipSlug } from "@/hooks/use-portal-championship-slug";
 import { PUBLIC_MAIN_NAV, isPublicNavActive } from "@/lib/public-nav";
 
 type Props = {
@@ -23,7 +23,7 @@ export function PublicNavLinks({
   variant = "sidebar",
 }: Props) {
   const isDrawer = variant === "drawer";
-  const championshipSlug = parseChampionshipSlugFromPath(pathname);
+  const championshipSlug = usePortalChampionshipSlug();
   const navItems = championshipSlug
     ? buildChampionshipPublicNav(championshipSlug)
     : PUBLIC_MAIN_NAV;

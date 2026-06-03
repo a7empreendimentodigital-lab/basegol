@@ -9,14 +9,33 @@ import { categoryPillActive, categoryPillBase } from "@/lib/public-ui-classes";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 import { SidebarAdBanner } from "@/components/public/SidebarAdBanner";
+import { ChampionshipSponsorsBlock } from "@/components/public/ChampionshipSponsorsBlock";
+import { championshipPublicBase } from "@/lib/championship-public-nav";
 import type { PublicBannerDto } from "@/services/banner.service";
 
 type Props = {
   categories: PublicCategoryGroups[];
   rightBanner?: PublicBannerDto | null;
+  championshipSlug?: string | null;
 };
 
-function Patrocinio({ rightBanner }: { rightBanner?: PublicBannerDto | null }) {
+function Patrocinio({
+  rightBanner,
+  championshipSlug,
+}: {
+  rightBanner?: PublicBannerDto | null;
+  championshipSlug?: string | null;
+}) {
+  if (championshipSlug) {
+    return (
+      <ChampionshipSponsorsBlock
+        championshipSlug={championshipSlug}
+        placement="SIDEBAR_RIGHT"
+        variant="right"
+        className="py-4 xl:mt-2 xl:border-t xl:border-line xl:pt-4 max-md:px-4 sm:max-md:px-5 md:px-0"
+      />
+    );
+  }
   if (!rightBanner?.imageUrl) return null;
   return (
     <div className="py-4 xl:mt-2 xl:border-t xl:border-line xl:pt-4">
@@ -30,7 +49,7 @@ function Patrocinio({ rightBanner }: { rightBanner?: PublicBannerDto | null }) {
   );
 }
 
-export function ClubesRightSidebar({ categories, rightBanner }: Props) {
+export function ClubesRightSidebar({ categories, rightBanner, championshipSlug }: Props) {
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [groupId, setGroupId] = useState(categories[0]?.groups[0]?.id ?? "");
 
@@ -48,12 +67,16 @@ export function ClubesRightSidebar({ categories, rightBanner }: Props) {
     return (
       <div className="max-xl:divide-y max-xl:divide-line xl:space-y-4">
         <p className="py-4 text-sm text-muted-foreground">Nenhum grupo cadastrado.</p>
-        <Patrocinio rightBanner={rightBanner} />
+        <Patrocinio rightBanner={rightBanner} championshipSlug={championshipSlug} />
       </div>
     );
   }
 
   const teams = group?.teams ?? [];
+  const tableHref = championshipSlug
+    ? `${championshipPublicBase(championshipSlug)}/classificacao`
+    : "/tabela";
+  const competitionsHref = championshipSlug ? championshipPublicBase(championshipSlug) : "/campeonatos";
 
   return (
     <div className="max-xl:divide-y max-xl:divide-line xl:space-y-4">
@@ -63,7 +86,7 @@ export function ClubesRightSidebar({ categories, rightBanner }: Props) {
             <Trophy className="h-4 w-4 text-muted-foreground" aria-hidden />
             Competições
           </h2>
-          <HomeSectionLink href="/campeonatos">Ver todas</HomeSectionLink>
+          <HomeSectionLink href={competitionsHref}>Ver todas</HomeSectionLink>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {categories.map((cat) => {
@@ -116,7 +139,7 @@ export function ClubesRightSidebar({ categories, rightBanner }: Props) {
               ({teams.length})
             </span>
           </h2>
-          <HomeSectionLink href="/tabelas">Tabelas</HomeSectionLink>
+          <HomeSectionLink href={tableHref}>Tabelas</HomeSectionLink>
         </div>
         {teams.length === 0 ? (
           <p className="text-xs text-muted-foreground">Nenhum clube neste grupo.</p>
@@ -139,7 +162,7 @@ export function ClubesRightSidebar({ categories, rightBanner }: Props) {
         )}
       </section>
 
-      <Patrocinio rightBanner={rightBanner} />
+      <Patrocinio rightBanner={rightBanner} championshipSlug={championshipSlug} />
     </div>
   );
 }

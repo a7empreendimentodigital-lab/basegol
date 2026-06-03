@@ -1,4 +1,8 @@
 import { ensureAdminCrud } from "@/lib/admin-api-guard";
+import {
+  assertGroupInChampionships,
+  enrichMatchPayloadWithChampionshipId,
+} from "@/lib/admin-entity-scope";
 import { enforceChampionshipIdForScopedAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { adminListQuerySchema } from "@/utils/zod-schemas";
@@ -354,11 +358,36 @@ export async function POST(req: Request, { params }: { params: Promise<{ entity:
       typeof raw === "object" && raw && "championshipId" in raw
         ? String((raw as { championshipId?: string }).championshipId ?? "")
         : undefined;
-    await ensureAdminCrud(entity, champId || null);
+    const adminCtx = await ensureAdminCrud(entity, champId || null);
     const schema = ENTITY_SCHEMAS[entity];
     if (!schema) return fail("Schema não configurado para esta entidade", 400);
     const parsed = schema.parse(raw);
-    const payload = prepareAdminPayload(entity, parsed as Record<string, unknown>);
+    let payload = prepareAdminPayload(entity, parsed as Record<string, unknown>);
+
+    if (entity === "matches" && typeof payload.groupId === "string") {
+      if (adminCtx.isChampionshipAdmin && adminCtx.championshipIds?.length) {
+        await assertGroupInChampionships(payload.groupId, adminCtx.championshipIds);
+      }
+      payload = await enrichMatchPayloadWithChampionshipId(payload);
+    }
+    if (entity === "groups" && typeof payload.categoryId === "string") {
+      if (adminCtx.isChampionshipAdmin && adminCtx.championshipIds?.length) {
+        const cat = await prisma.category.findUnique({
+          where: { id: payload.categoryId },
+          select: { championshipId: true },
+        });
+        if (!cat || !adminCtx.championshipIds.includes(cat.championshipId)) {
+          throw new Error("FORBIDDEN");
+        }
+      }
+    }
+    if (entity === "categories" && typeof payload.championshipId === "string") {
+      if (adminCtx.isChampionshipAdmin && adminCtx.championshipIds?.length) {
+        if (!adminCtx.championshipIds.includes(payload.championshipId)) {
+          throw new Error("FORBIDDEN");
+        }
+      }
+    }
 
     if (entity === "clubs") {
       const baseSlug =

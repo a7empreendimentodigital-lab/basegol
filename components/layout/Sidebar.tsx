@@ -4,22 +4,21 @@ import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { PublicNavLinks } from "@/components/layout/PublicNavLinks";
 import { SidebarFavorites, SidebarFooterLinks } from "@/components/layout/SidebarFooter";
-import { parseChampionshipSlugFromPath, championshipPublicBase } from "@/lib/championship-public-nav";
+import { championshipPublicBase } from "@/lib/championship-public-nav";
+import { usePortalChampionshipSlug } from "@/hooks/use-portal-championship-slug";
 import { isClubPortalRoute } from "@/lib/public-routes";
-import { SidebarAdBanner } from "@/components/public/SidebarAdBanner";
 import { ChampionshipSponsorsBlock } from "@/components/public/ChampionshipSponsorsBlock";
-import type { PublicBannerDto } from "@/services/banner.service";
 
 type SidebarProps = {
-  leftBanner?: PublicBannerDto | null;
+  leftBanner?: unknown;
   isLoggedIn?: boolean;
   userRole?: string | null;
   userChampionshipId?: string | null;
 };
 
-export function Sidebar({ leftBanner, isLoggedIn, userRole, userChampionshipId }: SidebarProps) {
+export function Sidebar({ isLoggedIn, userRole, userChampionshipId }: SidebarProps) {
   const pathname = usePathname() ?? "/";
-  const championshipSlug = parseChampionshipSlugFromPath(pathname);
+  const championshipSlug = usePortalChampionshipSlug();
   const logoHref = championshipSlug ? championshipPublicBase(championshipSlug) : "/";
 
   if (
@@ -53,13 +52,6 @@ export function Sidebar({ leftBanner, isLoggedIn, userRole, userChampionshipId }
           variant="left"
           className="shrink-0 p-3 border-t border-line"
         />
-      ) : leftBanner ? (
-        <div className="shrink-0 p-3 border-t border-line">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
-            Patrocinador
-          </p>
-          <SidebarAdBanner banner={leftBanner} variant="left" />
-        </div>
       ) : null}
 
       <div className="shrink-0 p-3 border-t border-line">

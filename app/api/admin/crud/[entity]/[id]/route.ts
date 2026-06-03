@@ -1,4 +1,8 @@
 import { ensureAdminCrud } from "@/lib/admin-api-guard";
+import {
+  assertGroupInChampionships,
+  enrichMatchPayloadWithChampionshipId,
+} from "@/lib/admin-entity-scope";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
@@ -72,6 +76,14 @@ async function verifyScopedRecord(
     if (!row) throw new Error("FORBIDDEN");
     return;
   }
+  if (entity === "groups") {
+    const row = await prisma.group.findUnique({
+      where: { id },
+      select: { category: { select: { championshipId: true } } },
+    });
+    if (!row || !allowed.includes(row.category.championshipId)) throw new Error("FORBIDDEN");
+    return;
+  }
   if (entity === "news") {
     const row = await prisma.news.findUnique({ where: { id }, select: { championshipId: true } });
     if (!row?.championshipId || !allowed.includes(row.championshipId)) throw new Error("FORBIDDEN");
@@ -121,7 +133,36 @@ export async function PATCH(
     if (!schema) return fail("Schema não configurado", 400);
     const raw = await req.json();
     const parsed = schema.partial().parse(raw);
-    const payload = prepareAdminPayload(entity, parsed as Record<string, unknown>);
+    let payload = prepareAdminPayload(entity, parsed as Record<string, unknown>);
+
+    if (entity === "matches") {
+      const groupId =
+        typeof payload.groupId === "string"
+          ? payload.groupId
+          : (
+              await prisma.match.findUnique({
+                where: { id },
+                select: { groupId: true },
+              })
+            )?.groupId;
+      if (groupId && adminCtx.isChampionshipAdmin && adminCtx.championshipIds?.length) {
+        await assertGroupInChampionships(groupId, adminCtx.championshipIds);
+      }
+      if (typeof payload.groupId === "string") {
+        payload = await enrichMatchPayloadWithChampionshipId(payload);
+      }
+    }
+    if (entity === "groups" && typeof payload.categoryId === "string") {
+      if (adminCtx.isChampionshipAdmin && adminCtx.championshipIds?.length) {
+        const cat = await prisma.category.findUnique({
+          where: { id: payload.categoryId },
+          select: { championshipId: true },
+        });
+        if (!cat || !adminCtx.championshipIds.includes(cat.championshipId)) {
+          throw new Error("FORBIDDEN");
+        }
+      }
+    }
 
     if (entity === "clubs") {
       delete payload.slug;

@@ -4,7 +4,12 @@ import {
   type PublicCategoryGroups,
 } from "@/services/public.service";
 
-/** Uma consulta por request (layout + página /clubes). */
+/** Grupos de todas as categorias ativas (legado — evitar em páginas de campeonato). */
 export const getPublicGroupsByCategory = cache(
   async (): Promise<PublicCategoryGroups[]> => listPublicGroupsByCategory()
+);
+
+export const getPublicGroupsByChampionship = cache(
+  async (championshipId: string): Promise<PublicCategoryGroups[]> =>
+    listPublicGroupsByCategory(championshipId)
 );

@@ -7,9 +7,13 @@ export async function getChampionshipPublicDetail(slug: string) {
     where: { slug },
     include: {
       categories: {
+        where: { status: "ACTIVE" },
         orderBy: { name: "asc" },
         include: {
-          groups: { orderBy: { name: "asc" } },
+          groups: {
+            where: { status: "ACTIVE" },
+            orderBy: { name: "asc" },
+          },
         },
       },
     },
