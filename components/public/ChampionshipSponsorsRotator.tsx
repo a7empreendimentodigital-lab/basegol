@@ -104,7 +104,10 @@ export function ChampionshipSponsorsRotator({
   if (!current) return null;
 
   const src = normalizeImageSrc(current.logoUrl);
-  const imageClass = "h-auto w-full max-h-[20rem] object-contain";
+  const imageClass =
+    variant === "right"
+      ? "h-auto w-full max-h-[51rem] object-contain"
+      : "h-auto w-full max-h-[20rem] object-contain";
 
   const content = src ? (
     <SafeImage
