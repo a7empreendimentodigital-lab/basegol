@@ -32,29 +32,31 @@ export function Sidebar({ isLoggedIn, userRole, userChampionshipId }: SidebarPro
   }
 
   return (
-    <aside className="hidden md:flex md:w-64 lg:w-72 md:flex-col md:fixed md:inset-y-0 border-r border-line bg-graphite/80 z-30">
-      <div className="border-b border-line px-2 py-6 flex items-center justify-center min-h-[220px] shrink-0">
+    <aside className="hidden md:flex md:w-64 lg:w-72 md:flex-col md:fixed md:inset-y-0 md:min-h-0 border-r border-line bg-graphite/80 z-30">
+      <div className="flex shrink-0 items-center justify-center border-b border-line px-2 py-6 min-h-[180px] max-h-[200px]">
         <Logo href={logoHref} size="sidebar" className="w-full" />
       </div>
 
-      <nav className="flex-1 min-h-0 overflow-y-auto p-3">
-        <PublicNavLinks pathname={pathname ?? "/"} />
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        <nav className="shrink-0 p-3">
+          <PublicNavLinks pathname={pathname ?? "/"} />
 
-        <div className="pt-4 mt-2 border-t border-line">
-          <SidebarFavorites isLoggedIn={isLoggedIn} />
-        </div>
-      </nav>
+          <div className="mt-2 border-t border-line pt-4">
+            <SidebarFavorites isLoggedIn={isLoggedIn} />
+          </div>
+        </nav>
 
-      {championshipSlug ? (
-        <ChampionshipSponsorsBlock
-          championshipSlug={championshipSlug}
-          placement="SIDEBAR_LEFT"
-          variant="left"
-          className="shrink-0 p-3 border-t border-line"
-        />
-      ) : null}
+        {championshipSlug ? (
+          <ChampionshipSponsorsBlock
+            championshipSlug={championshipSlug}
+            placement="SIDEBAR_LEFT"
+            variant="left"
+            className="mt-auto shrink-0 border-t border-line p-3"
+          />
+        ) : null}
+      </div>
 
-      <div className="shrink-0 p-3 border-t border-line">
+      <div className="shrink-0 border-t border-line p-3">
         <SidebarFooterLinks
           isLoggedIn={isLoggedIn}
           userRole={userRole}
