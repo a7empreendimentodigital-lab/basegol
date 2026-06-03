@@ -33,8 +33,8 @@ export function Sidebar({ isLoggedIn, userRole, userChampionshipId }: SidebarPro
 
   return (
     <aside className="hidden md:flex md:w-64 lg:w-72 md:flex-col md:fixed md:inset-y-0 md:min-h-0 border-r border-line bg-graphite/80 z-30">
-      <div className="flex shrink-0 items-center justify-center border-b border-line px-2 py-6 min-h-[180px] max-h-[200px]">
-        <Logo href={logoHref} size="sidebar" className="w-full" />
+      <div className="flex shrink-0 items-center justify-center border-b border-line px-3 pt-6 pb-8 min-h-[180px] max-h-[220px]">
+        <Logo href={logoHref} size="sidebar" className="w-full pb-2" />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
@@ -51,7 +51,7 @@ export function Sidebar({ isLoggedIn, userRole, userChampionshipId }: SidebarPro
             championshipSlug={championshipSlug}
             placement="SIDEBAR_LEFT"
             variant="left"
-            className="mt-auto shrink-0 border-t border-line p-3"
+            className="mt-auto shrink-0 border-t border-line px-3 pt-4 pb-5"
           />
         ) : null}
       </div>

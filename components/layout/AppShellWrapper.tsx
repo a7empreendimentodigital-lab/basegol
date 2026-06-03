@@ -56,7 +56,6 @@ const PublicAppChrome = memo(function PublicAppChrome({
         />
         <div className="flex flex-1 flex-col w-full min-h-0">
           {children}
-          <SiteFooterClient systemName={systemName} />
         </div>
       </div>
       <BottomNavClient />

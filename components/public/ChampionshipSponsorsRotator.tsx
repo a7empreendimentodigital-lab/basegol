@@ -107,7 +107,7 @@ export function ChampionshipSponsorsRotator({
   const imageClass =
     variant === "right"
       ? "h-auto w-full max-h-[51rem] object-contain"
-      : "h-auto w-full max-h-[10rem] object-contain";
+      : "h-auto w-full max-h-[20rem] object-contain";
 
   const content = src ? (
     <SafeImage
