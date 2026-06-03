@@ -106,15 +106,15 @@ export function ChampionshipSponsorsRotator({
   const src = normalizeImageSrc(current.logoUrl);
   const imageClass =
     variant === "left"
-      ? "h-auto max-h-24 w-full object-contain"
-      : "h-auto max-h-20 w-full object-contain";
+      ? "h-auto w-full max-h-44 object-contain lg:max-h-40"
+      : "h-auto w-full max-h-44 object-contain sm:max-h-40";
 
   const content = src ? (
     <SafeImage
       src={src}
       alt={current.name}
-      width={240}
-      height={120}
+      width={400}
+      height={200}
       className={imageClass}
     />
   ) : (
@@ -124,7 +124,7 @@ export function ChampionshipSponsorsRotator({
   const shell = (
     <div
       className={cn(
-        "min-h-[4.5rem] rounded-lg border border-[#a1a1aa1f] bg-graphite/30 p-3 transition-opacity ease-in-out",
+        "flex min-h-[5.5rem] w-full items-center justify-center transition-opacity ease-in-out",
         fadeIn ? "opacity-100" : "opacity-0"
       )}
       style={{ transitionDuration: `${FADE_MS}ms` }}
@@ -140,7 +140,7 @@ export function ChampionshipSponsorsRotator({
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackEvent(championshipSlug, current.id, "click")}
-        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg"
+        className="block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         aria-label={`Patrocinador: ${current.name}`}
       >
         {shell}
