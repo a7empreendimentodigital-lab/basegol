@@ -20,7 +20,12 @@ import { type AdminFormProps, str } from "@/components/admin/forms/types";
 type MatchFormInput = z.input<typeof matchFormSchema>;
 type MatchFormOutput = z.output<typeof matchFormSchema>;
 
-export function MatchForm({ initial, onSuccess, onCancel }: AdminFormProps) {
+type MatchFormProps = AdminFormProps & {
+  /** Painel do campeonato: restringe grupos ao campeonato atual. */
+  championshipId?: string;
+};
+
+export function MatchForm({ initial, onSuccess, onCancel, championshipId }: MatchFormProps) {
   const id = str(initial?.id);
   const { onSaveError, onValidationError } = useAdminFormFeedback();
   const [saving, setSaving] = useState(false);
@@ -49,7 +54,9 @@ export function MatchForm({ initial, onSuccess, onCancel }: AdminFormProps) {
   const groupId = watch("groupId");
   const homeTeamId = watch("homeTeamId");
   const awayTeamId = watch("awayTeamId");
-  const { options: groups } = useAdminOptions("groups");
+  const { options: groups } = useAdminOptions("groups", {
+    championshipId: championshipId || undefined,
+  });
   const { options: teams, loading: teamsLoading } = useAdminOptions("teams", { groupId });
 
   useEffect(() => {

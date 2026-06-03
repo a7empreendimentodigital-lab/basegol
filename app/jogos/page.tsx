@@ -3,12 +3,16 @@ import { JogosFilterTabs } from "@/components/jogos/JogosFilterTabs";
 import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { MatchList } from "@/components/matches/MatchList";
 import { PublicPageBanner } from "@/components/layout/PublicPageBanner";
+import { ChampionshipEmptyPanel } from "@/components/campeonatos/ChampionshipEmptyPanel";
+import { Calendar } from "lucide-react";
+import Link from "next/link";
 import {
   extractCategoriesFromMatches,
   filterMatchesByCategorySlug,
   resolveActiveCategorySlug,
 } from "@/lib/jogos-category-filter";
-import { getLiveMatches, getTodayMatches, getUpcomingMatches } from "@/services/match.service";
+import { redirectGlobalRouteToPortalChampionship } from "@/lib/redirect-portal-championship";
+import { getServerPortalChampionshipSlug } from "@/lib/portal-championship-context.server";
 
 export const metadata = { title: "Jogos" };
 
@@ -17,20 +21,65 @@ export default async function JogosPage({
 }: {
   searchParams: Promise<{ status?: string; categoria?: string }>;
 }) {
-  const { status, categoria: categoriaParam } = await searchParams;
+  const params = await searchParams;
+  await redirectGlobalRouteToPortalChampionship("jogos", params);
+
+  const championshipSlug = await getServerPortalChampionshipSlug();
+  const { status, categoria: categoriaParam } = params;
   const isLive = status === "LIVE";
   const isUpcoming = status === "upcoming";
 
+  const bannerTitle = isLive ? "Ao vivo" : isUpcoming ? "Próximos jogos" : "Jogos de hoje";
+
+  if (!championshipSlug) {
+    return (
+      <PublicRightSidebarLayout>
+        <PublicPageBanner title={bannerTitle} />
+        <main className="w-full px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+          <ChampionshipEmptyPanel
+            icon={Calendar}
+            title="Selecione um campeonato"
+            description="Escolha um campeonato na página inicial para ver jogos ao vivo, de hoje e próximos."
+          />
+          <p className="mt-4 text-center text-sm">
+            <Link href="/" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Ir para campeonatos
+            </Link>
+          </p>
+        </main>
+      </PublicRightSidebarLayout>
+    );
+  }
+
+  const { getChampionshipPortalBase } = await import("@/services/championship-portal.service");
+  const {
+    getLiveMatchesForChampionship,
+    getTodayMatchesForChampionship,
+    getUpcomingMatchesForChampionship,
+  } = await import("@/services/match.service");
+
+  const championship = await getChampionshipPortalBase(championshipSlug);
+  if (!championship) {
+    return (
+      <PublicRightSidebarLayout>
+        <PublicPageBanner title={bannerTitle} />
+        <main className="w-full px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+          <ChampionshipEmptyPanel icon={Calendar} title="Campeonato não encontrado" />
+        </main>
+      </PublicRightSidebarLayout>
+    );
+  }
+
   const allMatches = isLive
-    ? await getLiveMatches()
+    ? await getLiveMatchesForChampionship(championship.id)
     : isUpcoming
-      ? await getUpcomingMatches(50)
-      : await getTodayMatches();
+      ? await getUpcomingMatchesForChampionship(championship.id, undefined, 50)
+      : await getTodayMatchesForChampionship(championship.id);
 
   const categories = extractCategoriesFromMatches(allMatches);
   const activeCategory = resolveActiveCategorySlug(categoriaParam, categories);
-
   const matches = filterMatchesByCategorySlug(allMatches, activeCategory ?? undefined);
+  const basePath = `/campeonatos/${championshipSlug}/jogos`;
 
   const activeCategoryName =
     activeCategory != null
@@ -39,23 +88,17 @@ export default async function JogosPage({
 
   const statusFilter = isLive ? "LIVE" : isUpcoming ? "upcoming" : undefined;
 
-  const bannerTitle = isLive
-    ? "Ao vivo"
-    : isUpcoming
-      ? "Próximos jogos"
-      : "Jogos de hoje";
-
   const emptyMessage =
     activeCategoryName != null
       ? `Nenhum jogo em ${activeCategoryName}${isLive ? " ao vivo" : isUpcoming ? " nos próximos dias" : " hoje"}.`
       : isLive
-        ? "Nenhuma partida ao vivo no momento."
+        ? "Nenhuma partida ao vivo neste campeonato."
         : isUpcoming
           ? "Nenhum jogo agendado nos próximos dias."
-          : "Nenhum jogo programado para hoje.";
+          : "Nenhum jogo programado para hoje neste campeonato.";
 
   return (
-    <PublicRightSidebarLayout>
+    <PublicRightSidebarLayout championshipSlug={championshipSlug}>
       <PublicPageBanner title={bannerTitle} />
 
       <main className="w-full px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
@@ -64,12 +107,14 @@ export default async function JogosPage({
             isLive={isLive}
             isUpcoming={isUpcoming}
             activeCategory={activeCategory}
+            basePath={basePath}
           />
         </div>
 
         <JogosCategoryTabs
           categories={categories}
           activeSlug={activeCategory}
+          pathname={basePath}
           status={statusFilter}
         />
 

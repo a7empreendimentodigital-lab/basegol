@@ -16,6 +16,7 @@ type Props = {
   onClose: () => void;
   isLoggedIn?: boolean;
   userRole?: string | null;
+  userChampionshipId?: string | null;
   userName?: string | null;
   userImage?: string | null;
 };
@@ -33,6 +34,7 @@ export function PublicMobileNavDrawer({
   onClose,
   isLoggedIn,
   userRole,
+  userChampionshipId,
   userName,
   userImage,
 }: Props) {
@@ -164,6 +166,7 @@ export function PublicMobileNavDrawer({
         <div className="shrink-0 space-y-0.5 border-t border-white/[0.08] bg-pitch px-3 py-3">
           <StaffPanelNavLinks
             userRole={userRole}
+            userChampionshipId={userChampionshipId}
             currentArea="public"
             onNavigate={onClose}
             variant="drawer"

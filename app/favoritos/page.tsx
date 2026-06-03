@@ -1,12 +1,11 @@
 import { FavoritosPageContent } from "@/components/favorites/FavoritosPageContent";
-import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 
 export const metadata = { title: "Favoritos" };
 
 export default function FavoritosPage() {
   return (
-    <PublicRightSidebarLayout>
+    <div className="mx-auto w-full max-w-3xl">
       <FavoritosPageContent />
-    </PublicRightSidebarLayout>
+    </div>
   );
 }

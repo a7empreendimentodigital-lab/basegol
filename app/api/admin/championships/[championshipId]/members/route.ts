@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
+import { ZodError } from "zod";
 import { canCreateRole, requireChampionshipScopedAdmin } from "@/lib/admin-auth";
 import { assertMatchInChampionship } from "@/lib/championship-access";
-import { syncUserClubLink, syncUserChampionshipMembership, syncUserOperatorMatches } from "@/lib/user-admin";
+import { ensureSystemRole } from "@/lib/system-roles";
 import { prisma } from "@/lib/prisma";
 import { championshipMemberCreateSchema } from "@/utils/zod-schemas/championship-sponsor.schemas";
 import { fail, ok } from "@/utils/api-response";
@@ -100,36 +101,72 @@ export async function POST(req: Request, { params }: RouteCtx) {
       await assertMatchInChampionship(body.assignedMatchIds, championshipId);
     }
 
-    const role = await prisma.role.findUnique({ where: { slug: body.roleSlug } });
+    const role = await ensureSystemRole(body.roleSlug);
     if (!role) return fail("Papel inválido", 400);
 
-    const passwordHash = await bcrypt.hash(body.password, 12);
-    const created = await prisma.user.create({
-      data: {
-        name: body.name,
-        email: body.email.toLowerCase(),
-        passwordHash,
-        status: body.status,
-        roleId: role.id,
-        mustChangePassword: true,
-      },
+    const email = body.email.toLowerCase().trim();
+    const existingEmail = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
     });
+    if (existingEmail) {
+      return fail("Já existe um usuário com este e-mail.", 409);
+    }
 
-    await syncUserClubLink(created.id, body.roleSlug, null);
-    await syncUserChampionshipMembership(
-      created.id,
-      body.roleSlug,
-      body.roleSlug === "ADMIN_CAMPEONATO" ? championshipId : null
-    );
-    await syncUserOperatorMatches(
-      created.id,
-      body.roleSlug,
-      body.assignedMatchIds ?? [],
-      ctx.user.id
-    );
+    const championship = await prisma.championship.findUnique({
+      where: { id: championshipId },
+      select: { id: true },
+    });
+    if (!championship) return fail("Campeonato não encontrado", 404);
+
+    const passwordHash = await bcrypt.hash(body.password, 12);
+    const matchIds = body.assignedMatchIds ?? [];
+
+    const created = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name: body.name.trim(),
+          email,
+          passwordHash,
+          status: body.status,
+          roleId: role.id,
+          mustChangePassword: true,
+        },
+      });
+
+      await tx.clubUser.deleteMany({ where: { userId: user.id } });
+
+      if (body.roleSlug === "ADMIN_CAMPEONATO") {
+        await tx.championshipMember.deleteMany({ where: { userId: user.id } });
+        await tx.championshipMember.create({
+          data: { userId: user.id, championshipId },
+        });
+      } else {
+        await tx.championshipMember.deleteMany({ where: { userId: user.id } });
+        await tx.matchOperator.deleteMany({ where: { userId: user.id } });
+        if (matchIds.length > 0) {
+          await tx.matchOperator.createMany({
+            data: matchIds.map((matchId) => ({
+              matchId,
+              userId: user.id,
+              canEditLive: true,
+              canEditStats: true,
+              assignedBy: ctx.user.id,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      return user;
+    });
 
     return ok({ id: created.id }, 201);
   } catch (e) {
+    if (e instanceof ZodError) {
+      const first = e.errors[0];
+      return fail(first?.message ?? "Dados inválidos", 400);
+    }
     const msg = e instanceof Error ? e.message : "";
     if (msg === "FORBIDDEN") return fail("Sem permissão", 403);
     if (msg === "MATCH_NOT_IN_CHAMPIONSHIP") {

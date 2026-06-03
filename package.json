@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack -p 3000 --hostname 0.0.0.0",
     "icons:generate": "node scripts/generate-pwa-icons.mjs",
-    "build": "prisma generate && prisma db push && npm run icons:generate && next build",
+    "build": "prisma generate && bash scripts/vercel-sync-db.sh && npm run icons:generate && next build",
+    "db:migrate:prod": "bash scripts/fix-production-migrations.sh",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -31,6 +32,7 @@
     "db:purge-matches": "tsx scripts/purge-matches.ts",
     "sync:fpf-clubs": "tsx scripts/seed-missing-fpf-clubs.ts",
     "audit:fpf-clubs": "tsx scripts/audit-fpf-clubs.ts",
+    "audit:championship-isolation": "tsx scripts/audit-championship-isolation.ts",
     "import:paulista-pack": "tsx scripts/run-paulista-pack-import.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"

@@ -59,20 +59,31 @@ export function ChampionshipUsersAdmin({
   }, [load]);
 
   async function handleCreate() {
+    if (form.password.length < 8) {
+      toast({ title: "A senha deve ter no mínimo 8 caracteres.", variant: "error" });
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(base, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+          roleSlug: form.roleSlug,
           status: "ACTIVE",
           assignedMatchIds: [],
         }),
       });
+      const payload = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        message?: string;
+      };
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { message?: string }).message ?? "Erro ao criar");
+        throw new Error(payload.error ?? payload.message ?? "Erro ao criar usuário");
       }
       toast({
         title: "Usuário criado. Senha provisória — troca no primeiro acesso.",

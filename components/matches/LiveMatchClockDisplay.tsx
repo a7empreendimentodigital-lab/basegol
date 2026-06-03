@@ -121,7 +121,7 @@ export function LiveMatchClockDisplay({ match, size = "sm", className }: Props) 
       <span
         className={cn(
           "font-mono font-bold text-white",
-          isLarge ? "text-4xl sm:text-5xl" : "text-xl sm:text-2xl"
+          isLarge ? "text-3xl sm:text-4xl" : "text-base sm:text-lg"
         )}
         aria-label={`Tempo restante no período: ${formatElapsedClock(built.remainingSeconds)}`}
       >
@@ -130,17 +130,14 @@ export function LiveMatchClockDisplay({ match, size = "sm", className }: Props) 
       {lines.secondary ? (
         <span
           className={cn(
-            "text-neutral-500",
-            isLarge ? "text-sm" : "text-[11px]"
+            isLarge ? "text-sm" : "text-[11px]",
+            built.isPaused ? "font-medium text-amber-400/90" : "text-neutral-500"
           )}
         >
           {lines.secondary}
         </span>
-      ) : null}
-      {built.isPaused ? (
-        <span className="text-[10px] font-medium text-amber-400/90">
-          Cronômetro pausado
-        </span>
+      ) : built.isPaused ? (
+        <span className="text-[10px] font-medium text-amber-400/90">Cronômetro pausado</span>
       ) : null}
     </div>
   );

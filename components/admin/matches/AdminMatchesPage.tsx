@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentProps } from "react";
 import { CalendarDays, RefreshCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { AdminGroupedListPage } from "@/components/admin/shared/AdminGroupedListPage";
@@ -261,7 +261,13 @@ export function AdminMatchesPage({ championshipId }: PageProps = {}) {
       dialogTitles={{ new: "Nova partida", edit: "Editar partida" }}
       deleteConfirm={() => "Excluir esta partida? Esta ação não pode ser desfeita."}
       extraParams={extraParams}
-      FormComponent={MatchForm}
+      FormComponent={
+        championshipId
+          ? (props: ComponentProps<typeof MatchForm>) => (
+              <MatchForm {...props} championshipId={championshipId} />
+            )
+          : MatchForm
+      }
       buildGroups={buildGroups}
       toolbarExtras={
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">

@@ -6,19 +6,18 @@ import { cn } from "@/lib/utils";
 import {
   buildChampionshipBottomNav,
   isChampionshipPublicNavActive,
-  parseChampionshipSlugFromPath,
 } from "@/lib/championship-public-nav";
+import { usePortalChampionshipSlug } from "@/hooks/use-portal-championship-slug";
 import { PUBLIC_BOTTOM_NAV, isPublicNavActive } from "@/lib/public-nav";
 import { isPublicAppRoute } from "@/lib/public-routes";
 
 export function BottomNav() {
   const pathname = usePathname() ?? "";
+  const championshipSlug = usePortalChampionshipSlug();
 
   if (!isPublicAppRoute(pathname)) {
     return null;
   }
-
-  const championshipSlug = parseChampionshipSlugFromPath(pathname);
   const navItems = championshipSlug
     ? buildChampionshipBottomNav(championshipSlug)
     : PUBLIC_BOTTOM_NAV;

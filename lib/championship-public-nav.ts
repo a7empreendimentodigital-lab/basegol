@@ -10,13 +10,7 @@ import {
 } from "lucide-react";
 import type { PublicNavItem } from "@/lib/public-nav";
 
-/** Extrai o slug do campeonato em rotas `/campeonatos/[slug]/...`. */
-export function parseChampionshipSlugFromPath(pathname: string): string | null {
-  const match = pathname.match(/^\/campeonatos\/([^/]+)(?:\/|$)/);
-  if (!match?.[1]) return null;
-  if (match[1] === "page") return null;
-  return decodeURIComponent(match[1]);
-}
+export { parseChampionshipSlugFromPath } from "@/lib/portal-championship-slug";
 
 export function championshipPublicBase(slug: string) {
   return `/campeonatos/${slug}`;

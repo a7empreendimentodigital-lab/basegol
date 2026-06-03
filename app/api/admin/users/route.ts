@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import { canAssignRole } from "@/lib/role-access";
+import { ensureSystemRole } from "@/lib/system-roles";
 import { syncUserClubLink, syncUserChampionshipMembership, syncUserOperatorMatches } from "@/lib/user-admin";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/utils/api-response";
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
       return fail("Sem permissão para atribuir este papel", 403);
     }
 
-    const role = await prisma.role.findUnique({ where: { slug: parsed.roleSlug } });
+    const role = await ensureSystemRole(parsed.roleSlug);
     if (!role) return fail("Papel inválido", 400);
 
     const passwordHash = await bcrypt.hash(parsed.password, 12);

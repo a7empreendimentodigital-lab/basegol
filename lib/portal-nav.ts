@@ -17,8 +17,17 @@ const PANEL_ACCESS: { item: StaffPanelItem; roles: string[] }[] = [
   { item: { href: "/estatisticas", label: "Área scout" }, roles: ["SCOUT"] },
 ];
 
+function adminPanelForChampionshipAdmin(championshipId?: string | null): StaffPanelItem {
+  return {
+    href: championshipId ? `/admin/campeonatos/${championshipId}` : "/admin",
+    label: "Painel do campeonato",
+  };
+}
+
 function isCurrentPanel(panel: StaffPanelItem, area: PortalArea): boolean {
-  if (area === "admin") return panel.href === "/admin";
+  if (area === "admin") {
+    return panel.href === "/admin" || panel.href.startsWith("/admin/");
+  }
   if (area === "clube") return panel.href === "/clube";
   if (area === "operador") return panel.href === "/operador";
   if (area === "scout") return panel.href === "/estatisticas";
@@ -26,14 +35,22 @@ function isCurrentPanel(panel: StaffPanelItem, area: PortalArea): boolean {
 }
 
 /** Painéis internos que o papel pode abrir. */
-export function getStaffPanelsForRole(role?: string | null): StaffPanelItem[] {
+export function getStaffPanelsForRole(
+  role?: string | null,
+  championshipId?: string | null
+): StaffPanelItem[] {
   const r = role?.toUpperCase();
   if (!r || !isAppRole(r)) return [];
+
+  if (r === "ADMIN_CAMPEONATO") {
+    return [adminPanelForChampionshipAdmin(championshipId)];
+  }
+
   return PANEL_ACCESS.filter((entry) => entry.roles.includes(r)).map((entry) => entry.item);
 }
 
-export function isStaffRole(role?: string | null): boolean {
-  return getStaffPanelsForRole(role).length > 0;
+export function isStaffRole(role?: string | null, championshipId?: string | null): boolean {
+  return getStaffPanelsForRole(role, championshipId).length > 0;
 }
 
 export function portalAreaFromPathname(pathname: string): PortalArea {
@@ -46,7 +63,10 @@ export function portalAreaFromPathname(pathname: string): PortalArea {
 
 export function staffPanelsForContext(
   role: string | null | undefined,
-  currentArea: PortalArea
+  currentArea: PortalArea,
+  championshipId?: string | null
 ): StaffPanelItem[] {
-  return getStaffPanelsForRole(role).filter((panel) => !isCurrentPanel(panel, currentArea));
+  return getStaffPanelsForRole(role, championshipId).filter(
+    (panel) => !isCurrentPanel(panel, currentArea)
+  );
 }

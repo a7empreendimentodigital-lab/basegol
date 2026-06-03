@@ -1,9 +1,6 @@
 import { HomeRightSidebar } from "@/components/home/HomeRightSidebar";
 import { championshipPublicBase } from "@/lib/championship-public-nav";
-import {
-  getHomeSidebarData,
-  getHomeSidebarDataForChampionship,
-} from "@/services/home.service";
+import { getHomeSidebarDataForChampionship } from "@/services/home.service";
 import { getChampionshipPortalBase } from "@/services/championship-portal.service";
 import type { PublicBannerDto } from "@/services/banner.service";
 
@@ -19,7 +16,7 @@ export async function HomeRightSidebarDesktop({ rightBanner, championshipSlug }:
 
   const sidebarData = championship
     ? await getHomeSidebarDataForChampionship(championship.id, 4)
-    : await getHomeSidebarData(4);
+    : { categories: [], standingsByCategory: {}, scorersByCategory: {} };
 
   const tableHref = championshipSlug
     ? `${championshipPublicBase(championshipSlug)}/classificacao`

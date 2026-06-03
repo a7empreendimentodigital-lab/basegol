@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ChevronRight, LogOut, User } from "lucide-react";
-import { PublicRightSidebarLayout } from "@/components/layout/PublicRightSidebarLayout";
 import { publicListShell } from "@/lib/public-ui-classes";
 import { cn } from "@/lib/utils";
 
@@ -12,8 +11,7 @@ export const metadata = { title: "Configurações" };
 
 export default function ConfiguracoesPage() {
   return (
-    <PublicRightSidebarLayout>
-      <main className="mx-auto w-full max-w-lg space-y-4 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+    <main className="mx-auto w-full max-w-lg space-y-4 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         <div>
           <h1 className="font-display text-2xl tracking-wide text-foreground">Configurações</h1>
           <p className="mt-1 text-sm text-muted-foreground">Gerencie sua conta e preferências</p>
@@ -57,7 +55,6 @@ export default function ConfiguracoesPage() {
             <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground/60" aria-hidden />
           </Link>
         </nav>
-      </main>
-    </PublicRightSidebarLayout>
+    </main>
   );
 }
