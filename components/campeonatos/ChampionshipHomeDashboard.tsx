@@ -55,6 +55,7 @@ export async function ChampionshipHomeDashboard({
       <LiveMatchesSection
         matches={liveMatches}
         verTodosHref={`${base}/jogos?status=LIVE`}
+        championshipSlug={championshipSlug}
       />
 
       {todayMatchesAll.length > 0 ? (

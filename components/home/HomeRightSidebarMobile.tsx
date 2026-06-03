@@ -23,16 +23,16 @@ export function HomeRightSidebarMobile({ rightBanner, championshipSlug }: Props)
   const rootRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<SidebarPayload | null>(null);
   const [loading, setLoading] = useState(false);
-  const fetched = useRef(false);
 
   useEffect(() => {
     const el = rootRef.current;
-    if (!el || fetched.current) return;
+    if (!el) return;
+
+    let cancelled = false;
+    setData(null);
+    setLoading(true);
 
     const load = () => {
-      if (fetched.current) return;
-      fetched.current = true;
-      setLoading(true);
       const qs = championshipSlug
         ? `?championshipSlug=${encodeURIComponent(championshipSlug)}`
         : "";
@@ -42,14 +42,18 @@ export function HomeRightSidebarMobile({ rightBanner, championshipSlug }: Props)
           return parseApiResponse<SidebarPayload>(res);
         })
         .then((payload) => {
-          if (payload) setData(payload);
+          if (!cancelled && payload) setData(payload);
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
     };
 
     if (typeof IntersectionObserver === "undefined") {
       load();
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     const observer = new IntersectionObserver(
@@ -62,7 +66,10 @@ export function HomeRightSidebarMobile({ rightBanner, championshipSlug }: Props)
       { rootMargin: "200px" }
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
   }, [championshipSlug]);
 
   return (
@@ -77,6 +84,7 @@ export function HomeRightSidebarMobile({ rightBanner, championshipSlug }: Props)
         </div>
       ) : data ? (
         <HomeRightSidebar
+          key={championshipSlug ?? "global"}
           {...data}
           rightBanner={rightBanner}
           championshipSlug={championshipSlug}

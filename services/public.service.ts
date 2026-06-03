@@ -196,7 +196,25 @@ export async function getPublicAthleteBySlug(slug: string) {
   }
 }
 
-export async function listPublicMatches(status?: string | null) {
+export async function listPublicMatches(
+  status?: string | null,
+  championshipSlug?: string | null
+) {
+  if (championshipSlug) {
+    const { getChampionshipPortalBase } = await import(
+      "@/services/championship-portal.service"
+    );
+    const {
+      getLiveMatchesForChampionship,
+      getTodayMatchesForChampionship,
+    } = await import("@/services/match.service");
+    const championship = await getChampionshipPortalBase(championshipSlug);
+    if (!championship) return [];
+    if (status === "LIVE") {
+      return getLiveMatchesForChampionship(championship.id);
+    }
+    return getTodayMatchesForChampionship(championship.id);
+  }
   if (status === "LIVE") return getLiveMatches();
   return getTodayMatches();
 }

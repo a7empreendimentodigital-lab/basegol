@@ -40,7 +40,11 @@ export function CategoryPortalView({ data }: Props) {
 
       {liveMatches.length > 0 ? (
         <section>
-          <LiveMatchesSection matches={liveMatches} />
+          <LiveMatchesSection
+            matches={liveMatches}
+            verTodosHref={`${base}/jogos?status=LIVE`}
+            championshipSlug={championship.slug}
+          />
         </section>
       ) : null}
 

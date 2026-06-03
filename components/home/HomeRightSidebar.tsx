@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { HomeCategory } from "@/types/home";
@@ -65,6 +65,13 @@ export function HomeRightSidebar({
   tableHref = "/tabela",
 }: Props) {
   const [selectedId, setSelectedId] = useState(categories[0]?.id ?? "");
+
+  useEffect(() => {
+    const first = categories[0]?.id ?? "";
+    setSelectedId((prev) =>
+      categories.some((c) => c.id === prev) ? prev : first
+    );
+  }, [categories, championshipSlug]);
 
   const selected = useMemo(
     () => categories.find((c) => c.id === selectedId) ?? categories[0],

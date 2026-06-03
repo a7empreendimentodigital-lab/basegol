@@ -6,9 +6,11 @@ import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 export function LiveMatchesSection({
   matches,
   verTodosHref = "/jogos?status=LIVE",
+  championshipSlug,
 }: {
   matches: MatchWithTeams[];
   verTodosHref?: string;
+  championshipSlug?: string;
 }) {
   if (!matches.length) return null;
 
@@ -27,7 +29,11 @@ export function LiveMatchesSection({
         <HomeSectionLink href={verTodosHref}>Ver todos</HomeSectionLink>
       </div>
 
-      <LiveMatchesPoller initialMatches={matches} />
+      <LiveMatchesPoller
+        key={championshipSlug ?? "global"}
+        initialMatches={matches}
+        championshipSlug={championshipSlug}
+      />
     </section>
   );
 }

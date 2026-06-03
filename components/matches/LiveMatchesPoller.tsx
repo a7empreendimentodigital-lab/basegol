@@ -14,17 +14,31 @@ function fromApi(m: ApiMatch): MatchWithTeams {
   };
 }
 
-export function LiveMatchesPoller({ initialMatches }: { initialMatches: MatchWithTeams[] }) {
+type Props = {
+  initialMatches: MatchWithTeams[];
+  /** Quando definido, atualização em tempo real só deste campeonato. */
+  championshipSlug?: string;
+};
+
+export function LiveMatchesPoller({ initialMatches, championshipSlug }: Props) {
   const [matches, setMatches] = useState(initialMatches);
 
+  useEffect(() => {
+    setMatches(initialMatches);
+  }, [initialMatches, championshipSlug]);
+
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/matches?status=LIVE", { cache: "no-store" });
+    const params = new URLSearchParams({ status: "LIVE" });
+    if (championshipSlug) {
+      params.set("championshipSlug", championshipSlug);
+    }
+    const res = await fetch(`/api/matches?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) return;
     const data = await parseApiResponse<ApiMatch[]>(res);
     if (Array.isArray(data)) {
       setMatches(data.map(fromApi));
     }
-  }, []);
+  }, [championshipSlug]);
 
   useEffect(() => {
     const t = setInterval(() => void refresh(), 3000);

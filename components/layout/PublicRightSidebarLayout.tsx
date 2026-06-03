@@ -28,6 +28,7 @@ export async function PublicRightSidebarLayout({ children, championshipSlug }: P
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden xl:pr-[300px] 2xl:pr-[320px]">
           {children}
           <HomeRightSidebarMobile
+            key={championshipSlug ?? "global"}
             rightBanner={rightBanner}
             championshipSlug={championshipSlug}
           />
@@ -37,6 +38,7 @@ export async function PublicRightSidebarLayout({ children, championshipSlug }: P
           <div className="p-4">
             <Suspense fallback={<DesktopSidebarSkeleton />}>
               <HomeRightSidebarDesktop
+                key={championshipSlug ?? "global"}
                 rightBanner={rightBanner}
                 championshipSlug={championshipSlug}
               />
