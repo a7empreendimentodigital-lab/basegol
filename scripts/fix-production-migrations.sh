@@ -24,8 +24,13 @@ if [[ "$DATABASE_URL" != *"rlwy.net"* ]] && [[ "$DATABASE_URL" != *"railway"* ]]
   [[ "${ans,,}" == "y" ]] || exit 1
 fi
 
-echo "→ Resolvendo migration analytics (falha anterior)..."
-npx prisma migrate resolve --rolled-back "20260603120000_championship_sponsor_analytics" || true
+for migration in \
+  "20260603120000_championship_sponsor_analytics" \
+  "20260603140000_brand_portal_contact_social" \
+  "20260603000000_championship_members_sponsors"; do
+  echo "→ Resolvendo migration travada: $migration"
+  npx prisma migrate resolve --rolled-back "$migration" 2>/dev/null || true
+done
 
 echo "→ Aplicando migrations..."
 npx prisma migrate deploy

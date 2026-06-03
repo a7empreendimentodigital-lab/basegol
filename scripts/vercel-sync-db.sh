@@ -7,9 +7,17 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 0
 fi
 
-echo "[vercel-sync-db] Sincronizando banco..."
+echo "[vercel-sync-db] Sincronizando banco Railway..."
 
-npx prisma migrate resolve --rolled-back "20260603120000_championship_sponsor_analytics" 2>/dev/null || true
+FAILED_MIGRATIONS=(
+  "20260603120000_championship_sponsor_analytics"
+  "20260603140000_brand_portal_contact_social"
+  "20260603000000_championship_members_sponsors"
+)
+
+for migration in "${FAILED_MIGRATIONS[@]}"; do
+  npx prisma migrate resolve --rolled-back "$migration" 2>/dev/null || true
+done
 
 if npx prisma migrate deploy; then
   echo "[vercel-sync-db] migrate deploy OK"
