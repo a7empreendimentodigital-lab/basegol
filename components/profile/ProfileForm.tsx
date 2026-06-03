@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Loader2, Save } from "lucide-react";
 import { ProfileAvatarUpload } from "@/components/profile/ProfileAvatarUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ type ProfileData = {
 
 export function ProfileForm() {
   const router = useRouter();
-  const { update: updateSession } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -55,6 +55,17 @@ export function ProfileForm() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (session?.user?.role?.toUpperCase() === "ADMIN_CAMPEONATO") {
+      void updateSession();
+    }
+  }, [session?.user?.role, updateSession]);
+
+  const adminPanelHref =
+    session?.user?.role?.toUpperCase() === "ADMIN_CAMPEONATO" && session.user.championshipId
+      ? `/admin/campeonatos/${session.user.championshipId}`
+      : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -121,6 +132,15 @@ export function ProfileForm() {
         <p className="mt-1 text-sm text-muted-foreground">
           Atualize sua foto e dados pessoais. Perfil: {roleName}
         </p>
+        {adminPanelHref ? (
+          <Link
+            href={adminPanelHref}
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-selected/40 bg-selected/10 px-3 py-2 text-sm font-medium text-selected hover:bg-selected/20"
+          >
+            <LayoutDashboard className="h-4 w-4" aria-hidden />
+            Abrir painel do campeonato
+          </Link>
+        ) : null}
       </div>
 
       <form

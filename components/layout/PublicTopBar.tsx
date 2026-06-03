@@ -5,17 +5,26 @@ type Props = {
   userImage?: string | null;
   isLoggedIn?: boolean;
   userRole?: string | null;
+  userChampionshipId?: string | null;
   mobileLogoUrl?: string | null;
 };
 
 /** Header público — renderizado apenas quando o shell público está ativo. */
-export function PublicTopBar({ userName, userImage, isLoggedIn, userRole, mobileLogoUrl }: Props) {
+export function PublicTopBar({
+  userName,
+  userImage,
+  isLoggedIn,
+  userRole,
+  userChampionshipId,
+  mobileLogoUrl,
+}: Props) {
   return (
     <PublicHeader
       userName={userName}
       userImage={userImage}
       isLoggedIn={isLoggedIn}
       userRole={userRole}
+      userChampionshipId={userChampionshipId}
       mobileLogoUrl={mobileLogoUrl}
     />
   );

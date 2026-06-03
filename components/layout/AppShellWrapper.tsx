@@ -19,6 +19,7 @@ type Props = {
   userImage?: string | null;
   isLoggedIn?: boolean;
   userRole?: string | null;
+  userChampionshipId?: string | null;
   mobileLogoUrl?: string | null;
   systemName?: string;
 };
@@ -32,18 +33,25 @@ const PublicAppChrome = memo(function PublicAppChrome({
   userImage,
   isLoggedIn,
   userRole,
+  userChampionshipId,
   mobileLogoUrl,
   systemName = "BASEGOL",
 }: PublicChromeProps) {
   return (
     <>
-      <Sidebar leftBanner={leftSidebarBanner} isLoggedIn={isLoggedIn} userRole={userRole} />
+      <Sidebar
+        leftBanner={leftSidebarBanner}
+        isLoggedIn={isLoggedIn}
+        userRole={userRole}
+        userChampionshipId={userChampionshipId}
+      />
       <div className="flex min-h-screen flex-col pb-16 md:pb-0 md:pl-64 lg:pl-72">
         <PublicTopBar
           userName={userName}
           userImage={userImage}
           isLoggedIn={isLoggedIn}
           userRole={userRole}
+          userChampionshipId={userChampionshipId}
           mobileLogoUrl={mobileLogoUrl}
         />
         <div className="flex flex-1 flex-col w-full min-h-0">
@@ -64,6 +72,7 @@ export function AppShellWrapper({
   userImage,
   isLoggedIn,
   userRole,
+  userChampionshipId,
   mobileLogoUrl,
   systemName = "BASEGOL",
 }: Props) {
@@ -108,9 +117,14 @@ export function AppShellWrapper({
           userImage={userImage}
           isLoggedIn={isLoggedIn}
           userRole={userRole}
+          userChampionshipId={userChampionshipId}
           mobileLogoUrl={mobileLogoUrl}
         />
-        <StaffPortalBar userRole={userRole} currentArea="operador" />
+        <StaffPortalBar
+          userRole={userRole}
+          userChampionshipId={userChampionshipId}
+          currentArea="operador"
+        />
         <div className="flex flex-1 flex-col">
           {children}
           {footer}
@@ -126,6 +140,7 @@ export function AppShellWrapper({
       userImage={userImage}
       isLoggedIn={isLoggedIn}
       userRole={userRole}
+      userChampionshipId={userChampionshipId}
       mobileLogoUrl={mobileLogoUrl}
       systemName={systemName}
     >

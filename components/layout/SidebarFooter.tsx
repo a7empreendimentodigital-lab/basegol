@@ -61,12 +61,18 @@ export function SidebarFavorites({ isLoggedIn }: SidebarSessionProps) {
 export function SidebarFooterLinks({
   isLoggedIn,
   userRole,
+  userChampionshipId,
   onNavigate,
-}: SidebarSessionProps & { userRole?: string | null; onNavigate?: () => void }) {
+}: SidebarSessionProps & {
+  userRole?: string | null;
+  userChampionshipId?: string | null;
+  onNavigate?: () => void;
+}) {
   return (
     <div className="space-y-1">
       <StaffPanelNavLinks
         userRole={userRole}
+        userChampionshipId={userChampionshipId}
         currentArea="public"
         onNavigate={onNavigate}
         variant="sidebar"

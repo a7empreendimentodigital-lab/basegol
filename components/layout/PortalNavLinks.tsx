@@ -58,12 +58,14 @@ function StaffPanelLink({
 /** Links para painéis internos (site público). */
 export function StaffPanelNavLinks({
   userRole,
+  userChampionshipId,
   currentArea = "public",
   onNavigate,
   variant = "sidebar",
   className,
 }: {
   userRole?: string | null;
+  userChampionshipId?: string | null;
   currentArea?: PortalArea;
   onNavigate?: () => void;
   variant?: Variant;
@@ -71,8 +73,8 @@ export function StaffPanelNavLinks({
 }) {
   const panels =
     currentArea === "public"
-      ? getStaffPanelsForRole(userRole)
-      : staffPanelsForContext(userRole, currentArea);
+      ? getStaffPanelsForRole(userRole, userChampionshipId)
+      : staffPanelsForContext(userRole, currentArea, userChampionshipId);
 
   if (panels.length === 0) return null;
 
@@ -93,11 +95,13 @@ export function StaffPanelNavLinks({
 /** @deprecated Use StaffPanelNavLinks — mantido para imports antigos. */
 export function AdminPanelNavLink({
   userRole,
+  userChampionshipId,
   onNavigate,
   variant = "sidebar",
   className,
 }: {
   userRole?: string | null;
+  userChampionshipId?: string | null;
   onNavigate?: () => void;
   variant?: Variant;
   className?: string;
@@ -105,6 +109,7 @@ export function AdminPanelNavLink({
   return (
     <StaffPanelNavLinks
       userRole={userRole}
+      userChampionshipId={userChampionshipId}
       currentArea="public"
       onNavigate={onNavigate}
       variant={variant}
@@ -134,18 +139,20 @@ export function PublicSiteNavLink({
 /** Barra de troca entre site público e painéis do papel. */
 export function StaffPortalBar({
   userRole,
+  userChampionshipId,
   currentArea,
   onNavigate,
   variant = "bar",
 }: {
   userRole?: string | null;
+  userChampionshipId?: string | null;
   currentArea: PortalArea;
   onNavigate?: () => void;
   variant?: "bar" | "stacked";
 }) {
-  if (!isStaffRole(userRole)) return null;
+  if (!isStaffRole(userRole, userChampionshipId)) return null;
 
-  const panels = staffPanelsForContext(userRole, currentArea);
+  const panels = staffPanelsForContext(userRole, currentArea, userChampionshipId);
   const showPublic = currentArea !== "public";
 
   if (!showPublic && panels.length === 0) return null;
@@ -168,6 +175,7 @@ export function StaffPortalBar({
       ) : null}
       <StaffPanelNavLinks
         userRole={userRole}
+        userChampionshipId={userChampionshipId}
         currentArea={currentArea}
         onNavigate={onNavigate}
         variant={isStacked ? "admin" : "bar"}

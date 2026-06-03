@@ -14,9 +14,10 @@ type SidebarProps = {
   leftBanner?: PublicBannerDto | null;
   isLoggedIn?: boolean;
   userRole?: string | null;
+  userChampionshipId?: string | null;
 };
 
-export function Sidebar({ leftBanner, isLoggedIn, userRole }: SidebarProps) {
+export function Sidebar({ leftBanner, isLoggedIn, userRole, userChampionshipId }: SidebarProps) {
   const pathname = usePathname() ?? "/";
   const championshipSlug = parseChampionshipSlugFromPath(pathname);
   const logoHref = championshipSlug ? championshipPublicBase(championshipSlug) : "/";
@@ -62,7 +63,11 @@ export function Sidebar({ leftBanner, isLoggedIn, userRole }: SidebarProps) {
       ) : null}
 
       <div className="shrink-0 p-3 border-t border-line">
-        <SidebarFooterLinks isLoggedIn={isLoggedIn} userRole={userRole} />
+        <SidebarFooterLinks
+          isLoggedIn={isLoggedIn}
+          userRole={userRole}
+          userChampionshipId={userChampionshipId}
+        />
       </div>
     </aside>
   );
