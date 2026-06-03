@@ -25,7 +25,8 @@ export function HomeChampionshipPicker({
       (c) =>
         c.name.toLowerCase().includes(term) ||
         c.season.toLowerCase().includes(term) ||
-        c.slug.toLowerCase().includes(term)
+        c.slug.toLowerCase().includes(term) ||
+        (c.description?.toLowerCase().includes(term) ?? false)
     );
   }, [championships, query]);
 
