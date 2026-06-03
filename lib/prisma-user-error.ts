@@ -29,6 +29,13 @@ export function formatPrismaError(error: unknown): string {
     if (error.code === "P2003" || error.code === "P2014") {
       return "Este registro está vinculado a outros dados e não pode ser alterado assim.";
     }
+    if (error.code === "P2021") {
+      const table = String(error.meta?.table ?? "");
+      if (table.includes("championship_members")) {
+        return "Estrutura do banco incompleta (vínculo usuário-campeonato). Execute npx prisma migrate deploy no servidor.";
+      }
+      return "Estrutura do banco incompleta. Execute as migrations no servidor.";
+    }
   }
 
   if (error instanceof Error) {
@@ -43,7 +50,13 @@ export function formatPrismaError(error: unknown): string {
       return "Já existe outro clube cadastrado com este nome.";
     }
     if (msg.includes("Unique constraint failed")) {
+      if (msg.includes("users") && msg.includes("email")) {
+        return "Já existe um usuário com este e-mail.";
+      }
       return "Já existe outro registro com os mesmos dados.";
+    }
+    if (msg.includes("championship_members") && msg.includes("does not exist")) {
+      return "Estrutura do banco incompleta (vínculo usuário-campeonato). Execute npx prisma migrate deploy no servidor.";
     }
     if (!msg.toLowerCase().includes("prisma.") && !msg.includes("invocation")) {
       return msg;
