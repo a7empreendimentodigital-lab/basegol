@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 const VARIANTS: Record<string, string> = {
   ACTIVE: "bg-selected/20 text-white border-line",
   APPROVED: "bg-selected/20 text-white border-line",
-  LIVE: "bg-red-500/20 text-red-300 border-red-500/40 animate-pulse",
+  LIVE: "bg-red-600 text-white border-red-600",
+  HALFTIME: "bg-red-600 text-white border-red-600",
   PENDING: "bg-amber-500/15 text-amber-300 border-amber-500/30",
   PENDING_DOCS: "bg-amber-500/15 text-amber-300 border-amber-500/30",
   DRAFT: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30",

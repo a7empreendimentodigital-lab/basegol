@@ -90,7 +90,7 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
       className={cn(
         "overflow-hidden rounded-2xl border bg-graphite-light transition-shadow",
         isLive
-          ? "border-neon/50 shadow-[0_0_24px_-8px_rgba(34,197,94,0.35)]"
+          ? "border-red-600"
           : "border-line hover:border-line/80 hover:shadow-md"
       )}
     >
@@ -121,7 +121,7 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {isLive && match.minute != null ? (
-              <span className="text-xs font-semibold text-neon flex items-center gap-1 tabular-nums">
+              <span className="text-xs font-semibold text-red-500 flex items-center gap-1 tabular-nums">
                 <Radio className="h-3 w-3 animate-pulse" aria-hidden />
                 {match.minute}&apos;
               </span>
@@ -143,7 +143,7 @@ export function LiveMatchAdminCard({ match }: { match: LiveMatchAdminCardData })
           {!categoryName ? (
             <div className="flex items-center gap-2">
               {isLive && match.minute != null ? (
-                <span className="text-xs font-semibold text-neon flex items-center gap-1 tabular-nums">
+                <span className="text-xs font-semibold text-red-500 flex items-center gap-1 tabular-nums">
                   <Radio className="h-3 w-3 animate-pulse" aria-hidden />
                   {match.minute}&apos;
                 </span>

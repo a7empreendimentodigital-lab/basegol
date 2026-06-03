@@ -119,7 +119,7 @@ export default function AdminPlacarAoVivoPage() {
             >
               {f.label}
               {f.key === "live" && liveCount > 0 ? (
-                <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-neon text-[10px] font-bold text-background px-1">
+                <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white px-1">
                   {liveCount}
                 </span>
               ) : null}
