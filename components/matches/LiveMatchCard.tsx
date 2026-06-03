@@ -23,7 +23,7 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
     match.championshipName?.toUpperCase() ?? match.categoryName?.toUpperCase() ?? "CAMPEONATO";
 
   return (
-    <article className="flex w-[min(100%,300px)] shrink-0 flex-col gap-4 border-r border-line/60 pr-4 last:border-r-0">
+    <article className="flex w-full shrink-0 flex-col gap-4 rounded-xl border border-line/60 bg-graphite/25 p-4 sm:w-[min(100%,320px)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="flex items-center gap-1 truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
