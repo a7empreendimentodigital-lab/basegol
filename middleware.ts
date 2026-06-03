@@ -2,13 +2,25 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequestWithAuth } from "next-auth/middleware";
 import { toCanonicalUrl } from "@/lib/app-origin";
+import {
+  normalizePortalChampionshipSlug,
+  parseChampionshipSlugFromPath,
+  portalChampionshipCookieOptions,
+} from "@/lib/portal-championship-slug";
 import { canAccessRoute } from "@/lib/rbac";
 import { isClubPortalRoute } from "@/lib/public-routes";
 
 function nextWithPathname(req: NextRequestWithAuth) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", req.nextUrl.pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+  const slug = normalizePortalChampionshipSlug(
+    parseChampionshipSlugFromPath(req.nextUrl.pathname)
+  );
+  if (slug) {
+    res.cookies.set(portalChampionshipCookieOptions(slug));
+  }
+  return res;
 }
 
 export default withAuth(

@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   normalizePortalChampionshipSlug,
-  portalChampionshipCookieOptions,
   PORTAL_CHAMPIONSHIP_COOKIE,
 } from "@/lib/portal-championship-slug";
 
@@ -24,11 +23,4 @@ export async function getServerPortalChampionshipSlug(): Promise<string | null> 
     select: { slug: true },
   });
   return championship?.slug ?? null;
-}
-
-export async function persistServerPortalChampionshipSlug(slug: string) {
-  const normalized = normalizePortalChampionshipSlug(slug);
-  if (!normalized) return;
-  const store = await cookies();
-  store.set(portalChampionshipCookieOptions(normalized));
 }
