@@ -10,7 +10,6 @@ import {
 } from "@/lib/jogos-category-filter";
 import { championshipPublicBase } from "@/lib/championship-public-nav";
 import { getPublicSiteConfig } from "@/lib/site-config";
-import { getHomeBanners } from "@/services/banner.service";
 import {
   getHomeCategoryCirclesForChampionship,
 } from "@/services/home.service";
@@ -38,14 +37,12 @@ export async function ChampionshipHomeDashboard({
 }: Props) {
   const base = championshipPublicBase(championshipSlug);
 
-  const [liveMatches, todayMatchesAll, publicConfig, categoryCircles, homeBanners] =
-    await Promise.all([
-      getLiveMatchesForChampionship(championshipId),
-      getTodayMatchesForChampionship(championshipId),
-      getPublicSiteConfig(),
-      getHomeCategoryCirclesForChampionship(championshipId),
-      getHomeBanners(),
-    ]);
+  const [liveMatches, todayMatchesAll, publicConfig, categoryCircles] = await Promise.all([
+    getLiveMatchesForChampionship(championshipId),
+    getTodayMatchesForChampionship(championshipId),
+    getPublicSiteConfig(),
+    getHomeCategoryCirclesForChampionship(championshipId),
+  ]);
 
   const todayCategories = extractCategoriesFromMatches(todayMatchesAll);
   const activeTodayCategory = resolveActiveCategorySlug(categoriaParam, todayCategories);
@@ -61,10 +58,12 @@ export async function ChampionshipHomeDashboard({
   return (
     <main className="min-w-0 flex-1 space-y-6 overflow-x-hidden p-4 md:p-5 lg:p-6">
       <HeroBannerCarousel
-        slides={homeBanners.hero}
+        slides={[]}
         fallbackTitle={heroTitle}
         fallbackSubtitle={description ?? publicConfig.brand?.slogan ?? undefined}
-        fallbackBackgroundUrl={bannerUrl ?? publicConfig.brand?.homeHeroBackgroundUrl ?? null}
+        fallbackBackgroundUrl={bannerUrl ?? null}
+        fallbackCtaHref={`${base}/jogos`}
+        fallbackCtaLabel="Ver jogos"
       />
 
       <LiveMatchesSection

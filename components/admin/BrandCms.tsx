@@ -34,6 +34,11 @@ export function BrandCms() {
       splashScreenUrl: null,
       loginBackgroundUrl: null,
       homeHeroBackgroundUrl: null,
+      portalContactUrl: null,
+      portalContactLabel: "Contato",
+      socialInstagramUrl: null,
+      socialFacebookUrl: null,
+      socialYoutubeUrl: null,
     },
   });
 
@@ -56,6 +61,11 @@ export function BrandCms() {
             splashScreenUrl: row.splashScreenUrl,
             loginBackgroundUrl: row.loginBackgroundUrl,
             homeHeroBackgroundUrl: row.homeHeroBackgroundUrl,
+            portalContactUrl: row.portalContactUrl ?? null,
+            portalContactLabel: row.portalContactLabel ?? "Contato",
+            socialInstagramUrl: row.socialInstagramUrl ?? null,
+            socialFacebookUrl: row.socialFacebookUrl ?? null,
+            socialYoutubeUrl: row.socialYoutubeUrl ?? null,
           });
         }
       })
@@ -98,7 +108,7 @@ export function BrandCms() {
           <Input {...register("slogan")} />
         </FormField>
         <p className="text-xs text-muted-foreground -mt-2">
-          O logo mobile é usado no menu e rodapé das páginas Início, Sobre e Contato.
+          O logo mobile aparece no topo da página de escolha de campeonato.
         </p>
         <div className="grid gap-6 sm:grid-cols-2">
           <ImageUpload
@@ -142,10 +152,39 @@ export function BrandCms() {
             }
           />
           <p className="text-xs text-muted-foreground">
-            Usada como fundo em Início, Sobre e Contato. Recomendado: imagem escura (estádio), em
-            alta resolução.
+            Fundo da página de escolha de campeonato. Recomendado: imagem escura (estádio), em alta
+            resolução.
           </p>
         </div>
+
+        <div className="border-t border-line/60 pt-6 space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">Portal institucional</h3>
+          <p className="text-xs text-muted-foreground">
+            Menu da página de escolha de campeonato: um botão de contato (sem Início/Sobre/Contato) e
+            redes no rodapé.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Texto do botão de contato">
+              <Input {...register("portalContactLabel")} placeholder="Contato" />
+            </FormField>
+            <FormField label="Link do botão de contato">
+              <Input
+                {...register("portalContactUrl")}
+                placeholder="https://… ou /contato"
+              />
+            </FormField>
+            <FormField label="Instagram (URL)">
+              <Input {...register("socialInstagramUrl")} placeholder="https://instagram.com/…" />
+            </FormField>
+            <FormField label="Facebook (URL)">
+              <Input {...register("socialFacebookUrl")} placeholder="https://facebook.com/…" />
+            </FormField>
+            <FormField label="YouTube (URL)">
+              <Input {...register("socialYoutubeUrl")} placeholder="https://youtube.com/…" />
+            </FormField>
+          </div>
+        </div>
+
         <Button type="submit" disabled={saving}>
           {saving ? "Salvando..." : "Salvar personalização"}
         </Button>

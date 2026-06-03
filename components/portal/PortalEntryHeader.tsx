@@ -1,23 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { MobileBrandLogo } from "@/components/brand/MobileBrandLogo";
-import { PORTAL_INSTITUTIONAL_NAV } from "@/lib/portal-routes";
+import { isExternalPortalHref, portalContactHref } from "@/lib/portal-brand";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  activePath: string;
   mobileLogoUrl?: string | null;
   systemName?: string;
+  contactUrl?: string | null;
+  contactLabel?: string | null;
 };
 
 export function PortalEntryHeader({
-  activePath,
   mobileLogoUrl = null,
   systemName = "BASEGOL",
+  contactUrl = null,
+  contactLabel = "Contato",
 }: Props) {
-  const pathname = usePathname() ?? "/";
+  const href = portalContactHref(contactUrl);
+  const label = contactLabel?.trim() || "Contato";
+  const external = isExternalPortalHref(href);
 
   return (
     <header className="relative z-20 shrink-0 border-b border-white/5 bg-black">
@@ -30,34 +33,16 @@ export function PortalEntryHeader({
           imageClassName="h-10 sm:h-11"
         />
 
-        <nav
-          className="hidden items-center justify-end gap-6 sm:flex sm:gap-8 md:gap-10"
-          aria-label="Institucional"
+        <Link
+          href={href}
+          target={external ? "_blank" : undefined}
+          rel={external ? "noopener noreferrer" : undefined}
+          className={cn(
+            "inline-flex shrink-0 items-center justify-center rounded-lg border border-[#22c55e]/60 bg-[#22c55e]/10 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[#22c55e] transition-colors hover:bg-[#22c55e]/20 hover:text-[#4ade80]"
+          )}
         >
-          {PORTAL_INSTITUTIONAL_NAV.map((item) => {
-            const active = activePath === item.href || pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "relative pb-1 text-sm font-medium uppercase tracking-wide transition-colors",
-                  active
-                    ? "text-[#22c55e]"
-                    : "text-white hover:text-white/90"
-                )}
-              >
-                {item.label}
-                {active ? (
-                  <span
-                    className="absolute -bottom-px left-0 right-0 h-0.5 bg-[#22c55e]"
-                    aria-hidden
-                  />
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
+          {label}
+        </Link>
       </div>
     </header>
   );

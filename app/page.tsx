@@ -16,7 +16,7 @@ export default async function HomePage({
   const championships = await listPortalChampionships();
 
   return (
-    <PortalInstitutionalShell activePath="/">
+    <PortalInstitutionalShell>
       <HomeChampionshipPicker
         championships={championships.map((c) => ({
           slug: c.slug,

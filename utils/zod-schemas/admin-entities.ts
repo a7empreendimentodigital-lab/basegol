@@ -188,6 +188,15 @@ export const themeConfigSchema = z.object({
   borderColor: z.string().default("rgba(57,255,20,0.15)"),
 });
 
+const optionalExternalUrl = z
+  .string()
+  .optional()
+  .nullable()
+  .transform((v) => {
+    const t = v?.trim();
+    return t ? t : null;
+  });
+
 export const brandConfigSchema = z.object({
   systemName: z.string().min(2),
   slogan: z.string().optional(),
@@ -197,6 +206,11 @@ export const brandConfigSchema = z.object({
   splashScreenUrl: optionalImageUrlNullable,
   loginBackgroundUrl: optionalImageUrlNullable,
   homeHeroBackgroundUrl: optionalImageUrlNullable,
+  portalContactUrl: optionalExternalUrl,
+  portalContactLabel: z.string().max(40).optional().nullable(),
+  socialInstagramUrl: optionalExternalUrl,
+  socialFacebookUrl: optionalExternalUrl,
+  socialYoutubeUrl: optionalExternalUrl,
 });
 
 export const menuItemSchema = z.object({

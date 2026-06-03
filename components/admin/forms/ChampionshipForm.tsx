@@ -92,8 +92,23 @@ export function ChampionshipForm({ initial, onSuccess, onCancel }: AdminFormProp
         <Textarea {...register("description")} rows={3} />
       </FormField>
       <div className="grid gap-4 sm:grid-cols-2">
-        <ImageUpload label="Logo" category="championship" value={logoUrl} onChange={(v) => setValue("logoUrl", v)} />
-        <ImageUpload label="Banner / capa" category="banner" value={bannerUrl} onChange={(v) => setValue("bannerUrl", v)} />
+        <ImageUpload
+          label="Logo do campeonato"
+          category="championship"
+          value={logoUrl}
+          onChange={(v) => setValue("logoUrl", v)}
+        />
+        <div className="space-y-1">
+          <ImageUpload
+            label="Imagem principal da home"
+            category="championship"
+            value={bannerUrl}
+            onChange={(v) => setValue("bannerUrl", v)}
+          />
+          <p className="text-[11px] text-muted-foreground px-0.5">
+            Banner grande na página inicial deste campeonato (upload — não use URL manual).
+          </p>
+        </div>
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>
