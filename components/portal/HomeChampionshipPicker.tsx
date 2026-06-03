@@ -31,13 +31,13 @@ export function HomeChampionshipPicker({
   }, [championships, query]);
 
   return (
-    <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6 sm:py-12 lg:py-16">
-      <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-14 xl:gap-20">
-        <div className="text-left lg:w-[min(100%,22rem)] lg:shrink-0 xl:w-96">
+    <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-4 py-10 sm:px-6 sm:py-12">
+      <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14 xl:gap-20">
+        <div className="text-left lg:w-[min(100%,24rem)] lg:shrink-0 xl:w-[26rem]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#22c55e]">
             Futebol de base
           </p>
-          <h1 className="mt-3 font-display text-3xl leading-tight tracking-wide text-white sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
+          <h1 className="mt-3 font-display text-4xl uppercase leading-[1.05] tracking-wide text-white sm:text-5xl lg:text-6xl xl:text-[4.25rem]">
             Escolha um{" "}
             <span className="text-[#22c55e]">campeonato</span>
           </h1>

@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { Facebook, Instagram, Youtube } from "lucide-react";
-import { MobileBrandLogo } from "@/components/brand/MobileBrandLogo";
 
 type Props = {
-  mobileLogoUrl?: string | null;
   systemName?: string;
   slogan?: string;
 };
@@ -15,7 +13,6 @@ const SOCIAL = [
 ] as const;
 
 export function PortalEntryFooter({
-  mobileLogoUrl = null,
   systemName = "BASEGOL",
   slogan = "O futuro do futebol de base.",
 }: Props) {
@@ -24,15 +21,7 @@ export function PortalEntryFooter({
   return (
     <footer className="relative z-10 shrink-0 border-t border-white/10 bg-black/95 px-4 py-8 sm:px-6 sm:py-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <MobileBrandLogo
-            href="/"
-            src={mobileLogoUrl}
-            systemName={systemName}
-            imageClassName="h-9 sm:h-10"
-          />
-          <p className="max-w-md text-sm leading-relaxed text-neutral-400">{slogan}</p>
-        </div>
+        <p className="max-w-md text-sm leading-relaxed text-neutral-400">{slogan}</p>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 sm:justify-center">
           <span className="text-sm text-neutral-400">Siga nossas redes</span>

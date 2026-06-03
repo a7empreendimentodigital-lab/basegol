@@ -45,11 +45,7 @@ export function PortalInstitutionalShellClient({
 
       <div className="relative z-10 flex flex-1 flex-col">{children}</div>
 
-      <PortalEntryFooter
-        mobileLogoUrl={mobileLogoUrl}
-        systemName={systemName}
-        slogan={slogan}
-      />
+      <PortalEntryFooter systemName={systemName} slogan={slogan} />
     </div>
   );
 }

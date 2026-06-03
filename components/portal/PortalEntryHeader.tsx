@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { MobileBrandLogo } from "@/components/brand/MobileBrandLogo";
 import { PORTAL_INSTITUTIONAL_NAV } from "@/lib/portal-routes";
 import { cn } from "@/lib/utils";
@@ -19,7 +18,6 @@ export function PortalEntryHeader({
   systemName = "BASEGOL",
 }: Props) {
   const pathname = usePathname() ?? "/";
-  const router = useRouter();
 
   return (
     <header className="relative z-20 shrink-0 border-b border-white/5 bg-black">
@@ -43,7 +41,7 @@ export function PortalEntryHeader({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative pb-1 text-sm font-medium tracking-wide transition-colors",
+                  "relative pb-1 text-sm font-medium uppercase tracking-wide transition-colors",
                   active
                     ? "text-[#22c55e]"
                     : "text-white hover:text-white/90"
@@ -59,15 +57,6 @@ export function PortalEntryHeader({
               </Link>
             );
           })}
-
-          <button
-            type="button"
-            onClick={() => router.push("/busca")}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-white transition-opacity hover:opacity-80"
-            aria-label="Buscar"
-          >
-            <Search className="h-5 w-5 stroke-[1.5]" aria-hidden />
-          </button>
         </nav>
       </div>
     </header>
