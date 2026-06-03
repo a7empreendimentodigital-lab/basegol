@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack -p 3000 --hostname 0.0.0.0",
     "icons:generate": "node scripts/generate-pwa-icons.mjs",
-    "build": "prisma generate && prisma db push && npm run icons:generate && next build",
+    "build": "prisma generate && bash scripts/vercel-sync-db.sh && npm run icons:generate && next build",
+    "db:migrate:prod": "bash scripts/fix-production-migrations.sh",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
