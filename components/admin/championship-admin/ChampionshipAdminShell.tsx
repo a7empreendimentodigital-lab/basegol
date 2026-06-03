@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import {
   buildChampionshipAdminNav,
+  filterChampionshipAdminNavForRole,
   isChampionshipAdminNavActive,
 } from "@/lib/championship-admin-nav";
 import { cn } from "@/lib/utils";
@@ -24,11 +25,10 @@ export function ChampionshipAdminShell({
 }: Props) {
   const pathname = usePathname() ?? "";
   const isChampionshipOnlyAdmin = userRole === "ADMIN_CAMPEONATO";
-  const nav = buildChampionshipAdminNav(championshipId).filter((item) => {
-    if (!isChampionshipOnlyAdmin) return true;
-    if (item.segment === "importar" || item.segment === "importacao-log") return false;
-    return true;
-  });
+  const nav = filterChampionshipAdminNavForRole(
+    buildChampionshipAdminNav(championshipId),
+    userRole
+  );
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">

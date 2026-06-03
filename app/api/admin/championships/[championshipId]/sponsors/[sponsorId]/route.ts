@@ -1,5 +1,5 @@
 import { revalidatePublicContent } from "@/lib/revalidate-public-content";
-import { requireChampionshipScopedAdmin } from "@/lib/admin-auth";
+import { requireChampionshipSponsorAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { championshipSponsorUpdateSchema } from "@/utils/zod-schemas/championship-sponsor.schemas";
 import { fail, ok } from "@/utils/api-response";
@@ -15,7 +15,7 @@ function normalizeLink(link?: string | null) {
 export async function PATCH(req: Request, { params }: RouteCtx) {
   try {
     const { championshipId, sponsorId } = await params;
-    await requireChampionshipScopedAdmin(championshipId);
+    await requireChampionshipSponsorAdmin(championshipId);
     const existing = await prisma.championshipSponsor.findFirst({
       where: { id: sponsorId, championshipId },
     });
@@ -45,7 +45,7 @@ export async function PATCH(req: Request, { params }: RouteCtx) {
 export async function DELETE(_req: Request, { params }: RouteCtx) {
   try {
     const { championshipId, sponsorId } = await params;
-    await requireChampionshipScopedAdmin(championshipId);
+    await requireChampionshipSponsorAdmin(championshipId);
     const existing = await prisma.championshipSponsor.findFirst({
       where: { id: sponsorId, championshipId },
     });

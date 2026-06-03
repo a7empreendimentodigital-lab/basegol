@@ -12,7 +12,15 @@ async function main() {
     {
       slug: "ADMIN_LIGA",
       name: "Admin da Liga",
-      permissions: ["championship:*", "club:*", "match:*", "news:*", "standing:*", "user:read"],
+      permissions: [
+        "championship:*",
+        "club:*",
+        "match:*",
+        "news:*",
+        "standing:*",
+        "sponsor:*",
+        "user:read",
+      ],
     },
     {
       slug: "ADMIN_CAMPEONATO",

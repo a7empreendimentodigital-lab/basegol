@@ -18,6 +18,7 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     "match:*",
     "news:*",
     "standing:*",
+    "sponsor:*",
     "document:read",
     "user:read",
   ],
@@ -74,6 +75,12 @@ export function canAccessRoute(
 ): boolean {
   if (!isAppRole(role)) return false;
   if (pathname.startsWith("/admin")) {
+    if (pathname === "/admin/patrocinadores") {
+      return ["SUPER_ADMIN", "ADMIN_LIGA", "ADMIN_CAMPEONATO"].includes(role);
+    }
+    if (pathname.startsWith("/admin/patrocinadores/")) {
+      return ["SUPER_ADMIN", "ADMIN_LIGA"].includes(role);
+    }
     if (["SUPER_ADMIN", "ADMIN_LIGA"].includes(role)) return true;
     if (role === "ADMIN_CAMPEONATO") {
       const cid = options?.championshipId;

@@ -1,5 +1,5 @@
 import { revalidatePublicContent } from "@/lib/revalidate-public-content";
-import { requireChampionshipScopedAdmin } from "@/lib/admin-auth";
+import { requireChampionshipSponsorAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { listChampionshipSponsorsAdmin } from "@/services/championship-sponsor.service";
 import {
@@ -18,7 +18,7 @@ function normalizeLink(link?: string | null) {
 export async function GET(_req: Request, { params }: RouteCtx) {
   try {
     const { championshipId } = await params;
-    await requireChampionshipScopedAdmin(championshipId);
+    await requireChampionshipSponsorAdmin(championshipId);
     const items = await listChampionshipSponsorsAdmin(championshipId);
     return ok({ items });
   } catch (e) {
@@ -31,7 +31,7 @@ export async function GET(_req: Request, { params }: RouteCtx) {
 export async function POST(req: Request, { params }: RouteCtx) {
   try {
     const { championshipId } = await params;
-    await requireChampionshipScopedAdmin(championshipId);
+    await requireChampionshipSponsorAdmin(championshipId);
     const body = championshipSponsorCreateSchema.parse(await req.json());
     const created = await prisma.championshipSponsor.create({
       data: {

@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { isChampionshipSponsorManagerRole } from "@/lib/championship-sponsor-access";
 import {
   LayoutDashboard,
   Pencil,
@@ -44,4 +45,21 @@ export function isChampionshipAdminNavActive(pathname: string, item: Championshi
     return pathname === item.href;
   }
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+/** Oculta itens que o papel não pode acessar (ex.: operador não vê patrocinadores). */
+export function filterChampionshipAdminNavForRole(
+  items: ChampionshipAdminNavItem[],
+  role?: string | null
+): ChampionshipAdminNavItem[] {
+  const r = role?.toUpperCase() ?? "";
+  if (!isChampionshipSponsorManagerRole(r)) {
+    return items.filter((item) => item.segment !== "patrocinadores");
+  }
+  if (r === "ADMIN_CAMPEONATO") {
+    return items.filter(
+      (item) => item.segment !== "importar" && item.segment !== "importacao-log"
+    );
+  }
+  return items;
 }

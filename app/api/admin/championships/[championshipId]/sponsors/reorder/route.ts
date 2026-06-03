@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { revalidatePublicContent } from "@/lib/revalidate-public-content";
-import { requireChampionshipScopedAdmin } from "@/lib/admin-auth";
+import { requireChampionshipSponsorAdmin } from "@/lib/admin-auth";
 import { reorderChampionshipSponsors } from "@/services/championship-sponsor.service";
 import { fail, ok } from "@/utils/api-response";
 
@@ -13,7 +13,7 @@ const bodySchema = z.object({
 export async function PATCH(req: Request, { params }: RouteCtx) {
   try {
     const { championshipId } = await params;
-    await requireChampionshipScopedAdmin(championshipId);
+    await requireChampionshipSponsorAdmin(championshipId);
     const { orderedIds } = bodySchema.parse(await req.json());
     await reorderChampionshipSponsors(championshipId, orderedIds);
     revalidatePublicContent();

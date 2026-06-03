@@ -19,6 +19,20 @@ export async function listChampionshipSponsorsAdmin(championshipId: string) {
   });
 }
 
+export async function listAllChampionshipSponsorsForGlobalAdmin() {
+  return prisma.championshipSponsor.findMany({
+    orderBy: [
+      { championship: { name: "asc" } },
+      { placement: "asc" },
+      { order: "asc" },
+      { name: "asc" },
+    ],
+    include: {
+      championship: { select: { id: true, name: true, slug: true } },
+    },
+  });
+}
+
 export async function getActiveChampionshipSponsorsBySlug(
   slug: string,
   placement: ChampionshipSponsorPlacement

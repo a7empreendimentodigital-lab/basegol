@@ -6,6 +6,7 @@ import {
   requireChampionshipAccess,
   userHasChampionshipAccess,
 } from "@/lib/championship-access";
+import { isChampionshipSponsorManagerRole } from "@/lib/championship-sponsor-access";
 
 export type AdminContext = {
   user: Awaited<ReturnType<typeof getSessionUserOrThrow>>;
@@ -44,6 +45,16 @@ export async function requireGlobalAdmin() {
 
 export async function requireChampionshipScopedAdmin(championshipId: string) {
   const ctx = await getAdminContext();
+  if (ctx.isGlobalAdmin) return ctx;
+  if (!ctx.isChampionshipAdmin) throw new Error("FORBIDDEN");
+  await requireChampionshipAccess(ctx.user.id, ctx.role, championshipId);
+  return ctx;
+}
+
+/** Patrocinadores: Super/Admin Liga (qualquer campeonato) ou Admin do Campeonato (só o vinculado). */
+export async function requireChampionshipSponsorAdmin(championshipId: string) {
+  const ctx = await getAdminContext();
+  if (!isChampionshipSponsorManagerRole(ctx.role)) throw new Error("FORBIDDEN");
   if (ctx.isGlobalAdmin) return ctx;
   if (!ctx.isChampionshipAdmin) throw new Error("FORBIDDEN");
   await requireChampionshipAccess(ctx.user.id, ctx.role, championshipId);

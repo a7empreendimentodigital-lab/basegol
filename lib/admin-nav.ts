@@ -18,6 +18,7 @@ import {
   ScrollText,
   Bell,
   FileUp,
+  Handshake,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -64,6 +65,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: "/admin/noticias", label: "Notícias", icon: Newspaper },
       { href: "/admin/banners", label: "Banners e patrocínios", icon: Image },
+      { href: "/admin/patrocinadores", label: "Patrocinadores", icon: Handshake },
       { href: "/admin/midia", label: "Mídia", icon: ImagePlus },
       { href: "/admin/menu", label: "Menu público", icon: Menu },
     ],

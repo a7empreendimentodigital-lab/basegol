@@ -16,7 +16,8 @@ export const ROLE_SECTOR_INFO: Record<AppRole, RoleSectorInfo> = {
   ADMIN_LIGA: {
     label: "Admin da Liga",
     loginPath: "/admin",
-    description: "Gestão operacional da competição (sem exclusão de super admin).",
+    description:
+      "Gestão operacional da competição — inclui patrocinadores de todos os campeonatos.",
   },
   ADMIN_CAMPEONATO: {
     label: "Admin do Campeonato",
@@ -31,7 +32,8 @@ export const ROLE_SECTOR_INFO: Record<AppRole, RoleSectorInfo> = {
   OPERADOR_DE_PARTIDA: {
     label: "Operador de jogo",
     loginPath: "/operador",
-    description: "Placar ao vivo apenas nas partidas atribuídas a este usuário.",
+    description:
+      "Placar ao vivo nas partidas atribuídas — sem acesso a patrocinadores ou administração.",
   },
   SCOUT: {
     label: "Scout",
