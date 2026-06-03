@@ -46,16 +46,12 @@ export function Sidebar({ leftBanner, isLoggedIn, userRole }: SidebarProps) {
       </nav>
 
       {championshipSlug ? (
-        <div className="shrink-0 p-3 border-t border-line">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
-            Patrocinadores
-          </p>
-          <ChampionshipSponsorsBlock
-            championshipSlug={championshipSlug}
-            placement="SIDEBAR_LEFT"
-            variant="left"
-          />
-        </div>
+        <ChampionshipSponsorsBlock
+          championshipSlug={championshipSlug}
+          placement="SIDEBAR_LEFT"
+          variant="left"
+          className="shrink-0 p-3 border-t border-line"
+        />
       ) : leftBanner ? (
         <div className="shrink-0 p-3 border-t border-line">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">

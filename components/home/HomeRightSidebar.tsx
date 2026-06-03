@@ -32,18 +32,12 @@ function RightSidebarPatrocinio({
 }) {
   if (championshipSlug) {
     return (
-      <div className="py-4 xl:mt-2 xl:border-t xl:border-line xl:pt-4">
-        <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Patrocinadores
-        </p>
-        <div className="max-md:px-4 sm:max-md:px-5 md:px-0">
-          <ChampionshipSponsorsBlock
-            championshipSlug={championshipSlug}
-            placement="SIDEBAR_RIGHT"
-            variant="right"
-          />
-        </div>
-      </div>
+      <ChampionshipSponsorsBlock
+        championshipSlug={championshipSlug}
+        placement="SIDEBAR_RIGHT"
+        variant="right"
+        className="py-4 xl:mt-2 xl:border-t xl:border-line xl:pt-4 max-md:px-4 sm:max-md:px-5 md:px-0"
+      />
     );
   }
 

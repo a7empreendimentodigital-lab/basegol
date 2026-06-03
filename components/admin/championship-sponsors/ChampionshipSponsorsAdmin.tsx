@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChampionshipSponsorPlacement } from "@prisma/client";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/shared/AdminPageHeader";
 import { AdminListRowActions } from "@/components/admin/shared/AdminListRowActions";
 import { StatusBadge } from "@/components/admin/shared/StatusBadge";
@@ -14,6 +15,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { parseApiResponse } from "@/lib/api-client";
+import { sponsorCtr } from "@/lib/championship-sponsor-analytics";
 import { CHAMPIONSHIP_SPONSOR_PLACEMENT_LABELS } from "@/lib/championship-sponsor-labels";
 
 type SponsorRow = {
@@ -24,6 +26,10 @@ type SponsorRow = {
   placement: ChampionshipSponsorPlacement;
   order: number;
   isActive: boolean;
+  impressionCount: number;
+  clickCount: number;
+  lastImpressionAt: string | null;
+  lastClickAt: string | null;
 };
 
 type FormState = {
@@ -44,6 +50,21 @@ const emptyForm = (): FormState => ({
   isActive: true,
 });
 
+function formatMetricDate(iso: string | null) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
+
 export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: string }) {
   const { toast } = useToast();
   const [items, setItems] = useState<SponsorRow[]>([]);
@@ -52,6 +73,7 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
   const [editing, setEditing] = useState<SponsorRow | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   const base = `/api/admin/championships/${championshipId}/sponsors`;
 
@@ -71,6 +93,17 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const sortedItems = useMemo(
+    () =>
+      [...items].sort(
+        (a, b) =>
+          a.placement.localeCompare(b.placement) ||
+          a.order - b.order ||
+          a.name.localeCompare(b.name)
+      ),
+    [items]
+  );
 
   function openCreate() {
     setEditing(null);
@@ -153,11 +186,37 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
     }
   }
 
+  async function reorderPlacement(placement: ChampionshipSponsorPlacement, moveId: string, dir: -1 | 1) {
+    const group = sortedItems.filter((r) => r.placement === placement);
+    const idx = group.findIndex((r) => r.id === moveId);
+    const swapIdx = idx + dir;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= group.length) return;
+
+    const next = [...group];
+    [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+    const orderedIds = next.map((r) => r.id);
+
+    setReordering(true);
+    try {
+      const res = await fetch(`${base}/reorder`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds }),
+      });
+      if (!res.ok) throw new Error();
+      await load();
+    } catch {
+      toast({ title: "Erro ao reordenar", variant: "error" });
+    } finally {
+      setReordering(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Patrocinadores do campeonato"
-        description="Exibidos na área pública deste campeonato (barra lateral esquerda e direita). Não aparecem em outros campeonatos."
+        description="Exibidos na área pública deste campeonato (barra lateral esquerda e direita), com rotação automática. Não aparecem em outros campeonatos."
         onNew={openCreate}
         newLabel="Novo patrocinador"
       />
@@ -170,36 +229,72 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
         </p>
       ) : (
         <ul className="divide-y divide-line rounded-lg border border-line overflow-hidden">
-          {items.map((row) => (
-            <li
-              key={row.id}
-              className="flex flex-wrap items-center gap-3 bg-graphite/20 px-4 py-3 sm:grid sm:grid-cols-[auto_1fr_8rem_5rem_auto] sm:items-center"
-            >
-              <Thumb src={row.logoUrl ?? ""} alt={row.name} />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-foreground">{row.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {CHAMPIONSHIP_SPONSOR_PLACEMENT_LABELS[row.placement]} · Ordem {row.order}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void toggleActive(row)}
-                className="text-left"
+          {sortedItems.map((row, _i, arr) => {
+            const placementGroup = arr.filter((r) => r.placement === row.placement);
+            const idxInPlacement = placementGroup.findIndex((r) => r.id === row.id);
+            const ctr = sponsorCtr(row.impressionCount, row.clickCount);
+
+            return (
+              <li
+                key={row.id}
+                className="flex flex-wrap items-center gap-3 bg-graphite/20 px-4 py-3 sm:grid sm:grid-cols-[auto_1fr_7rem_5rem_auto] sm:items-center"
               >
-                <StatusBadge
-                  status={row.isActive ? "ACTIVE" : "INACTIVE"}
-                  label={row.isActive ? "Ativo" : "Inativo"}
+                <Thumb src={row.logoUrl ?? ""} alt={row.name} />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground">{row.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {CHAMPIONSHIP_SPONSOR_PLACEMENT_LABELS[row.placement]} · Ordem {row.order}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/80 mt-1">
+                    Exibições {row.impressionCount} · Cliques {row.clickCount} · CTR {ctr}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Última exibição: {formatMetricDate(row.lastImpressionAt)}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={reordering || idxInPlacement === 0}
+                    aria-label={`Subir ${row.name}`}
+                    onClick={() => void reorderPlacement(row.placement, row.id, -1)}
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={reordering || idxInPlacement >= placementGroup.length - 1}
+                    aria-label={`Descer ${row.name}`}
+                    onClick={() => void reorderPlacement(row.placement, row.id, 1)}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void toggleActive(row)}
+                  className="text-left"
+                >
+                  <StatusBadge
+                    status={row.isActive ? "ACTIVE" : "INACTIVE"}
+                    label={row.isActive ? "Ativo" : "Inativo"}
+                  />
+                </button>
+                <AdminListRowActions
+                  onEdit={() => openEdit(row)}
+                  onDelete={() => void handleDelete(row)}
+                  editLabel={`Editar ${row.name}`}
+                  deleteLabel={`Excluir ${row.name}`}
                 />
-              </button>
-              <AdminListRowActions
-                onEdit={() => openEdit(row)}
-                onDelete={() => void handleDelete(row)}
-                editLabel={`Editar ${row.name}`}
-                deleteLabel={`Excluir ${row.name}`}
-              />
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
 
@@ -218,7 +313,7 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
               />
             </div>
             <div>
-              <Label htmlFor="sp-logo">URL do logo</Label>
+              <Label htmlFor="sp-logo">Imagem / banner (URL)</Label>
               <Input
                 id="sp-logo"
                 value={form.logoUrl}
@@ -227,7 +322,7 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
               />
             </div>
             <div>
-              <Label htmlFor="sp-link">Link (opcional)</Label>
+              <Label htmlFor="sp-link">Link de destino (opcional)</Label>
               <Input
                 id="sp-link"
                 value={form.linkUrl}
@@ -236,7 +331,7 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
               />
             </div>
             <div>
-              <Label htmlFor="sp-placement">Posição</Label>
+              <Label htmlFor="sp-placement">Posição na área pública</Label>
               <Select
                 id="sp-placement"
                 value={form.placement}
@@ -260,7 +355,7 @@ export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: 
               </Select>
             </div>
             <div>
-              <Label htmlFor="sp-order">Ordem</Label>
+              <Label htmlFor="sp-order">Ordem de exibição</Label>
               <Input
                 id="sp-order"
                 type="number"
