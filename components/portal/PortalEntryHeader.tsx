@@ -38,7 +38,7 @@ export function PortalEntryHeader({
           target={external ? "_blank" : undefined}
           rel={external ? "noopener noreferrer" : undefined}
           className={cn(
-            "inline-flex shrink-0 items-center justify-center rounded-lg border border-[#22c55e]/60 bg-[#22c55e]/10 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[#22c55e] transition-colors hover:bg-[#22c55e]/20 hover:text-[#4ade80]"
+            "inline-flex shrink-0 items-center justify-center rounded-lg border-0 bg-[#22c55e] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-[#16a34a]"
           )}
         >
           {label}

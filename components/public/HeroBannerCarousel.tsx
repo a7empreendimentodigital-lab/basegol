@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { normalizeImageSrc } from "@/lib/image-url";
 import { useCallback, useEffect, useState } from "react";
@@ -14,8 +13,6 @@ type HeroBannerCarouselProps = {
   fallbackTitle?: string;
   fallbackSubtitle?: string;
   fallbackBackgroundUrl?: string | null;
-  fallbackCtaHref?: string;
-  fallbackCtaLabel?: string;
 };
 
 const ROTATE_MS = 6000;
@@ -28,8 +25,6 @@ export function HeroBannerCarousel({
   fallbackTitle,
   fallbackSubtitle,
   fallbackBackgroundUrl,
-  fallbackCtaHref = "/campeonatos",
-  fallbackCtaLabel = "Conheça as ligas",
 }: HeroBannerCarouselProps) {
   const [index, setIndex] = useState(0);
   const count = slides.length;
@@ -53,8 +48,7 @@ export function HeroBannerCarousel({
   if (count === 0) {
     const bg = normalizeImageSrc(fallbackBackgroundUrl);
     const hasText = Boolean(fallbackTitle || fallbackSubtitle);
-    const hasCta = Boolean(fallbackCtaLabel?.trim());
-    const hasOverlay = hasText || hasCta;
+    const hasOverlay = hasText;
 
     if (!bg && !hasOverlay) return null;
 
@@ -97,15 +91,6 @@ export function HeroBannerCarousel({
               >
                 {fallbackSubtitle}
               </p>
-            ) : null}
-            {hasCta ? (
-              <Link
-                href={fallbackCtaHref}
-                className="mt-5 inline-flex w-fit items-center gap-1 rounded-lg bg-selected px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-              >
-                {fallbackCtaLabel}
-                <ChevronRight className="h-4 w-4" />
-              </Link>
             ) : null}
           </div>
         ) : null}
