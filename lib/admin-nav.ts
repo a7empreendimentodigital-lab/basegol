@@ -50,7 +50,7 @@ function buildGlobalAdminNav(): AdminNavGroup[] {
       items: [
         { href: "/admin/campeonatos", label: "Campeonatos", icon: Trophy },
         { href: "/admin/placar-ao-vivo", label: "Placar ao vivo", icon: ActivitySquare },
-        { href: "/admin/patrocinadores", label: "Patrocinadores (global)", icon: Handshake },
+        { href: "/admin/patrocinadores", label: "Patrocinadores", icon: Handshake },
         { href: "/admin/usuarios", label: "Usuários", icon: Users },
         { href: "/admin/permissoes", label: "Permissões", icon: KeyRound },
       ],

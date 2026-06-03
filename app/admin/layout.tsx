@@ -1,5 +1,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  isLegacyChampionshipAdminPath,
+  legacyChampionshipAdminRedirect,
+} from "@/lib/admin-legacy-routes";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminMobileHeader } from "@/components/admin/AdminMobileHeader";
 import { authOptions } from "@/lib/auth";
@@ -15,6 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const userRole = session?.user?.role ?? null;
   const pathname = headerList.get("x-pathname") ?? "";
   const championshipId = session?.user?.championshipId;
+
+  if (isLegacyChampionshipAdminPath(pathname)) {
+    redirect(legacyChampionshipAdminRedirect(championshipId));
+  }
 
   if (
     userRole?.toUpperCase() === "ADMIN_CAMPEONATO" &&
