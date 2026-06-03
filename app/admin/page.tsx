@@ -9,7 +9,6 @@ import {
   Users,
   Activity,
   ArrowRight,
-  Radio,
   LayoutGrid,
 } from "lucide-react";
 import { parseApiResponse } from "@/lib/api-client";
@@ -107,16 +106,13 @@ export default function AdminDashboardPage() {
       {(stats?.liveMatches ?? 0) > 0 ? (
         <Link
           href="/admin/placar-ao-vivo"
-          className="flex items-center justify-between gap-3 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3.5 transition-colors hover:bg-red-500/15"
+          className="flex items-center justify-between gap-3 rounded-xl bg-red-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
         >
-          <span className="flex items-center gap-2 text-sm font-semibold text-red-300">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-400" />
-            </span>
+          <span className="flex items-center gap-2.5">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-white" aria-hidden />
             {stats!.liveMatches} partida{stats!.liveMatches === 1 ? "" : "s"} ao vivo agora
           </span>
-          <ArrowRight className="h-4 w-4 shrink-0 text-red-300" aria-hidden />
+          <ArrowRight className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
         </Link>
       ) : null}
 
@@ -130,9 +126,9 @@ export default function AdminDashboardPage() {
               key={label}
               href={href}
               className={cn(
-                "group relative overflow-hidden rounded-2xl border border-line bg-graphite-light p-3.5 sm:p-4 transition-all",
-                "hover:border-neon/30 hover:bg-graphite active:scale-[0.98]",
-                highlight && "col-span-2 sm:col-span-1 border-red-500/35 bg-red-500/[0.06] hover:border-red-500/50"
+                "group relative overflow-hidden rounded-xl border border-line bg-graphite-light p-3.5 sm:p-4 transition-colors",
+                "hover:bg-graphite active:scale-[0.99]",
+                highlight && "col-span-2 sm:col-span-1"
               )}
             >
               {loading ? (
@@ -147,14 +143,15 @@ export default function AdminDashboardPage() {
                     <div
                       className={cn(
                         "rounded-lg p-2",
-                        highlight ? "bg-red-500/15 text-red-400" : "bg-neon/10 text-neon"
+                        highlight
+                          ? "bg-red-600 text-white"
+                          : "bg-pitch text-muted-foreground"
                       )}
                     >
                       <Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
                     </div>
                     {highlight ? (
-                      <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase text-red-400">
-                        <Radio className="h-2.5 w-2.5" />
+                      <span className="rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
                         Live
                       </span>
                     ) : null}
@@ -163,7 +160,7 @@ export default function AdminDashboardPage() {
                     {value ?? "—"}
                   </p>
                   <p className="mt-1 text-xs sm:text-sm font-medium text-foreground">{label}</p>
-                  <p className="mt-1.5 text-[10px] sm:text-xs text-muted-foreground group-hover:text-neon flex items-center gap-1 transition-colors">
+                  <p className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground transition-colors group-hover:text-foreground sm:text-xs">
                     {hint}
                     <ArrowRight className="h-3 w-3 opacity-60 group-hover:opacity-100" aria-hidden />
                   </p>
@@ -175,11 +172,11 @@ export default function AdminDashboardPage() {
       </section>
 
       <section
-        className="rounded-2xl border border-line bg-graphite-light p-4 sm:p-6"
+        className="rounded-xl border border-line bg-graphite-light p-4 sm:p-6"
         aria-labelledby="dashboard-quick"
       >
         <div className="flex items-center gap-2 mb-4">
-          <LayoutGrid className="h-4 w-4 text-neon shrink-0" aria-hidden />
+          <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <h2 id="dashboard-quick" className="text-sm font-semibold text-foreground">
             Ações rápidas
           </h2>
@@ -192,7 +189,7 @@ export default function AdminDashboardPage() {
               className={cn(
                 "flex items-center justify-between gap-2 rounded-xl border px-3 py-3 text-sm font-medium transition-colors min-h-[3rem]",
                 action.primary
-                  ? "border-neon/40 bg-neon/10 text-foreground hover:bg-neon/15 col-span-2 sm:col-span-1"
+                  ? "col-span-2 border-red-600 bg-red-600 text-white hover:bg-red-700 sm:col-span-1"
                   : "border-line bg-pitch/40 text-foreground hover:bg-graphite"
               )}
             >
