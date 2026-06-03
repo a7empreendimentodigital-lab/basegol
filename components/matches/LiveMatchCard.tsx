@@ -23,7 +23,7 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
     match.championshipName?.toUpperCase() ?? match.categoryName?.toUpperCase() ?? "CAMPEONATO";
 
   return (
-    <article className="flex w-[min(100%,300px)] shrink-0 flex-col gap-4 border-r border-line/60 pr-4 last:border-r-0">
+    <article className="flex w-full shrink-0 flex-col gap-4 rounded-xl border border-[#a1a1aa1f] bg-graphite/25 p-4 sm:w-[min(100%,320px)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="flex items-center gap-1 truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -35,7 +35,7 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
           </p>
         </div>
         <div className="shrink-0 text-right">
-          <LiveMatchClockDisplay match={match} size="sm" />
+          <LiveMatchClockDisplay match={match} size="sm" className="items-end" />
         </div>
       </div>
 
@@ -74,7 +74,7 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
 
       <Link
         href={`/jogos/${match.id}`}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-graphite py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-foreground hover:text-background"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#a1a1aa1f] bg-graphite py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-foreground hover:text-background"
       >
         <Play className="h-4 w-4 fill-current" aria-hidden />
         Assistir ao vivo

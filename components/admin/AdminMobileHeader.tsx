@@ -13,9 +13,15 @@ type Props = {
   mobileLogoUrl?: string | null;
   systemName?: string;
   userRole?: string | null;
+  championshipId?: string | null;
 };
 
-export function AdminMobileHeader({ mobileLogoUrl, systemName = "BASEGOL", userRole }: Props) {
+export function AdminMobileHeader({
+  mobileLogoUrl,
+  systemName = "BASEGOL",
+  userRole,
+  championshipId,
+}: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "/";
   const skipPathClose = useRef(true);
@@ -102,7 +108,11 @@ export function AdminMobileHeader({ mobileLogoUrl, systemName = "BASEGOL", userR
               </button>
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
-              <AdminNavList onNavigate={close} />
+              <AdminNavList
+                onNavigate={close}
+                userRole={userRole}
+                championshipId={championshipId}
+              />
             </div>
             <StaffPortalBar
               userRole={userRole}

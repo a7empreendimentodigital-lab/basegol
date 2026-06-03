@@ -16,7 +16,13 @@ export const ROLE_SECTOR_INFO: Record<AppRole, RoleSectorInfo> = {
   ADMIN_LIGA: {
     label: "Admin da Liga",
     loginPath: "/admin",
-    description: "Gestão operacional da competição (sem exclusão de super admin).",
+    description:
+      "Gestão operacional da competição — inclui patrocinadores de todos os campeonatos.",
+  },
+  ADMIN_CAMPEONATO: {
+    label: "Admin do Campeonato",
+    loginPath: "/admin",
+    description: "Gestão de um campeonato — clubes, jogos, categorias e patrocinadores.",
   },
   CLUBE: {
     label: "Clube",
@@ -26,7 +32,8 @@ export const ROLE_SECTOR_INFO: Record<AppRole, RoleSectorInfo> = {
   OPERADOR_DE_PARTIDA: {
     label: "Operador de jogo",
     loginPath: "/operador",
-    description: "Placar ao vivo apenas nas partidas atribuídas a este usuário.",
+    description:
+      "Placar ao vivo nas partidas atribuídas — sem acesso a patrocinadores ou administração.",
   },
   SCOUT: {
     label: "Scout",
@@ -43,6 +50,7 @@ export const ROLE_SECTOR_INFO: Record<AppRole, RoleSectorInfo> = {
 /** Papéis que o admin pode criar manualmente (visitante = cadastro público). */
 export const ADMIN_CREATABLE_ROLE_SLUGS = [
   "ADMIN_LIGA",
+  "ADMIN_CAMPEONATO",
   "CLUBE",
   "OPERADOR_DE_PARTIDA",
   "SCOUT",
@@ -56,7 +64,10 @@ export function rolesCreatableBy(actorRole: string): AdminCreatableRole[] {
     return [...ADMIN_CREATABLE_ROLE_SLUGS];
   }
   if (actor === "ADMIN_LIGA") {
-    return [...ADMIN_CREATABLE_ROLE_SLUGS];
+    return ADMIN_CREATABLE_ROLE_SLUGS.filter((r) => r !== "ADMIN_LIGA");
+  }
+  if (actor === "ADMIN_CAMPEONATO") {
+    return ["OPERADOR_DE_PARTIDA"];
   }
   return [];
 }

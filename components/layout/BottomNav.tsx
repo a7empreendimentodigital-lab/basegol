@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  buildChampionshipBottomNav,
+  isChampionshipPublicNavActive,
+  parseChampionshipSlugFromPath,
+} from "@/lib/championship-public-nav";
 import { PUBLIC_BOTTOM_NAV, isPublicNavActive } from "@/lib/public-nav";
 import { isPublicAppRoute } from "@/lib/public-routes";
 
@@ -13,14 +18,21 @@ export function BottomNav() {
     return null;
   }
 
+  const championshipSlug = parseChampionshipSlugFromPath(pathname);
+  const navItems = championshipSlug
+    ? buildChampionshipBottomNav(championshipSlug)
+    : PUBLIC_BOTTOM_NAV;
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-line bg-pitch/95 backdrop-blur-xl md:hidden pb-safe"
       suppressHydrationWarning
     >
       <div className="flex h-14 items-center justify-around px-1 max-w-lg mx-auto">
-        {PUBLIC_BOTTOM_NAV.map(({ href, label, icon: Icon }) => {
-          const active = isPublicNavActive(pathname, href);
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const active = championshipSlug
+            ? isChampionshipPublicNavActive(pathname, href, championshipSlug)
+            : isPublicNavActive(pathname, href);
           return (
             <Link
               key={href}

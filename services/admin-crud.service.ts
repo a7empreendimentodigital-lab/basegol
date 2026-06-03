@@ -48,7 +48,13 @@ export async function listClubsAdmin(page: number, pageSize: number, q?: string)
 export async function listMatchesAdmin(
   page: number,
   pageSize: number,
-  filters?: { categoryId?: string; clubId?: string; roundNumber?: number; q?: string }
+  filters?: {
+    categoryId?: string;
+    clubId?: string;
+    roundNumber?: number;
+    championshipId?: string;
+    q?: string;
+  }
 ) {
   const skip = (page - 1) * pageSize;
 
@@ -69,6 +75,14 @@ export async function listMatchesAdmin(
     : {};
 
   const where = {
+    ...(filters?.championshipId
+      ? {
+          OR: [
+            { championshipId: filters.championshipId },
+            { group: { category: { championshipId: filters.championshipId } } },
+          ],
+        }
+      : {}),
     ...(filters?.categoryId ? { group: { categoryId: filters.categoryId } } : {}),
     ...(filters?.roundNumber != null ? { round: filters.roundNumber } : {}),
     ...(filters?.clubId && filters?.q

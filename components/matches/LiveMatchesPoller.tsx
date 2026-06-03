@@ -34,7 +34,7 @@ export function LiveMatchesPoller({ initialMatches }: { initialMatches: MatchWit
   if (!matches.length) return null;
 
   return (
-    <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 scrollbar-hide">
+    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 sm:overflow-x-auto sm:pb-1 scrollbar-hide">
       {matches.map((m) => (
         <LiveMatchCard key={m.id} match={m} />
       ))}

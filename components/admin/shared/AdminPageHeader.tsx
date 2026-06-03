@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -6,9 +7,17 @@ type Props = {
   description?: string;
   onNew?: () => void;
   newLabel?: string;
+  /** Botões extras no cabeçalho (ex.: seletor + novo). */
+  action?: ReactNode;
 };
 
-export function AdminPageHeader({ title, description, onNew, newLabel = "Novo" }: Props) {
+export function AdminPageHeader({
+  title,
+  description,
+  onNew,
+  newLabel = "Novo",
+  action,
+}: Props) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-4 mb-8 pb-6 border-b border-line">
       <div className="space-y-1 min-w-0">
@@ -20,12 +29,12 @@ export function AdminPageHeader({ title, description, onNew, newLabel = "Novo" }
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{description}</p>
         )}
       </div>
-      {onNew && (
+      {action ?? (onNew ? (
         <Button onClick={onNew} className="gap-2 shrink-0">
           <Plus className="h-4 w-4" />
           {newLabel}
         </Button>
-      )}
+      ) : null)}
     </div>
   );
 }

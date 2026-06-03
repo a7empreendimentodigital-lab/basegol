@@ -10,6 +10,7 @@ import { HomeTopScorersCard, type TopScorerRow } from "@/components/home/HomeTop
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 import type { StandingRowDisplay } from "@/types";
 import { SidebarAdBanner } from "@/components/public/SidebarAdBanner";
+import { ChampionshipSponsorsBlock } from "@/components/public/ChampionshipSponsorsBlock";
 import type { PublicBannerDto } from "@/services/banner.service";
 
 type Props = {
@@ -17,13 +18,29 @@ type Props = {
   standingsByCategory: Record<string, StandingRowDisplay[]>;
   scorersByCategory: Record<string, TopScorerRow[]>;
   rightBanner?: PublicBannerDto | null;
+  championshipSlug?: string;
+  competitionsLink?: string;
+  tableHref?: string;
 };
 
 function RightSidebarPatrocinio({
   rightBanner,
+  championshipSlug,
 }: {
   rightBanner?: PublicBannerDto | null;
+  championshipSlug?: string;
 }) {
+  if (championshipSlug) {
+    return (
+      <ChampionshipSponsorsBlock
+        championshipSlug={championshipSlug}
+        placement="SIDEBAR_RIGHT"
+        variant="right"
+        className="py-4 xl:mt-2 xl:border-t xl:border-line xl:pt-4 max-md:px-4 sm:max-md:px-5 md:px-0"
+      />
+    );
+  }
+
   if (!rightBanner?.imageUrl) return null;
 
   return (
@@ -43,6 +60,9 @@ export function HomeRightSidebar({
   standingsByCategory,
   scorersByCategory,
   rightBanner,
+  championshipSlug,
+  competitionsLink = "/campeonatos",
+  tableHref = "/tabela",
 }: Props) {
   const [selectedId, setSelectedId] = useState(categories[0]?.id ?? "");
 
@@ -57,7 +77,10 @@ export function HomeRightSidebar({
         <p className="py-4 text-sm text-muted-foreground">
           Nenhuma competição ativa no momento.
         </p>
-        <RightSidebarPatrocinio rightBanner={rightBanner} />
+        <RightSidebarPatrocinio
+          rightBanner={rightBanner}
+          championshipSlug={championshipSlug}
+        />
       </div>
     );
   }
@@ -73,7 +96,7 @@ export function HomeRightSidebar({
             <Trophy className="h-4 w-4 text-muted-foreground" aria-hidden />
             Competições
           </h2>
-          <HomeSectionLink href="/campeonatos">Ver todas</HomeSectionLink>
+          <HomeSectionLink href={competitionsLink}>Ver todas</HomeSectionLink>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {categories.map((cat) => {
@@ -97,7 +120,7 @@ export function HomeRightSidebar({
           title="Tabela"
           categoryLabel={selected?.label}
           tableLinkLabel="Classificação geral"
-          tableHref="/tabelas"
+          tableHref={tableHref}
           rows={standings}
           layout="sidebar"
         />
@@ -112,7 +135,10 @@ export function HomeRightSidebar({
         />
       )}
 
-      <RightSidebarPatrocinio rightBanner={rightBanner} />
+      <RightSidebarPatrocinio
+        rightBanner={rightBanner}
+        championshipSlug={championshipSlug}
+      />
     </div>
   );
 }

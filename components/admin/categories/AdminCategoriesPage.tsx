@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type ComponentProps } from "react";
 import { Layers } from "lucide-react";
 import { Thumb } from "@/components/admin/shared/AdminDataTable";
 import { AdminGroupedListPage } from "@/components/admin/shared/AdminGroupedListPage";
@@ -48,20 +48,43 @@ function CategoryListRow({
   );
 }
 
-export function AdminCategoriesPage() {
+type PageProps = { championshipId?: string };
+
+function CategoryFormForChampionship({
+  championshipId,
+  ...props
+}: ComponentProps<typeof CategoryForm> & { championshipId?: string }) {
+  const mergedInitial = championshipId
+    ? { ...(props.initial ?? {}), championshipId }
+    : props.initial;
+  return <CategoryForm {...props} initial={mergedInitial} />;
+}
+
+export function AdminCategoriesPage({ championshipId }: PageProps = {}) {
   const buildGroups = useCallback(
-    (items: Row[]) =>
-      groupItemsByKey(items, (r) => r.championship?.name ?? "Sem campeonato", {
+    (items: Row[]) => {
+      if (championshipId) {
+        return [{ key: "all", label: "Categorias", items }];
+      }
+      return groupItemsByKey(items, (r) => r.championship?.name ?? "Sem campeonato", {
         sortItems: (a, b) => a.name.localeCompare(b.name, "pt-BR"),
-      }),
-    []
+      });
+    },
+    [championshipId]
   );
+
+  const Form = championshipId
+    ? (props: ComponentProps<typeof CategoryForm>) => (
+        <CategoryFormForChampionship {...props} championshipId={championshipId} />
+      )
+    : CategoryForm;
 
   return (
     <AdminGroupedListPage<Row>
       entity="categories"
-      title="Categorias"
+      title={championshipId ? "Categorias do campeonato" : "Categorias"}
       description="Faixas etárias e divisões dentro de cada campeonato."
+      extraParams={championshipId ? { championshipId } : undefined}
       searchPlaceholder="Buscar categoria..."
       emptyMessage="Nenhuma categoria encontrada."
       filterAriaLabel="Filtrar por campeonato"
@@ -69,7 +92,7 @@ export function AdminCategoriesPage() {
       countLabel={(n) => `${n} ${n === 1 ? "categoria" : "categorias"}`}
       dialogTitles={{ new: "Nova categoria", edit: "Editar categoria" }}
       deleteConfirm={(r) => `Excluir a categoria "${r.name}"? Esta ação não pode ser desfeita.`}
-      FormComponent={CategoryForm}
+      FormComponent={Form}
       buildGroups={buildGroups}
       renderDesktopHeader={() => (
         <div className="hidden sm:grid sm:grid-cols-[auto_1fr_6rem_auto] sm:gap-4 sm:items-center px-4 py-2 bg-secondary/30 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">

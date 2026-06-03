@@ -1,6 +1,7 @@
 export const APP_ROLES = [
   "SUPER_ADMIN",
   "ADMIN_LIGA",
+  "ADMIN_CAMPEONATO",
   "CLUBE",
   "OPERADOR_DE_PARTIDA",
   "SCOUT",
@@ -17,8 +18,18 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     "match:*",
     "news:*",
     "standing:*",
+    "sponsor:*",
     "document:read",
     "user:read",
+  ],
+  ADMIN_CAMPEONATO: [
+    "championship:scoped:*",
+    "club:*",
+    "match:*",
+    "news:*",
+    "standing:*",
+    "sponsor:scoped:*",
+    "user:scoped:read",
   ],
   CLUBE: [
     "club:own:*",
@@ -57,10 +68,32 @@ export function hasPermission(role: string, permission: string): boolean {
 
 import { isClubPortalRoute } from "@/lib/public-routes";
 
-export function canAccessRoute(role: string, pathname: string): boolean {
+export function canAccessRoute(
+  role: string,
+  pathname: string,
+  options?: { championshipId?: string | null }
+): boolean {
   if (!isAppRole(role)) return false;
   if (pathname.startsWith("/admin")) {
-    return ["SUPER_ADMIN", "ADMIN_LIGA"].includes(role);
+    if (pathname === "/admin/patrocinadores") {
+      return ["SUPER_ADMIN", "ADMIN_LIGA", "ADMIN_CAMPEONATO"].includes(role);
+    }
+    if (pathname.startsWith("/admin/patrocinadores/")) {
+      return ["SUPER_ADMIN", "ADMIN_LIGA"].includes(role);
+    }
+    if (["SUPER_ADMIN", "ADMIN_LIGA"].includes(role)) return true;
+    if (role === "ADMIN_CAMPEONATO") {
+      const cid = options?.championshipId;
+      if (!cid) {
+        return (
+          pathname === "/admin" ||
+          pathname === "/admin/campeonatos" ||
+          pathname.startsWith("/admin/campeonatos/")
+        );
+      }
+      return pathname.startsWith(`/admin/campeonatos/${cid}`);
+    }
+    return false;
   }
   if (isClubPortalRoute(pathname)) {
     return ["SUPER_ADMIN", "CLUBE", "ADMIN_LIGA"].includes(role);

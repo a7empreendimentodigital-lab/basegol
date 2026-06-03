@@ -9,6 +9,7 @@ import { InstallPwaPrompt } from "@/components/pwa/InstallPwaPrompt";
 import { StaffPortalBar } from "@/components/layout/PortalNavLinks";
 import { SiteFooterClient } from "@/components/layout/SiteFooterClient";
 import { isAuthRoute, isPublicAppRoute } from "@/lib/public-routes";
+import { isPortalEntryRoute } from "@/lib/portal-routes";
 import type { PublicBannerDto } from "@/services/banner.service";
 
 type Props = {
@@ -80,6 +81,10 @@ export function AppShellWrapper({
 
   if (pathname.startsWith("/admin")) {
     return <>{children}</>;
+  }
+
+  if (isPortalEntryRoute(pathname)) {
+    return <div className="min-h-screen bg-pitch">{children}</div>;
   }
 
   const showPublicChrome = isPublicAppRoute(pathname);

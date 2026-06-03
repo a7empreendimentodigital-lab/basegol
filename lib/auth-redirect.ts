@@ -7,6 +7,8 @@ export function redirectPathForRole(role?: string, mustChangePassword?: boolean)
     case "SUPER_ADMIN":
     case "ADMIN_LIGA":
       return "/admin";
+    case "ADMIN_CAMPEONATO":
+      return "/admin";
     case "CLUBE":
       return "/clube";
     case "OPERADOR_DE_PARTIDA":
@@ -31,8 +33,12 @@ export function resolvePostLoginPath({
   mustChangePassword,
   callbackUrl,
   origin,
-}: ResolvePostLoginInput): string {
-  const defaultPath = redirectPathForRole(role, mustChangePassword);
+  championshipId,
+}: ResolvePostLoginInput & { championshipId?: string | null }): string {
+  let defaultPath = redirectPathForRole(role, mustChangePassword);
+  if (role?.toUpperCase() === "ADMIN_CAMPEONATO" && championshipId && !mustChangePassword) {
+    defaultPath = `/admin/campeonatos/${championshipId}`;
+  }
 
   const canonicalOrigin = getCanonicalOrigin(origin);
   const callbackPath = normalizeCallbackPath(callbackUrl, origin);

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import { canAssignRole } from "@/lib/role-access";
-import { syncUserClubLink, syncUserOperatorMatches } from "@/lib/user-admin";
+import { syncUserClubLink, syncUserChampionshipMembership, syncUserOperatorMatches } from "@/lib/user-admin";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/utils/api-response";
 import { userUpdateSchema } from "@/utils/zod-schemas/user.schemas";
@@ -46,6 +46,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     if (parsed.assignedMatchIds !== undefined || parsed.roleSlug) {
       await syncUserOperatorMatches(id, effectiveRole, parsed.assignedMatchIds, sessionUser.id);
+    }
+
+    if (parsed.championshipId !== undefined || parsed.roleSlug) {
+      await syncUserChampionshipMembership(
+        id,
+        effectiveRole,
+        parsed.championshipId ?? null
+      );
     }
 
     return ok(updated);

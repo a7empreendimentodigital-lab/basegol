@@ -79,38 +79,68 @@ export function LiveMatchClockDisplay({ match, size = "sm", className }: Props) 
 
   if (!built.showCountdown) {
     return (
-      <span className={cn("font-medium text-red-400", isLarge ? "text-base" : "text-sm", className)}>
+      <span
+        className={cn(
+          "font-medium text-white",
+          isLarge ? "text-base" : "text-sm",
+          className
+        )}
+      >
         {lines.primary}
       </span>
     );
   }
 
   return (
-    <div className={cn("flex flex-col items-center gap-1 tabular-nums", className)}>
-      <span
+    <div
+      className={cn(
+        "flex flex-col gap-0.5 tabular-nums",
+        isLarge ? "items-center text-center" : "items-end",
+        className
+      )}
+    >
+      <div
         className={cn(
-          "font-semibold uppercase tracking-wider text-red-400/90",
-          isLarge ? "text-sm" : "text-xs"
+          "flex items-center gap-1.5",
+          isLarge ? "justify-center" : "justify-end"
         )}
       >
-        {lines.periodLabel}
-      </span>
+        <span
+          className="h-2 w-2 shrink-0 rounded-full bg-[#4ade80]"
+          aria-hidden
+        />
+        <span
+          className={cn(
+            "font-semibold uppercase tracking-wider text-[#4ade80]",
+            isLarge ? "text-sm" : "text-xs"
+          )}
+        >
+          {lines.periodLabel}
+        </span>
+      </div>
       <span
         className={cn(
-          "font-mono font-bold text-red-400",
-          isLarge ? "text-4xl sm:text-5xl" : "text-lg sm:text-xl"
+          "font-mono font-bold text-white",
+          isLarge ? "text-4xl sm:text-5xl" : "text-xl sm:text-2xl"
         )}
         aria-label={`Tempo restante no período: ${formatElapsedClock(built.remainingSeconds)}`}
       >
         {lines.primary}
       </span>
       {lines.secondary ? (
-        <span className={cn("text-muted-foreground", isLarge ? "text-sm" : "text-[11px]")}>
+        <span
+          className={cn(
+            "text-neutral-500",
+            isLarge ? "text-sm" : "text-[11px]"
+          )}
+        >
           {lines.secondary}
         </span>
       ) : null}
       {built.isPaused ? (
-        <span className="text-[10px] font-medium text-amber-400/90">Cronômetro pausado</span>
+        <span className="text-[10px] font-medium text-amber-400/90">
+          Cronômetro pausado
+        </span>
       ) : null}
     </div>
   );

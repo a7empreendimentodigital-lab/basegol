@@ -1,4 +1,4 @@
-import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
+import { ensureAdminCrud } from "@/lib/admin-api-guard";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
@@ -42,11 +42,39 @@ const allowed = [
   "notifications",
 ] as const;
 
-async function ensureAdmin() {
-  const user = await getSessionUserOrThrow();
-  const role = user.role.slug.toUpperCase();
-  if (!hasRole(role, ["SUPER_ADMIN", "ADMIN_LIGA"])) {
-    throw new Error("FORBIDDEN");
+async function verifyScopedRecord(
+  entity: string,
+  id: string,
+  ctx: Awaited<ReturnType<typeof ensureAdminCrud>>
+) {
+  if (!ctx.isChampionshipAdmin || !ctx.championshipIds?.length) return;
+  const allowed = ctx.championshipIds;
+  if (entity === "championships") {
+    if (!allowed.includes(id)) throw new Error("FORBIDDEN");
+    return;
+  }
+  if (entity === "categories") {
+    const row = await prisma.category.findUnique({ where: { id }, select: { championshipId: true } });
+    if (!row || !allowed.includes(row.championshipId)) throw new Error("FORBIDDEN");
+    return;
+  }
+  if (entity === "matches") {
+    const row = await prisma.match.findFirst({
+      where: {
+        id,
+        OR: [
+          { championshipId: { in: allowed } },
+          { group: { category: { championshipId: { in: allowed } } } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (!row) throw new Error("FORBIDDEN");
+    return;
+  }
+  if (entity === "news") {
+    const row = await prisma.news.findUnique({ where: { id }, select: { championshipId: true } });
+    if (!row?.championshipId || !allowed.includes(row.championshipId)) throw new Error("FORBIDDEN");
   }
 }
 
@@ -83,11 +111,12 @@ export async function PATCH(
   { params }: { params: Promise<{ entity: string; id: string }> }
 ) {
   try {
-    await ensureAdmin();
     const { entity, id } = await params;
     if (!allowed.includes(entity as (typeof allowed)[number])) {
       return fail("Entidade inválida", 404);
     }
+    const adminCtx = await ensureAdminCrud(entity, null);
+    await verifyScopedRecord(entity, id, adminCtx);
     const schema = ENTITY_SCHEMAS[entity];
     if (!schema) return fail("Schema não configurado", 400);
     const raw = await req.json();
@@ -170,10 +199,14 @@ export async function DELETE(
   { params }: { params: Promise<{ entity: string; id: string }> }
 ) {
   try {
-    await ensureAdmin();
     const { entity, id } = await params;
     if (!allowed.includes(entity as (typeof allowed)[number])) {
       return fail("Entidade inválida", 404);
+    }
+    const adminCtx = await ensureAdminCrud(entity, null);
+    await verifyScopedRecord(entity, id, adminCtx);
+    if (entity === "championships" && adminCtx.isChampionshipAdmin) {
+      return fail("Admin do campeonato não pode excluir o campeonato", 403);
     }
     if (entity === "championships") await prisma.championship.delete({ where: { id } });
     else if (entity === "categories") await prisma.category.delete({ where: { id } });

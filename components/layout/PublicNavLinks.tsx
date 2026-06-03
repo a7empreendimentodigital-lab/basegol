@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import {
+  buildChampionshipPublicNav,
+  isChampionshipPublicNavActive,
+  parseChampionshipSlugFromPath,
+} from "@/lib/championship-public-nav";
 import { PUBLIC_MAIN_NAV, isPublicNavActive } from "@/lib/public-nav";
 
 type Props = {
@@ -18,14 +23,20 @@ export function PublicNavLinks({
   variant = "sidebar",
 }: Props) {
   const isDrawer = variant === "drawer";
+  const championshipSlug = parseChampionshipSlugFromPath(pathname);
+  const navItems = championshipSlug
+    ? buildChampionshipPublicNav(championshipSlug)
+    : PUBLIC_MAIN_NAV;
 
   return (
     <nav
       className={cn(isDrawer ? "flex flex-col gap-1" : "space-y-0.5", className)}
       aria-label="Navegação principal"
     >
-      {PUBLIC_MAIN_NAV.map(({ href, label, icon: Icon }) => {
-        const active = isPublicNavActive(pathname, href);
+      {navItems.map(({ href, label, icon: Icon }) => {
+        const active = championshipSlug
+          ? isChampionshipPublicNavActive(pathname, href, championshipSlug)
+          : isPublicNavActive(pathname, href);
         return (
           <Link
             key={href}

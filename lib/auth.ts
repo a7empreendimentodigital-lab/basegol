@@ -1,6 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { authenticateCredentials } from "@/lib/auth-credentials";
+import { getPrimaryChampionshipIdForUser } from "@/lib/championship-access";
 
 const secret = process.env.NEXTAUTH_SECRET;
 
@@ -61,18 +62,27 @@ export const authOptions: NextAuthOptions = {
         token.name = user.name ?? undefined;
         token.picture = user.image ?? undefined;
       }
-      if (trigger === "update" && token.id) {
+      const syncFromDb = async (userId: string) => {
         const { prisma } = await import("@/lib/prisma");
         const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
+          where: { id: userId },
           include: { role: true },
         });
-        if (dbUser) {
-          token.mustChangePassword = dbUser.mustChangePassword;
-          token.role = dbUser.role.slug.toUpperCase();
-          token.name = dbUser.name ?? undefined;
-          token.picture = dbUser.image ?? undefined;
-        }
+        if (!dbUser) return;
+        const roleSlug = dbUser.role.slug.toUpperCase();
+        token.mustChangePassword = dbUser.mustChangePassword;
+        token.role = roleSlug;
+        token.name = dbUser.name ?? undefined;
+        token.picture = dbUser.image ?? undefined;
+        token.championshipId = await getPrimaryChampionshipIdForUser(dbUser.id, roleSlug);
+      };
+
+      if (user?.id) {
+        await syncFromDb(user.id);
+      } else if (trigger === "update" && token.id) {
+        await syncFromDb(token.id as string);
+      } else if (token.id && token.role === "ADMIN_CAMPEONATO" && !token.championshipId) {
+        await syncFromDb(token.id as string);
       }
       return token;
     },
@@ -81,6 +91,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.mustChangePassword = Boolean(token.mustChangePassword);
+        session.user.championshipId = (token.championshipId as string | null) ?? null;
         if (token.name) session.user.name = token.name as string;
         if (token.picture) session.user.image = token.picture as string;
       }
