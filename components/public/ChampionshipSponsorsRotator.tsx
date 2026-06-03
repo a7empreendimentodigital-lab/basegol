@@ -10,7 +10,7 @@ import {
 } from "@/lib/sponsor-rotation";
 import { cn } from "@/lib/utils";
 
-const ROTATION_MS = 3000;
+const ROTATION_MS = 6000;
 const FADE_MS = 500;
 
 export type RotatorSponsor = {

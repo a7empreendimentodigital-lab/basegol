@@ -20,7 +20,7 @@ type Props = {
 
 /**
  * Área de patrocínio do campeonato: oculta totalmente se não houver cadastros ativos.
- * Rotação automática (1 por vez, 3s, fade) no componente interno.
+ * Rotação automática (1 por vez, 6s, fade) no componente interno.
  */
 export function ChampionshipSponsorsBlock({
   championshipSlug,
