@@ -1,20 +1,24 @@
 import Link from "next/link";
 import { Facebook, Instagram, Youtube } from "lucide-react";
+import type { PortalSocialLink } from "@/lib/portal-brand";
+import { isExternalPortalHref } from "@/lib/portal-brand";
 
 type Props = {
   systemName?: string;
   slogan?: string;
+  socialLinks?: PortalSocialLink[];
 };
 
-const SOCIAL = [
-  { label: "Instagram", href: "#", Icon: Instagram },
-  { label: "Facebook", href: "#", Icon: Facebook },
-  { label: "YouTube", href: "#", Icon: Youtube },
-] as const;
+const SOCIAL_ICONS: Record<string, typeof Instagram> = {
+  Instagram,
+  Facebook,
+  YouTube: Youtube,
+};
 
 export function PortalEntryFooter({
   systemName = "BASEGOL",
   slogan = "O futuro do futebol de base.",
+  socialLinks = [],
 }: Props) {
   const year = new Date().getFullYear();
 
@@ -23,21 +27,29 @@ export function PortalEntryFooter({
       <div className="mx-auto flex max-w-7xl flex-col gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="max-w-md text-sm leading-relaxed text-neutral-400">{slogan}</p>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 sm:justify-center">
-          <span className="text-sm text-neutral-400">Siga nossas redes</span>
-          <div className="flex items-center gap-2.5">
-            {SOCIAL.map(({ label, href, Icon }) => (
-              <Link
-                key={label}
-                href={href}
-                aria-label={label}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-600 text-neutral-300 transition-colors hover:border-neutral-400 hover:text-white sm:h-9 sm:w-9"
-              >
-                <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden />
-              </Link>
-            ))}
+        {socialLinks.length > 0 ? (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 sm:justify-center">
+            <span className="text-sm text-neutral-400">Siga nossas redes</span>
+            <div className="flex items-center gap-2.5">
+              {socialLinks.map(({ label, href }) => {
+                const Icon = SOCIAL_ICONS[label] ?? Instagram;
+                const external = isExternalPortalHref(href);
+                return (
+                  <Link
+                    key={label}
+                    href={href}
+                    target={external ? "_blank" : undefined}
+                    rel={external ? "noopener noreferrer" : undefined}
+                    aria-label={label}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-600 text-neutral-300 transition-colors hover:border-neutral-400 hover:text-white sm:h-9 sm:w-9"
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <p className="border-t border-white/10 pt-6 text-center text-xs leading-relaxed text-neutral-500 sm:border-0 sm:pt-0 sm:text-right sm:text-sm sm:whitespace-nowrap">
           © {year} {systemName}. Todos os direitos reservados.

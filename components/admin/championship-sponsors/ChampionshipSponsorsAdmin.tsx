@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/admin/shared/ImageUpload";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { parseApiResponse } from "@/lib/api-client";
@@ -222,7 +223,7 @@ export function ChampionshipSponsorsAdmin({
     <div className="space-y-6">
       <AdminPageHeader
         title="Patrocinadores do campeonato"
-        description="Exibidos na área pública deste campeonato (barra lateral esquerda e direita), com rotação automática. Não aparecem em outros campeonatos."
+        description="Exibidos na área pública deste campeonato (barra lateral esquerda e direita), com rotação automática. A imagem principal da home do campeonato é configurada em Editar campeonato."
         onNew={openCreate}
         newLabel="Novo patrocinador"
       />
@@ -318,15 +319,12 @@ export function ChampionshipSponsorsAdmin({
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               />
             </div>
-            <div>
-              <Label htmlFor="sp-logo">Imagem / banner (URL)</Label>
-              <Input
-                id="sp-logo"
-                value={form.logoUrl}
-                onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value }))}
-                placeholder="https://…"
-              />
-            </div>
+            <ImageUpload
+              label="Imagem / banner"
+              category="sponsor"
+              value={form.logoUrl || null}
+              onChange={(url) => setForm((f) => ({ ...f, logoUrl: url ?? "" }))}
+            />
             <div>
               <Label htmlFor="sp-link">Link de destino (opcional)</Label>
               <Input

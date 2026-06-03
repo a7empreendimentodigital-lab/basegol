@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function ContatoPage() {
   return (
-    <PortalInstitutionalShell activePath="/contato">
+    <PortalInstitutionalShell>
       <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
           <div>

@@ -14,6 +14,8 @@ type HeroBannerCarouselProps = {
   fallbackTitle?: string;
   fallbackSubtitle?: string;
   fallbackBackgroundUrl?: string | null;
+  fallbackCtaHref?: string;
+  fallbackCtaLabel?: string;
 };
 
 const ROTATE_MS = 6000;
@@ -26,6 +28,8 @@ export function HeroBannerCarousel({
   fallbackTitle,
   fallbackSubtitle,
   fallbackBackgroundUrl,
+  fallbackCtaHref = "/campeonatos",
+  fallbackCtaLabel = "Conheça as ligas",
 }: HeroBannerCarouselProps) {
   const [index, setIndex] = useState(0);
   const count = slides.length;
@@ -96,10 +100,10 @@ export function HeroBannerCarousel({
               </p>
             ) : null}
             <Link
-              href="/campeonatos"
+              href={fallbackCtaHref}
               className="mt-5 inline-flex w-fit items-center gap-1 rounded-lg bg-selected px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             >
-              Conheça as ligas
+              {fallbackCtaLabel}
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>

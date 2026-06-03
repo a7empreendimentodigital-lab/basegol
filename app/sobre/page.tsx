@@ -16,7 +16,7 @@ const VALUES = [
 
 export default function SobrePage() {
   return (
-    <PortalInstitutionalShell activePath="/sobre">
+    <PortalInstitutionalShell>
       <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
         <section className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>

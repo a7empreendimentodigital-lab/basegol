@@ -994,6 +994,11 @@ model BrandConfig {
   splashScreenUrl  String?
   loginBackgroundUrl String?
   homeHeroBackgroundUrl String?
+  portalContactUrl    String?
+  portalContactLabel  String?  @default("Contato")
+  socialInstagramUrl  String?
+  socialFacebookUrl   String?
+  socialYoutubeUrl    String?
   updatedBy        String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

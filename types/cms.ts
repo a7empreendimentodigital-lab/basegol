@@ -21,4 +21,9 @@ export type BrandConfigDTO = {
   splashScreenUrl?: string | null;
   loginBackgroundUrl?: string | null;
   homeHeroBackgroundUrl?: string | null;
+  portalContactUrl?: string | null;
+  portalContactLabel?: string | null;
+  socialInstagramUrl?: string | null;
+  socialFacebookUrl?: string | null;
+  socialYoutubeUrl?: string | null;
 };
