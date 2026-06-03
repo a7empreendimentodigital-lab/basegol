@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { canCreateRole, requireChampionshipScopedAdmin } from "@/lib/admin-auth";
 import { assertMatchInChampionship } from "@/lib/championship-access";
+import { ensureSystemRole } from "@/lib/system-roles";
 import { syncUserClubLink, syncUserChampionshipMembership, syncUserOperatorMatches } from "@/lib/user-admin";
 import { prisma } from "@/lib/prisma";
 import { championshipMemberCreateSchema } from "@/utils/zod-schemas/championship-sponsor.schemas";
@@ -100,7 +101,7 @@ export async function POST(req: Request, { params }: RouteCtx) {
       await assertMatchInChampionship(body.assignedMatchIds, championshipId);
     }
 
-    const role = await prisma.role.findUnique({ where: { slug: body.roleSlug } });
+    const role = await ensureSystemRole(body.roleSlug);
     if (!role) return fail("Papel inválido", 400);
 
     const passwordHash = await bcrypt.hash(body.password, 12);

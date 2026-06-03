@@ -53,8 +53,10 @@ export function HeroBannerCarousel({
   if (count === 0) {
     const bg = normalizeImageSrc(fallbackBackgroundUrl);
     const hasText = Boolean(fallbackTitle || fallbackSubtitle);
+    const hasCta = Boolean(fallbackCtaLabel?.trim());
+    const hasOverlay = hasText || hasCta;
 
-    if (!bg && !hasText) return null;
+    if (!bg && !hasOverlay) return null;
 
     return (
       <section
@@ -74,13 +76,10 @@ export function HeroBannerCarousel({
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1200px"
           />
         ) : null}
-        <div
-          className={cn(
-            "absolute inset-0",
-            bg ? "bg-gradient-to-r from-black/85 via-black/50 to-transparent" : ""
-          )}
-        />
-        {hasText ? (
+        {bg && hasOverlay ? (
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
+        ) : null}
+        {hasOverlay ? (
           <div className="relative z-10 flex flex-col justify-center h-full p-6 sm:p-8 lg:p-10 max-w-xl">
             {fallbackTitle ? (
               <h1
@@ -99,13 +98,15 @@ export function HeroBannerCarousel({
                 {fallbackSubtitle}
               </p>
             ) : null}
-            <Link
-              href={fallbackCtaHref}
-              className="mt-5 inline-flex w-fit items-center gap-1 rounded-lg bg-selected px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-            >
-              {fallbackCtaLabel}
-              <ChevronRight className="h-4 w-4" />
-            </Link>
+            {hasCta ? (
+              <Link
+                href={fallbackCtaHref}
+                className="mt-5 inline-flex w-fit items-center gap-1 rounded-lg bg-selected px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+              >
+                {fallbackCtaLabel}
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </section>

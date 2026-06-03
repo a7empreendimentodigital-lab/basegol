@@ -27,9 +27,7 @@ export default async function ChampionshipHomePage({ params, searchParams }: Pag
       <ChampionshipHomeDashboard
         championshipId={championship.id}
         championshipSlug={slug}
-        championshipName={championship.name}
         bannerUrl={championship.bannerUrl}
-        description={championship.description}
         categoriaParam={categoria}
       />
     </PublicRightSidebarLayout>

@@ -71,8 +71,11 @@ export function ChampionshipUsersAdmin({
         }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { message?: string }).message ?? "Erro ao criar");
+        const err = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          message?: string;
+        };
+        throw new Error(err.error ?? err.message ?? "Erro ao criar");
       }
       toast({
         title: "Usuário criado. Senha provisória — troca no primeiro acesso.",
