@@ -22,8 +22,8 @@ export function PortalEntryHeader({
   const router = useRouter();
 
   return (
-    <header className="relative z-20 shrink-0 bg-black border-b border-white/5">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-[4.25rem] sm:px-6 lg:px-8">
+    <header className="relative z-20 shrink-0 border-b border-white/5 bg-black">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-[4.25rem] sm:px-6 lg:px-8">
         <MobileBrandLogo
           href="/"
           src={mobileLogoUrl}
@@ -33,7 +33,7 @@ export function PortalEntryHeader({
         />
 
         <nav
-          className="flex flex-1 items-center justify-end gap-6 sm:gap-8 md:gap-10"
+          className="hidden items-center justify-end gap-6 sm:flex sm:gap-8 md:gap-10"
           aria-label="Institucional"
         >
           {PORTAL_INSTITUTIONAL_NAV.map((item) => {
