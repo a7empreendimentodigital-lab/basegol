@@ -3,14 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ADMIN_NAV_GROUPS, isAdminNavActive } from "@/lib/admin-nav";
+import { ADMIN_NAV_GROUPS, filterAdminNavForRole, isAdminNavActive } from "@/lib/admin-nav";
 
-export function AdminNavList({ onNavigate }: { onNavigate?: () => void }) {
+export function AdminNavList({
+  onNavigate,
+  userRole,
+}: {
+  onNavigate?: () => void;
+  userRole?: string | null;
+}) {
   const pathname = usePathname();
+  const groups = filterAdminNavForRole(ADMIN_NAV_GROUPS, userRole);
 
   return (
     <nav className="space-y-6">
-      {ADMIN_NAV_GROUPS.map((group) => (
+      {groups.map((group) => (
         <div key={group.title}>
           <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {group.title}

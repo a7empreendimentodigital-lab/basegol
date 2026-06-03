@@ -36,6 +36,7 @@ model User {
   sessions      Session[]
   passwordResetTokens PasswordResetToken[]
   matchOperators MatchOperator[]
+  championshipMembers ChampionshipMember[]
   notifications Notification[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -286,10 +287,48 @@ model Championship {
   rounds          CompetitionRound[]
   matches         Match[]
   scheduleImports ScheduleImport[]
+  members         ChampionshipMember[]
+  sponsors        ChampionshipSponsor[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
   @@map("championships")
+}
+
+enum ChampionshipSponsorPlacement {
+  SIDEBAR_LEFT
+  SIDEBAR_RIGHT
+}
+
+model ChampionshipMember {
+  id             String       @id @default(cuid())
+  userId         String
+  championshipId String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, championshipId])
+  @@index([championshipId])
+  @@map("championship_members")
+}
+
+model ChampionshipSponsor {
+  id             String                      @id @default(cuid())
+  championshipId String
+  name           String
+  logoUrl        String?
+  linkUrl        String?
+  placement      ChampionshipSponsorPlacement @default(SIDEBAR_RIGHT)
+  order          Int                         @default(0)
+  isActive       Boolean                     @default(true)
+  championship   Championship                @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+
+  @@index([championshipId, placement, isActive, order])
+  @@map("championship_sponsors")
 }
 
 model Season {

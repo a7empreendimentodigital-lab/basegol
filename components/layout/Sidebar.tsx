@@ -7,6 +7,7 @@ import { SidebarFavorites, SidebarFooterLinks } from "@/components/layout/Sideba
 import { parseChampionshipSlugFromPath, championshipPublicBase } from "@/lib/championship-public-nav";
 import { isClubPortalRoute } from "@/lib/public-routes";
 import { SidebarAdBanner } from "@/components/public/SidebarAdBanner";
+import { ChampionshipSponsorsBlock } from "@/components/public/ChampionshipSponsorsBlock";
 import type { PublicBannerDto } from "@/services/banner.service";
 
 type SidebarProps = {
@@ -44,7 +45,18 @@ export function Sidebar({ leftBanner, isLoggedIn, userRole }: SidebarProps) {
         </div>
       </nav>
 
-      {leftBanner ? (
+      {championshipSlug ? (
+        <div className="shrink-0 p-3 border-t border-line">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
+            Patrocinadores
+          </p>
+          <ChampionshipSponsorsBlock
+            championshipSlug={championshipSlug}
+            placement="SIDEBAR_LEFT"
+            variant="left"
+          />
+        </div>
+      ) : leftBanner ? (
         <div className="shrink-0 p-3 border-t border-line">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
             Patrocinador

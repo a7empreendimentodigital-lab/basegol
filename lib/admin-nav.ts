@@ -82,6 +82,21 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
 ];
 
+/** Menu lateral global do admin — admin do campeonato usa só o menu do campeonato. */
+export function filterAdminNavForRole(
+  groups: AdminNavGroup[],
+  role?: string | null
+): AdminNavGroup[] {
+  const r = role?.toUpperCase();
+  if (r !== "ADMIN_CAMPEONATO") return groups;
+  return [
+    {
+      title: "Meu campeonato",
+      items: [{ href: "/admin/campeonatos", label: "Painel do campeonato", icon: Trophy }],
+    },
+  ];
+}
+
 export function isAdminNavActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
   if (href === "/admin/placar-ao-vivo") {

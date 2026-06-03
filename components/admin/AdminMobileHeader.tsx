@@ -102,7 +102,7 @@ export function AdminMobileHeader({ mobileLogoUrl, systemName = "BASEGOL", userR
               </button>
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
-              <AdminNavList onNavigate={close} />
+              <AdminNavList onNavigate={close} userRole={userRole} />
             </div>
             <StaffPortalBar
               userRole={userRole}

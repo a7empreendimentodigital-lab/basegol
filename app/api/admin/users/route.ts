@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
 import { canAssignRole } from "@/lib/role-access";
-import { syncUserClubLink, syncUserOperatorMatches } from "@/lib/user-admin";
+import { syncUserClubLink, syncUserChampionshipMembership, syncUserOperatorMatches } from "@/lib/user-admin";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/utils/api-response";
 import { adminListQuerySchema } from "@/utils/zod-schemas";
@@ -91,6 +91,11 @@ export async function POST(req: Request) {
     });
 
     await syncUserClubLink(created.id, parsed.roleSlug, parsed.clubId);
+    await syncUserChampionshipMembership(
+      created.id,
+      parsed.roleSlug,
+      parsed.championshipId
+    );
     await syncUserOperatorMatches(
       created.id,
       parsed.roleSlug,

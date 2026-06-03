@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     mustChangePassword: Boolean(token.mustChangePassword),
     callbackUrl: request.nextUrl.searchParams.get("callbackUrl"),
     origin: canonicalOrigin,
+    championshipId: (token.championshipId as string | null) ?? null,
   });
 
   return NextResponse.redirect(new URL(path, canonicalOrigin));

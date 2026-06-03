@@ -7,6 +7,7 @@ import {
   Shield,
   Calendar,
   Users,
+  UserCog,
   Newspaper,
   Handshake,
   FileUp,
@@ -32,6 +33,7 @@ export function buildChampionshipAdminNav(championshipId: string): ChampionshipA
     { href: `${base}/atletas`, label: "Atletas", icon: Users, segment: "atletas" },
     { href: `${base}/noticias`, label: "Notícias", icon: Newspaper, segment: "noticias" },
     { href: `${base}/patrocinadores`, label: "Patrocinadores", icon: Handshake, segment: "patrocinadores" },
+    { href: `${base}/usuarios`, label: "Usuários", icon: UserCog, segment: "usuarios" },
     { href: `${base}/importar`, label: "Importar", icon: FileUp, segment: "importar" },
     { href: `${base}/importacao-log`, label: "Log de importação", icon: ScrollText, segment: "importacao-log" },
   ];

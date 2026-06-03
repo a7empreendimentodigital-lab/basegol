@@ -1,6 +1,8 @@
-import { redirect } from "next/navigation";
+import { ChampionshipSponsorsAdmin } from "@/components/admin/championship-sponsors/ChampionshipSponsorsAdmin";
 
-/** Patrocinadores são globais no sistema; redireciona para a tela existente. */
-export default function ChampionshipAdminSponsorsPage() {
-  redirect("/admin/patrocinadores");
+type Props = { params: Promise<{ id: string }> };
+
+export default async function ChampionshipAdminSponsorsPage({ params }: Props) {
+  const { id } = await params;
+  return <ChampionshipSponsorsAdmin championshipId={id} />;
 }

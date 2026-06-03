@@ -12,27 +12,36 @@ import { cn } from "@/lib/utils";
 type Props = {
   championshipId: string;
   championshipName: string;
+  userRole?: string;
   children: React.ReactNode;
 };
 
 export function ChampionshipAdminShell({
   championshipId,
   championshipName,
+  userRole,
   children,
 }: Props) {
   const pathname = usePathname() ?? "";
-  const nav = buildChampionshipAdminNav(championshipId);
+  const isChampionshipOnlyAdmin = userRole === "ADMIN_CAMPEONATO";
+  const nav = buildChampionshipAdminNav(championshipId).filter((item) => {
+    if (!isChampionshipOnlyAdmin) return true;
+    if (item.segment === "importar" || item.segment === "importacao-log") return false;
+    return true;
+  });
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
       <aside className="lg:w-56 shrink-0">
-        <Link
-          href="/admin/campeonatos"
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-          Todos os campeonatos
-        </Link>
+        {!isChampionshipOnlyAdmin ? (
+          <Link
+            href="/admin/campeonatos"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+            Todos os campeonatos
+          </Link>
+        ) : null}
         <p className="font-display text-lg tracking-wide text-foreground line-clamp-2">
           {championshipName}
         </p>

@@ -16,6 +16,22 @@ export async function syncUserClubLink(
   });
 }
 
+export async function syncUserChampionshipMembership(
+  userId: string,
+  roleSlug: string,
+  championshipId: string | null | undefined
+) {
+  if (roleSlug !== "ADMIN_CAMPEONATO") {
+    await prisma.championshipMember.deleteMany({ where: { userId } });
+    return;
+  }
+  if (!championshipId) return;
+  await prisma.championshipMember.deleteMany({ where: { userId } });
+  await prisma.championshipMember.create({
+    data: { userId, championshipId },
+  });
+}
+
 export async function syncUserOperatorMatches(
   userId: string,
   roleSlug: string,

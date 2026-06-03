@@ -1,4 +1,5 @@
-import { getSessionUserOrThrow, hasRole } from "@/lib/access-control";
+import { ensureAdminCrud } from "@/lib/admin-api-guard";
+import { enforceChampionshipIdForScopedAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { adminListQuerySchema } from "@/utils/zod-schemas";
 import { ENTITY_SCHEMAS } from "@/utils/zod-schemas/admin-entities";
@@ -52,18 +53,8 @@ function notAllowed(entity: string) {
   return !allowed.includes(entity as (typeof allowed)[number]);
 }
 
-async function ensureAdmin() {
-  const user = await getSessionUserOrThrow();
-  const role = user.role.slug.toUpperCase();
-  if (!hasRole(role, ["SUPER_ADMIN", "ADMIN_LIGA"])) {
-    throw new Error("FORBIDDEN");
-  }
-  return user;
-}
-
 export async function GET(req: Request, { params }: { params: Promise<{ entity: string }> }) {
   try {
-    await ensureAdmin();
     const { entity } = await params;
     if (notAllowed(entity)) {
       return fail("Entidade inválida", 404);
@@ -79,18 +70,33 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       roundNumber: url.searchParams.get("roundNumber") ?? undefined,
       championshipId: url.searchParams.get("championshipId") ?? undefined,
     });
+    const adminCtx = await ensureAdminCrud(entity, parsed.championshipId ?? null);
+    const scopedChampionshipId = adminCtx.isChampionshipAdmin
+      ? enforceChampionshipIdForScopedAdmin(adminCtx, parsed.championshipId ?? null)
+      : parsed.championshipId;
+    if (scopedChampionshipId) {
+      parsed.championshipId = scopedChampionshipId;
+    }
     const { skip, pageSize } = normalizePagination(parsed);
     const contains = parsed.q ? prismaContains(parsed.q) : undefined;
 
     if (entity === "championships") {
+      const champWhere = adminCtx.isChampionshipAdmin
+        ? {
+            id: { in: adminCtx.championshipIds ?? [] },
+            ...(contains ? { name: contains } : {}),
+          }
+        : contains
+          ? { name: contains }
+          : undefined;
       const [items, total] = await Promise.all([
         prisma.championship.findMany({
-          where: contains ? { name: contains } : undefined,
+          where: champWhere,
           orderBy: { createdAt: "desc" },
           skip,
           take: pageSize,
         }),
-        prisma.championship.count({ where: contains ? { name: contains } : undefined }),
+        prisma.championship.count({ where: champWhere }),
       ]);
       return ok({ items, total });
     }
@@ -339,14 +345,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
 
 export async function POST(req: Request, { params }: { params: Promise<{ entity: string }> }) {
   try {
-    await ensureAdmin();
     const { entity } = await params;
     if (notAllowed(entity) || entity === "audit_logs" || entity === "permissions") {
       return fail("Não permitido", 400);
     }
+    const raw = await req.json();
+    const champId =
+      typeof raw === "object" && raw && "championshipId" in raw
+        ? String((raw as { championshipId?: string }).championshipId ?? "")
+        : undefined;
+    await ensureAdminCrud(entity, champId || null);
     const schema = ENTITY_SCHEMAS[entity];
     if (!schema) return fail("Schema não configurado para esta entidade", 400);
-    const raw = await req.json();
     const parsed = schema.parse(raw);
     const payload = prepareAdminPayload(entity, parsed as Record<string, unknown>);
 

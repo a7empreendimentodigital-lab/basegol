@@ -10,6 +10,7 @@ import { HomeTopScorersCard, type TopScorerRow } from "@/components/home/HomeTop
 import { HomeSectionLink } from "@/components/home/HomeSectionLink";
 import type { StandingRowDisplay } from "@/types";
 import { SidebarAdBanner } from "@/components/public/SidebarAdBanner";
+import { ChampionshipSponsorsBlock } from "@/components/public/ChampionshipSponsorsBlock";
 import type { PublicBannerDto } from "@/services/banner.service";
 
 type Props = {
@@ -17,15 +18,35 @@ type Props = {
   standingsByCategory: Record<string, StandingRowDisplay[]>;
   scorersByCategory: Record<string, TopScorerRow[]>;
   rightBanner?: PublicBannerDto | null;
+  championshipSlug?: string;
   competitionsLink?: string;
   tableHref?: string;
 };
 
 function RightSidebarPatrocinio({
   rightBanner,
+  championshipSlug,
 }: {
   rightBanner?: PublicBannerDto | null;
+  championshipSlug?: string;
 }) {
+  if (championshipSlug) {
+    return (
+      <div className="py-4 xl:mt-2 xl:border-t xl:border-line xl:pt-4">
+        <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Patrocinadores
+        </p>
+        <div className="max-md:px-4 sm:max-md:px-5 md:px-0">
+          <ChampionshipSponsorsBlock
+            championshipSlug={championshipSlug}
+            placement="SIDEBAR_RIGHT"
+            variant="right"
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (!rightBanner?.imageUrl) return null;
 
   return (
@@ -45,6 +66,7 @@ export function HomeRightSidebar({
   standingsByCategory,
   scorersByCategory,
   rightBanner,
+  championshipSlug,
   competitionsLink = "/campeonatos",
   tableHref = "/tabela",
 }: Props) {
@@ -61,7 +83,10 @@ export function HomeRightSidebar({
         <p className="py-4 text-sm text-muted-foreground">
           Nenhuma competição ativa no momento.
         </p>
-        <RightSidebarPatrocinio rightBanner={rightBanner} />
+        <RightSidebarPatrocinio
+          rightBanner={rightBanner}
+          championshipSlug={championshipSlug}
+        />
       </div>
     );
   }
@@ -116,7 +141,10 @@ export function HomeRightSidebar({
         />
       )}
 
-      <RightSidebarPatrocinio rightBanner={rightBanner} />
+      <RightSidebarPatrocinio
+        rightBanner={rightBanner}
+        championshipSlug={championshipSlug}
+      />
     </div>
   );
 }

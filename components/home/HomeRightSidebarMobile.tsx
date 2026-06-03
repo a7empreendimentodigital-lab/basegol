@@ -79,6 +79,7 @@ export function HomeRightSidebarMobile({ rightBanner, championshipSlug }: Props)
         <HomeRightSidebar
           {...data}
           rightBanner={rightBanner}
+          championshipSlug={championshipSlug}
           competitionsLink={championshipSlug ? "/" : "/campeonatos"}
           tableHref={
             championshipSlug

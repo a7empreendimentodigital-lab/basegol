@@ -15,6 +15,19 @@ async function main() {
       permissions: ["championship:*", "club:*", "match:*", "news:*", "standing:*", "user:read"],
     },
     {
+      slug: "ADMIN_CAMPEONATO",
+      name: "Admin do Campeonato",
+      permissions: [
+        "championship:scoped:*",
+        "club:*",
+        "match:*",
+        "news:*",
+        "standing:*",
+        "sponsor:scoped:*",
+        "user:scoped:read",
+      ],
+    },
+    {
       slug: "CLUBE",
       name: "Clube",
       permissions: ["club:own:*", "athlete:own:*", "document:own:*"],

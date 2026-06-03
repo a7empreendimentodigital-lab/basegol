@@ -19,7 +19,7 @@ export function AdminSidebar({ userRole }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-4">
-        <AdminNavList />
+        <AdminNavList userRole={userRole} />
       </div>
 
       <StaffPortalBar userRole={userRole} currentArea="admin" variant="stacked" />

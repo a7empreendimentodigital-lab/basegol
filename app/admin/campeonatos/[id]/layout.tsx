@@ -1,5 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { ChampionshipAdminShell } from "@/components/admin/championship-admin/ChampionshipAdminShell";
+import { userHasChampionshipAccess } from "@/lib/championship-access";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
@@ -15,10 +18,19 @@ export default async function ChampionshipAdminLayout({ children, params }: Prop
   });
   if (!championship) notFound();
 
+  const session = await getServerSession(authOptions);
+  const role = session?.user?.role?.toUpperCase() ?? "";
+  const userId = session?.user?.id;
+  if (userId && role === "ADMIN_CAMPEONATO") {
+    const allowed = await userHasChampionshipAccess(userId, role, championship.id);
+    if (!allowed) redirect("/");
+  }
+
   return (
     <ChampionshipAdminShell
       championshipId={championship.id}
       championshipName={championship.name}
+      userRole={role}
     >
       {children}
     </ChampionshipAdminShell>

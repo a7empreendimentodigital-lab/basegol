@@ -46,7 +46,8 @@ export default withAuth(
       return NextResponse.redirect(toCanonicalUrl("/primeiro-acesso/trocar-senha", req.url));
     }
 
-    if (!canAccessRoute(effectiveRole, pathname)) {
+    const championshipId = token.championshipId as string | undefined;
+    if (!canAccessRoute(effectiveRole, pathname, { championshipId })) {
       return NextResponse.redirect(toCanonicalUrl("/", req.url));
     }
 

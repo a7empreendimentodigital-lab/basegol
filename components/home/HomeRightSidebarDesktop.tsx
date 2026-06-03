@@ -31,6 +31,7 @@ export async function HomeRightSidebarDesktop({ rightBanner, championshipSlug }:
       standingsByCategory={sidebarData.standingsByCategory}
       scorersByCategory={sidebarData.scorersByCategory}
       rightBanner={rightBanner}
+      championshipSlug={championshipSlug}
       competitionsLink={championshipSlug ? "/" : "/campeonatos"}
       tableHref={tableHref}
     />

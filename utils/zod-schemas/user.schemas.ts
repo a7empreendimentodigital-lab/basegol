@@ -3,6 +3,7 @@ import { z } from "zod";
 const roleSlugEnum = z.enum([
   "SUPER_ADMIN",
   "ADMIN_LIGA",
+  "ADMIN_CAMPEONATO",
   "CLUBE",
   "OPERADOR_DE_PARTIDA",
   "SCOUT",
@@ -17,9 +18,17 @@ export const userCreateSchema = z
     roleSlug: roleSlugEnum,
     status: z.enum(["ACTIVE", "INACTIVE", "PENDING", "BANNED"]).default("ACTIVE"),
     clubId: z.string().optional().nullable(),
+    championshipId: z.string().optional().nullable(),
     assignedMatchIds: z.array(z.string()).optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.roleSlug === "ADMIN_CAMPEONATO" && !data.championshipId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Selecione o campeonato para o admin do campeonato",
+        path: ["championshipId"],
+      });
+    }
     if (data.roleSlug === "CLUBE" && !data.clubId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -37,9 +46,17 @@ export const userUpdateSchema = z
     roleSlug: roleSlugEnum.optional(),
     status: z.enum(["ACTIVE", "INACTIVE", "PENDING", "BANNED"]).optional(),
     clubId: z.string().optional().nullable(),
+    championshipId: z.string().optional().nullable(),
     assignedMatchIds: z.array(z.string()).optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.roleSlug === "ADMIN_CAMPEONATO" && data.championshipId === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Selecione o campeonato",
+        path: ["championshipId"],
+      });
+    }
     if (data.roleSlug === "CLUBE" && data.clubId === null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
