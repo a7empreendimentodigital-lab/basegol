@@ -4,10 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { assertCanManageChampionshipSponsors } from "@/lib/championship-sponsor-access";
 import { ChampionshipSponsorsAdmin } from "@/components/admin/championship-sponsors/ChampionshipSponsorsAdmin";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ new?: string }>;
+};
 
-export default async function ChampionshipAdminSponsorsPage({ params }: Props) {
+export default async function ChampionshipAdminSponsorsPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const { new: newParam } = await searchParams;
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   const role = session?.user?.role ?? "";
@@ -22,5 +26,5 @@ export default async function ChampionshipAdminSponsorsPage({ params }: Props) {
     redirect("/");
   }
 
-  return <ChampionshipSponsorsAdmin championshipId={id} />;
+  return <ChampionshipSponsorsAdmin championshipId={id} autoOpenCreate={newParam === "1"} />;
 }

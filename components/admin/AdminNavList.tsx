@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ADMIN_NAV_GROUPS, filterAdminNavForRole, isAdminNavActive } from "@/lib/admin-nav";
+import { buildAdminNavForRole, isAdminNavActive } from "@/lib/admin-nav";
 
 export function AdminNavList({
   onNavigate,
   userRole,
+  championshipId,
 }: {
   onNavigate?: () => void;
   userRole?: string | null;
+  championshipId?: string | null;
 }) {
   const pathname = usePathname();
-  const groups = filterAdminNavForRole(ADMIN_NAV_GROUPS, userRole);
+  const groups = buildAdminNavForRole({ role: userRole, championshipId });
 
   return (
     <nav className="space-y-6">

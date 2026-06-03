@@ -331,7 +331,7 @@ model ChampionshipSponsor {
   createdAt      DateTime                    @default(now())
   updatedAt      DateTime                    @updatedAt
 
-  @@index([championshipId, placement, isActive, order])
+  @@index([championshipId, placement, isActive, order], map: "ch_sponsors_champ_placement_idx")
   @@map("championship_sponsors")
 }
 

@@ -26,12 +26,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen flex bg-pitch">
-      <AdminSidebar userRole={userRole} />
+      <AdminSidebar userRole={userRole} championshipId={championshipId} />
       <div className="flex flex-1 flex-col min-w-0">
         <AdminMobileHeader
           mobileLogoUrl={brand?.mobileLogoUrl ?? null}
           systemName={brand?.systemName ?? "BASEGOL"}
           userRole={userRole}
+          championshipId={championshipId}
         />
         <main className="flex-1 overflow-y-auto">
           <div className="w-full max-w-[1400px] mx-auto p-4 md:p-6 lg:p-8">{children}</div>

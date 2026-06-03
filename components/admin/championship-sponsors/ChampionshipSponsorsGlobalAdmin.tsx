@@ -2,13 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ChampionshipSponsorPlacement } from "@prisma/client";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/shared/AdminPageHeader";
 import { StatusBadge } from "@/components/admin/shared/StatusBadge";
 import { Thumb } from "@/components/admin/shared/AdminDataTable";
 import { useToast } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { parseApiResponse } from "@/lib/api-client";
 import { sponsorCtr } from "@/lib/championship-sponsor-analytics";
 import { CHAMPIONSHIP_SPONSOR_PLACEMENT_LABELS } from "@/lib/championship-sponsor-labels";
@@ -26,17 +29,32 @@ type SponsorRow = {
   championship: { id: string; name: string; slug: string };
 };
 
+type ChampionshipOption = { id: string; name: string };
+
 export function ChampionshipSponsorsGlobalAdmin() {
   const { toast } = useToast();
+  const router = useRouter();
   const [items, setItems] = useState<SponsorRow[]>([]);
+  const [championships, setChampionships] = useState<ChampionshipOption[]>([]);
+  const [selectedChampionshipId, setSelectedChampionshipId] = useState("");
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/championship-sponsors", { cache: "no-store" });
-      const data = await parseApiResponse<{ items: SponsorRow[] }>(res);
-      setItems(data?.items ?? []);
+      const [sponsorsRes, champsRes] = await Promise.all([
+        fetch("/api/admin/championship-sponsors", { cache: "no-store" }),
+        fetch("/api/admin/crud/championships?page=1&pageSize=100", { cache: "no-store" }),
+      ]);
+      const sponsorsData = await parseApiResponse<{ items: SponsorRow[] }>(sponsorsRes);
+      const champsPayload = await parseApiResponse<{ items: ChampionshipOption[] }>(champsRes);
+      const champList = champsPayload?.items ?? [];
+      setItems(sponsorsData?.items ?? []);
+      const sorted = [...champList].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+      setChampionships(sorted);
+      if (sorted.length === 1) {
+        setSelectedChampionshipId(sorted[0]!.id);
+      }
     } catch {
       toast({ title: "Não foi possível carregar patrocinadores", variant: "error" });
     } finally {
@@ -61,31 +79,97 @@ export function ChampionshipSponsorsGlobalAdmin() {
     );
   }, [items]);
 
+  function goToCreate() {
+    if (!selectedChampionshipId) {
+      toast({
+        title: "Selecione um campeonato",
+        description: "Escolha o campeonato em que deseja cadastrar o patrocinador.",
+        variant: "error",
+      });
+      return;
+    }
+    router.push(
+      `/admin/campeonatos/${selectedChampionshipId}/patrocinadores?new=1`
+    );
+  }
+
+  const headerAction = (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end shrink-0">
+      <div className="min-w-[200px]">
+        <Label htmlFor="sp-champ" className="text-xs text-muted-foreground mb-1 block">
+          Campeonato
+        </Label>
+        <Select
+          id="sp-champ"
+          value={selectedChampionshipId}
+          onChange={(e) => setSelectedChampionshipId(e.target.value)}
+        >
+          <option value="">Selecione…</option>
+          {championships.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <Button type="button" onClick={goToCreate} className="gap-2">
+        <Plus className="h-4 w-4" aria-hidden />
+        Novo patrocinador
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Patrocinadores por campeonato"
-        description="Visualize patrocinadores de todos os campeonatos. Edite em cada campeonato pelo botão Gerenciar."
+        description="Cadastre patrocinadores por campeonato. Eles aparecem na área pública apenas do campeonato vinculado."
+        action={headerAction}
       />
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : items.length === 0 ? (
-        <p className="rounded-lg border border-line/60 bg-graphite/30 px-4 py-8 text-center text-sm text-muted-foreground">
-          Nenhum patrocinador cadastrado em nenhum campeonato.
-        </p>
+        <div className="rounded-lg border border-line/60 bg-graphite/30 px-4 py-8 space-y-4">
+          <p className="text-center text-sm text-muted-foreground">
+            Nenhum patrocinador cadastrado em nenhum campeonato.
+          </p>
+          {championships.length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-2">
+              {championships.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/admin/campeonatos/${c.id}/patrocinadores?new=1`}
+                >
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5">
+                    <Plus className="h-3.5 w-3.5" aria-hidden />
+                    Cadastrar em {c.name}
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
       ) : (
         <div className="space-y-8">
           {grouped.map(({ championship, sponsors }) => (
             <section key={championship.id} className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-display text-lg text-foreground">{championship.name}</h2>
-                <Link href={`/admin/campeonatos/${championship.id}/patrocinadores`}>
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5">
-                    <Pencil className="h-3.5 w-3.5" aria-hidden />
-                    Gerenciar patrocinadores
-                  </Button>
-                </Link>
+                <div className="flex flex-wrap gap-2">
+                  <Link href={`/admin/campeonatos/${championship.id}/patrocinadores?new=1`}>
+                    <Button type="button" size="sm" className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" aria-hidden />
+                      Novo patrocinador
+                    </Button>
+                  </Link>
+                  <Link href={`/admin/campeonatos/${championship.id}/patrocinadores`}>
+                    <Button type="button" variant="outline" size="sm" className="gap-1.5">
+                      <Pencil className="h-3.5 w-3.5" aria-hidden />
+                      Gerenciar
+                    </Button>
+                  </Link>
+                </div>
               </div>
               <ul className="divide-y divide-line rounded-lg border border-line overflow-hidden">
                 {sponsors.map((row) => {

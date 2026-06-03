@@ -65,11 +65,17 @@ function formatMetricDate(iso: string | null) {
   }
 }
 
-export function ChampionshipSponsorsAdmin({ championshipId }: { championshipId: string }) {
+export function ChampionshipSponsorsAdmin({
+  championshipId,
+  autoOpenCreate = false,
+}: {
+  championshipId: string;
+  autoOpenCreate?: boolean;
+}) {
   const { toast } = useToast();
   const [items, setItems] = useState<SponsorRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(autoOpenCreate);
   const [editing, setEditing] = useState<SponsorRow | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);

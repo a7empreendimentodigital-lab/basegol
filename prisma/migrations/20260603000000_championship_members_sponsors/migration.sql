@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `championship_sponsors` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    INDEX `championship_sponsors_championshipId_placement_isActive_order_idx`(`championshipId`, `placement`, `isActive`, `order`),
+    INDEX `ch_sponsors_champ_placement_idx`(`championshipId`, `placement`, `isActive`, `order`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
