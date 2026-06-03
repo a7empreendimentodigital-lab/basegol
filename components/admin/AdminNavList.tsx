@@ -15,7 +15,11 @@ export function AdminNavList({
   championshipId?: string | null;
 }) {
   const pathname = usePathname();
-  const groups = buildAdminNavForRole({ role: userRole, championshipId });
+  const groups = buildAdminNavForRole({
+    role: userRole,
+    championshipId,
+    pathname: pathname ?? "",
+  });
 
   return (
     <nav className="space-y-6">
