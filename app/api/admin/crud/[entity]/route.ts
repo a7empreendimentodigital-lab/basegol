@@ -1,4 +1,6 @@
 import { ensureAdminCrud } from "@/lib/admin-api-guard";
+import type { Prisma } from "@prisma/client";
+import { athletesInChampionshipWhere } from "@/lib/admin-championship-scope";
 import {
   assertGroupInChampionships,
   enrichMatchPayloadWithChampionshipId,
@@ -150,7 +152,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       return ok({ items, total });
     }
     if (entity === "clubs") {
-      const data = await listClubsAdmin(parsed.page, pageSize, parsed.q);
+      const data = await listClubsAdmin(
+        parsed.page,
+        pageSize,
+        parsed.q,
+        parsed.championshipId
+      );
       return ok(data);
     }
     if (entity === "staff_members") {
@@ -168,18 +175,23 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       return ok({ items, total });
     }
     if (entity === "athletes") {
-      const athleteWhere = contains
-        ? { OR: [{ firstName: contains }, { lastName: contains }] }
-        : undefined;
+      const athleteWhere: Prisma.AthleteWhereInput = {
+        ...(parsed.championshipId
+          ? athletesInChampionshipWhere(parsed.championshipId)
+          : {}),
+        ...(contains ? { OR: [{ firstName: contains }, { lastName: contains }] } : {}),
+      };
+      const athleteWhereFinal =
+        Object.keys(athleteWhere).length > 0 ? athleteWhere : undefined;
       const [items, total] = await Promise.all([
         prisma.athlete.findMany({
-          where: athleteWhere,
+          where: athleteWhereFinal,
           orderBy: { createdAt: "desc" },
           skip,
           take: pageSize,
           include: { club: true },
         }),
-        prisma.athlete.count({ where: athleteWhere }),
+        prisma.athlete.count({ where: athleteWhereFinal }),
       ]);
       return ok({ items, total });
     }

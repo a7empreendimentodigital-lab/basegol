@@ -139,9 +139,12 @@ export function AdminMatchesPage({ championshipId }: PageProps = {}) {
     championshipId: championshipId || undefined,
   });
   const { options: championships } = useAdminOptions("championships");
-  const { options: clubs } = useAdminOptions("clubs");
+  const { options: clubs } = useAdminOptions("clubs", {
+    championshipId: championshipId || undefined,
+  });
   const { options: rounds } = useAdminOptions("match-rounds", {
     categoryId: categoryId || undefined,
+    championshipId: championshipId || undefined,
   });
 
   useEffect(() => {
@@ -271,29 +274,33 @@ export function AdminMatchesPage({ championshipId }: PageProps = {}) {
       buildGroups={buildGroups}
       toolbarExtras={
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={purgingMatches || syncingRounds}
-            onClick={() => void purgeAllMatches()}
-            className="gap-2 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 className="h-4 w-4" aria-hidden />
-            {purgingMatches ? "Apagando…" : "Apagar todos os jogos"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={syncingRounds || purgingMatches}
-            onClick={() => void fixRoundsFromFpf()}
-            className="gap-2 shrink-0"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${syncingRounds ? "animate-spin" : ""}`}
-              aria-hidden
-            />
-            {syncingRounds ? "Corrigindo…" : "Corrigir rodadas (FPF)"}
-          </Button>
+          {!championshipId ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={purgingMatches || syncingRounds}
+                onClick={() => void purgeAllMatches()}
+                className="gap-2 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden />
+                {purgingMatches ? "Apagando…" : "Apagar todos os jogos"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={syncingRounds || purgingMatches}
+                onClick={() => void fixRoundsFromFpf()}
+                className="gap-2 shrink-0"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${syncingRounds ? "animate-spin" : ""}`}
+                  aria-hidden
+                />
+                {syncingRounds ? "Corrigindo…" : "Corrigir rodadas (FPF)"}
+              </Button>
+            </>
+          ) : null}
           <Select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}

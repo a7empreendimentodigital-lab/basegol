@@ -1,5 +1,8 @@
 import { AdminClubsPage } from "@/components/admin/clubs/AdminClubsPage";
 
-export default function ChampionshipAdminClubsPage() {
-  return <AdminClubsPage />;
+type Props = { params: Promise<{ id: string }> };
+
+export default async function ChampionshipAdminClubsPage({ params }: Props) {
+  const { id } = await params;
+  return <AdminClubsPage championshipId={id} />;
 }

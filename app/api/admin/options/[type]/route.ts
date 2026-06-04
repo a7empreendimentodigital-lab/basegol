@@ -56,8 +56,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ type: s
     }
 
     if (type === "clubs") {
+      const championshipId = new URL(_req.url).searchParams.get("championshipId");
       const items = await prisma.club.findMany({
-        where: { status: { notIn: ["SUSPENDED", "REJECTED"] } },
+        where: {
+          status: { notIn: ["SUSPENDED", "REJECTED"] },
+          ...(championshipId
+            ? {
+                teams: {
+                  some: { group: { category: { championshipId } } },
+                },
+              }
+            : {}),
+        },
         orderBy: { name: "asc" },
         select: { id: true, name: true, crestUrl: true },
       });
@@ -91,12 +101,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ type: s
     }
 
     if (type === "match-rounds") {
-      const categoryId = new URL(_req.url).searchParams.get("categoryId");
+      const url = new URL(_req.url);
+      const categoryId = url.searchParams.get("categoryId");
+      const championshipId = url.searchParams.get("championshipId");
       const grouped = await prisma.match.groupBy({
         by: ["round"],
         where: {
           round: { gt: 0 },
           ...(categoryId ? { group: { categoryId } } : {}),
+          ...(championshipId && !categoryId
+            ? { group: { category: { championshipId } } }
+            : {}),
         },
         _count: { _all: true },
         orderBy: { round: "asc" },

@@ -29,10 +29,20 @@ function buildDefaults(initial?: Record<string, unknown> | null): FormData {
   };
 }
 
-export function GroupForm({ initial, onSuccess, onCancel }: AdminFormProps) {
+type GroupFormProps = AdminFormProps & { championshipId?: string };
+
+export function GroupForm({
+  initial,
+  onSuccess,
+  onCancel,
+  championshipId,
+}: GroupFormProps) {
   const id = str(initial?.id);
   const { toast } = useToast();
-  const { options: categories, loading: categoriesLoading } = useAdminOptions("categories");
+  const { options: categories, loading: categoriesLoading } = useAdminOptions(
+    "categories",
+    championshipId ? { championshipId } : undefined
+  );
   const [saving, setSaving] = useState(false);
 
   const defaultValues = useMemo(() => buildDefaults(initial), [initial]);

@@ -62,7 +62,9 @@ function ClubListRow({
   );
 }
 
-export function AdminClubsPage() {
+type PageProps = { championshipId?: string };
+
+export function AdminClubsPage({ championshipId }: PageProps = {}) {
   const { toast } = useToast();
   const { confirm } = useConfirm();
   const [syncing, setSyncing] = useState(false);
@@ -125,27 +127,32 @@ export function AdminClubsPage() {
     <AdminGroupedListPage<Row>
       entity="clubs"
       title="Clubes"
-      description="Cadastro de clubes, escudos, banners e status de aprovação (lista oficial: 79 participantes FPF)."
+      description={
+        championshipId
+          ? "Clubes inscritos neste campeonato (via grupos). Crie categorias e grupos antes de vincular clubes."
+          : "Cadastro de clubes, escudos, banners e status de aprovação."
+      }
       pageSize={120}
+      extraParams={championshipId ? { championshipId } : undefined}
       toolbarExtras={
-        <Button
-          type="button"
-          variant="outline"
-          disabled={syncing}
-          onClick={() => void syncFpfClubs()}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} aria-hidden />
-          {syncing ? "Sincronizando…" : "Completar lista FPF (79)"}
-        </Button>
+        championshipId ? null : (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={syncing}
+            onClick={() => void syncFpfClubs()}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} aria-hidden />
+            {syncing ? "Sincronizando…" : "Completar lista FPF (79)"}
+          </Button>
+        )
       }
       searchPlaceholder="Buscar clube..."
       emptyMessage="Nenhum clube encontrado."
       filterAriaLabel="Filtrar por status"
       sectionIcon={Shield}
-      countLabel={(n) =>
-        `${n} ${n === 1 ? "clube" : "clubes"} · 79 participantes FPF`
-      }
+      countLabel={(n) => `${n} ${n === 1 ? "clube" : "clubes"}`}
       dialogTitles={{ new: "Novo clube", edit: "Editar clube" }}
       deleteConfirm={(r) => `Excluir o clube "${r.name}"? Esta ação não pode ser desfeita.`}
       FormComponent={ClubForm}

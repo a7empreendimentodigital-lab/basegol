@@ -91,14 +91,21 @@ function AthleteListRow({
   );
 }
 
-export function AdminAthletesPage() {
+type PageProps = { championshipId?: string };
+
+export function AdminAthletesPage({ championshipId }: PageProps = {}) {
   const buildGroups = useCallback((items: AthleteRow[]) => buildAthleteGroups(items), []);
 
   return (
     <AdminGroupedListPage<AthleteRow>
       entity="athletes"
       title="Atletas"
-      description="Elenco, fotos, posições e vínculo com clubes."
+      description={
+        championshipId
+          ? "Atletas dos clubes inscritos neste campeonato."
+          : "Elenco, fotos, posições e vínculo com clubes."
+      }
+      extraParams={championshipId ? { championshipId } : undefined}
       searchPlaceholder="Buscar atleta..."
       emptyMessage="Nenhum atleta encontrado."
       filterAriaLabel="Filtrar por categoria"

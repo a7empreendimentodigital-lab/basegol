@@ -92,6 +92,7 @@ export function GroupsByCategoryList({ championshipId }: Props = {}) {
     try {
       const params = new URLSearchParams({ page: "1", pageSize: "200" });
       if (q.trim()) params.set("q", q.trim());
+      if (championshipId) params.set("championshipId", championshipId);
       const res = await fetch(`/api/admin/crud/groups?${params}`);
       if (!res.ok) throw new Error("Falha ao carregar");
       const data = await parseApiResponse<{ items: GroupRow[]; total: number }>(res);
@@ -249,29 +250,33 @@ export function GroupsByCategoryList({ championshipId }: Props = {}) {
       />
 
       <div className="glass-card mb-4 flex flex-wrap items-center gap-3 p-4">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={syncingRoster || syncingFixtures}
-          onClick={() => void syncOfficialRoster()}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${syncingRoster ? "animate-spin" : ""}`} aria-hidden />
-          {syncingRoster ? "Sincronizando…" : "Sincronizar lista FPF"}
-        </Button>
-        <Button
-          type="button"
-          variant="default"
-          disabled={syncingRoster || syncingFixtures}
-          onClick={() => void syncFixturesFromGroups()}
-          className="gap-2"
-        >
-          <CalendarDays
-            className={`h-4 w-4 ${syncingFixtures ? "animate-pulse" : ""}`}
-            aria-hidden
-          />
-          {syncingFixtures ? "Importando jogos…" : "Importar jogos (FPF)"}
-        </Button>
+        {!championshipId ? (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={syncingRoster || syncingFixtures}
+              onClick={() => void syncOfficialRoster()}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncingRoster ? "animate-spin" : ""}`} aria-hidden />
+              {syncingRoster ? "Sincronizando…" : "Sincronizar lista FPF"}
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              disabled={syncingRoster || syncingFixtures}
+              onClick={() => void syncFixturesFromGroups()}
+              className="gap-2"
+            >
+              <CalendarDays
+                className={`h-4 w-4 ${syncingFixtures ? "animate-pulse" : ""}`}
+                aria-hidden
+              />
+              {syncingFixtures ? "Importando jogos…" : "Importar jogos (FPF)"}
+            </Button>
+          </>
+        ) : null}
         <div className="flex min-w-[200px] flex-1 gap-2">
           <Input
             placeholder="Buscar grupo ou categoria..."
@@ -372,6 +377,7 @@ export function GroupsByCategoryList({ championshipId }: Props = {}) {
         >
           <GroupForm
             key={editing?.id ?? "new"}
+            championshipId={championshipId}
             initial={(editing as Record<string, unknown>) ?? null}
             onSuccess={() => {
               setDialogOpen(false);

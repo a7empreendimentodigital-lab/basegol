@@ -1,3 +1,7 @@
+import {
+  athletesInChampionshipWhere,
+  clubsInChampionshipWhere,
+} from "@/lib/admin-championship-scope";
 import { resolveMatchScoresForDisplay } from "@/lib/match-live";
 import { prisma } from "@/lib/prisma";
 import { prismaContains } from "@/lib/prisma-search";
@@ -18,10 +22,16 @@ export async function listUsersAdmin(page: number, pageSize: number, q?: string)
   return { items, total };
 }
 
-export async function listClubsAdmin(page: number, pageSize: number, q?: string) {
+export async function listClubsAdmin(
+  page: number,
+  pageSize: number,
+  q?: string,
+  championshipId?: string
+) {
   const skip = (page - 1) * pageSize;
   const where = {
     status: { not: "SUSPENDED" as const },
+    ...(championshipId ? clubsInChampionshipWhere(championshipId) : {}),
     ...(q
       ? {
           OR: [
