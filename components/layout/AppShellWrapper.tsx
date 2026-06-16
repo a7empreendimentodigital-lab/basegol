@@ -2,8 +2,10 @@
 
 import { memo } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { BottomNavClient } from "@/components/layout/BottomNavClient";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { NavigationProgressBar } from "@/components/layout/NavigationProgressBar";
 import { PublicTopBar } from "@/components/layout/PublicTopBar";
 import { InstallPwaPrompt } from "@/components/pwa/InstallPwaPrompt";
 import { StaffPortalBar } from "@/components/layout/PortalNavLinks";
@@ -15,16 +17,17 @@ import type { PublicBannerDto } from "@/services/banner.service";
 type Props = {
   children: React.ReactNode;
   leftSidebarBanner?: PublicBannerDto | null;
+  mobileLogoUrl?: string | null;
+  systemName?: string;
+};
+
+type PublicChromeProps = Props & {
   userName?: string | null;
   userImage?: string | null;
   isLoggedIn?: boolean;
   userRole?: string | null;
   userChampionshipId?: string | null;
-  mobileLogoUrl?: string | null;
-  systemName?: string;
 };
-
-type PublicChromeProps = Props;
 
 const PublicAppChrome = memo(function PublicAppChrome({
   children,
@@ -39,6 +42,7 @@ const PublicAppChrome = memo(function PublicAppChrome({
 }: PublicChromeProps) {
   return (
     <>
+      <NavigationProgressBar />
       <Sidebar
         leftBanner={leftSidebarBanner}
         isLoggedIn={isLoggedIn}
@@ -58,7 +62,7 @@ const PublicAppChrome = memo(function PublicAppChrome({
           {children}
         </div>
       </div>
-      <BottomNavClient />
+      <BottomNav />
       <InstallPwaPrompt />
     </>
   );
@@ -67,15 +71,16 @@ const PublicAppChrome = memo(function PublicAppChrome({
 export function AppShellWrapper({
   children,
   leftSidebarBanner,
-  userName,
-  userImage,
-  isLoggedIn,
-  userRole,
-  userChampionshipId,
   mobileLogoUrl,
   systemName = "BASEGOL",
 }: Props) {
   const pathname = usePathname() ?? "/";
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? null;
+  const userImage = session?.user?.image ?? null;
+  const isLoggedIn = !!session?.user;
+  const userRole = session?.user?.role ?? null;
+  const userChampionshipId = session?.user?.championshipId ?? null;
   const footer = <SiteFooterClient systemName={systemName} />;
 
   if (isAuthRoute(pathname)) {
@@ -111,6 +116,7 @@ export function AppShellWrapper({
   if (showOperadorHeader && !showPublicChrome) {
     return (
       <div className="flex min-h-screen flex-col">
+        <NavigationProgressBar />
         <PublicTopBar
           userName={userName}
           userImage={userImage}

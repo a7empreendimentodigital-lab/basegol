@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useLinkStatus } from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   buildChampionshipPublicNav,
@@ -15,6 +17,32 @@ type Props = {
   className?: string;
   variant?: "sidebar" | "drawer";
 };
+
+function NavLinkLabel({
+  label,
+  icon: Icon,
+  isDrawer,
+}: {
+  label: string;
+  icon: LucideIcon;
+  isDrawer: boolean;
+}) {
+  const { pending } = useLinkStatus();
+
+  return (
+    <>
+      <Icon
+        className={cn(
+          "shrink-0",
+          isDrawer ? "h-5 w-5 opacity-90" : "h-5 w-5",
+          pending && "opacity-50"
+        )}
+        aria-hidden
+      />
+      <span className={cn("truncate", pending && "opacity-60")}>{label}</span>
+    </>
+  );
+}
 
 export function PublicNavLinks({
   pathname,
@@ -43,7 +71,7 @@ export function PublicNavLinks({
             href={href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center font-medium transition-colors",
+              "flex items-center font-medium transition-colors active:scale-[0.99]",
               isDrawer
                 ? cn(
                     "min-h-12 gap-3.5 rounded-xl px-4 py-3 text-[15px]",
@@ -59,11 +87,7 @@ export function PublicNavLinks({
                   )
             )}
           >
-            <Icon
-              className={cn("shrink-0", isDrawer ? "h-5 w-5 opacity-90" : "h-5 w-5")}
-              aria-hidden
-            />
-            <span className="truncate">{label}</span>
+            <NavLinkLabel label={label} icon={Icon} isDrawer={isDrawer} />
           </Link>
         );
       })}

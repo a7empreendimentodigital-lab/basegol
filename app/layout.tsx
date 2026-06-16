@@ -6,8 +6,8 @@ import { AppShellWrapper } from "@/components/layout/AppShellWrapper";
 import { AppSplashScreenGate } from "@/components/pwa/AppSplashScreenGate";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
 import { buildMetadataIcons } from "@/lib/brand-icons";
+import { getCachedSidebarLeftBanner } from "@/lib/server-cache";
 import { getActiveThemeConfig, getBrandConfig } from "@/lib/site-config";
-import { getActiveBannersByPlacement } from "@/services/banner.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -49,16 +49,13 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export const dynamic = "force-dynamic";
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [theme, brand, sidebarLeftBanners, session] = await Promise.all([
+  const [theme, brand, leftSidebarBanner, session] = await Promise.all([
     getActiveThemeConfig(),
     getBrandConfig(),
-    getActiveBannersByPlacement("SIDEBAR_LEFT"),
+    getCachedSidebarLeftBanner(),
     getServerSession(authOptions),
   ]);
-  const leftSidebarBanner = sidebarLeftBanners[0] ?? null;
   const cssVars = {
     ["--primary" as string]: theme ? "111 100% 54%" : undefined,
     ["--background" as string]: theme ? "0 0% 2%" : undefined,
@@ -81,11 +78,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           ) : null}
           <AppShellWrapper
             leftSidebarBanner={leftSidebarBanner}
-            userName={session?.user?.name ?? null}
-            userImage={session?.user?.image ?? null}
-            isLoggedIn={!!session?.user}
-            userRole={session?.user?.role ?? null}
-            userChampionshipId={session?.user?.championshipId ?? null}
             mobileLogoUrl={brand?.mobileLogoUrl ?? null}
             systemName={brand?.systemName ?? "BASEGOL"}
           >

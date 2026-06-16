@@ -37,6 +37,17 @@
 
   body {
     @apply bg-pitch text-foreground antialiased;
+    touch-action: manipulation;
+  }
+
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label {
+    touch-action: manipulation;
   }
 
   html {
