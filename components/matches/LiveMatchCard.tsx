@@ -74,7 +74,7 @@ export function LiveMatchCard({ match }: { match: MatchWithTeams }) {
 
       <Link
         href={`/jogos/${match.id}`}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#a1a1aa1f] bg-graphite py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-foreground hover:text-background"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border-0 bg-white py-2.5 text-sm font-semibold text-black transition-colors hover:bg-white/90"
       >
         <Play className="h-4 w-4 fill-current" aria-hidden />
         Assistir ao vivo
