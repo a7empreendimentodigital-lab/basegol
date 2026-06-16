@@ -191,8 +191,8 @@ export function PublicHeader({
                 openMenu();
               }}
               className={cn(
-                "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-0 bg-[#22c55e] text-white shadow-none transition-colors hover:bg-[#16a34a]",
-                menuOpen && "bg-[#16a34a]"
+                touchIconBtn,
+                menuOpen && "border-foreground/30 bg-graphite-light text-foreground"
               )}
               aria-label="Abrir menu"
               aria-expanded={menuOpen}
