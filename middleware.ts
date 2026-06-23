@@ -96,6 +96,10 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|assets|uploads|manifest.webmanifest|sw.js|api).*)",
+    /*
+     * Não executar middleware em assets estáticos, API nem uploads.
+     * uploads: servidos por public/ ou app/uploads/[...path]/route.ts
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|assets|uploads|manifest.webmanifest|sw.js).*)",
   ],
 };

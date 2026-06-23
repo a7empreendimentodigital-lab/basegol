@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
+import { existsSync } from "fs";
 import { put, del } from "@vercel/blob";
 import { generateUploadStem } from "@/lib/generate-id";
 import { contentTypeForExtension } from "@/lib/upload-mime";
@@ -27,25 +28,59 @@ function buildFileName(originalName: string): string {
   return `${generateUploadStem()}${ext}`;
 }
 
-/** Diretório físico dos uploads locais (VPS / dev). */
-export function getLocalUploadDir(): string {
-  const configured = process.env.UPLOAD_DIR?.trim();
-  if (configured) {
-    return path.resolve(configured);
-  }
-  return path.join(process.cwd(), "public", "uploads");
+function isPathInsideDir(filePath: string, dir: string): boolean {
+  const resolvedFile = path.resolve(filePath);
+  const resolvedDir = path.resolve(dir);
+  const prefix = resolvedDir.endsWith(path.sep) ? resolvedDir : `${resolvedDir}${path.sep}`;
+  return resolvedFile === resolvedDir || resolvedFile.startsWith(prefix);
 }
 
-export function getLocalUploadFilePath(fileName: string): string {
+/**
+ * Diretórios onde procurar arquivos (ordem de prioridade).
+ * Inclui storage/uploads, public/uploads legado e variantes de cwd (standalone/PM2).
+ */
+export function getLocalUploadSearchDirs(): string[] {
+  const dirs: string[] = [];
+  const seen = new Set<string>();
+
+  const add = (dir: string) => {
+    const resolved = path.resolve(dir);
+    if (seen.has(resolved)) return;
+    seen.add(resolved);
+    dirs.push(resolved);
+  };
+
+  const configured = process.env.UPLOAD_DIR?.trim();
+  if (configured) add(configured);
+
+  const cwd = process.cwd();
+  add(path.join(cwd, "storage", "uploads"));
+  add(path.join(cwd, "public", "uploads"));
+  add(path.join(cwd, "..", "storage", "uploads"));
+  add(path.join(cwd, "..", "public", "uploads"));
+  add(path.join(cwd, "..", "..", "storage", "uploads"));
+  add(path.join(cwd, "..", "..", "public", "uploads"));
+
+  return dirs;
+}
+
+/** Diretório padrão para novos uploads locais (fora de public/ — servido via app/uploads route). */
+export function getLocalUploadDir(): string {
+  const configured = process.env.UPLOAD_DIR?.trim();
+  if (configured) return path.resolve(configured);
+  return path.resolve(process.cwd(), "storage", "uploads");
+}
+
+export function getLocalUploadFilePath(fileName: string, baseDir?: string): string {
   const safeName = path.basename(fileName);
-  return path.join(getLocalUploadDir(), safeName);
+  return path.join(baseDir ?? getLocalUploadDir(), safeName);
 }
 
 export function usesRemoteBlobStorage(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
 }
 
-/** VPS / servidor próprio: grava em public/uploads sem Vercel Blob. */
+/** VPS / servidor próprio: grava em storage/uploads (servido por app/uploads/[...path]). */
 export function usesLocalUploadStorage(): boolean {
   const mode = process.env.UPLOAD_STORAGE?.trim().toLowerCase();
   if (mode === "local") return true;
@@ -93,7 +128,7 @@ async function storeToLocalDisk(input: StoreUploadInput): Promise<StoreUploadRes
 }
 
 /**
- * Persiste arquivo em Vercel Blob (BLOB_READ_WRITE_TOKEN) ou em public/uploads
+ * Persiste arquivo em Vercel Blob (BLOB_READ_WRITE_TOKEN) ou em storage/uploads
  * (desenvolvimento ou UPLOAD_STORAGE=local na VPS).
  */
 export async function storeUploadedFile(input: StoreUploadInput): Promise<StoreUploadResult> {
@@ -106,7 +141,7 @@ export async function storeUploadedFile(input: StoreUploadInput): Promise<StoreU
       console.info("[upload] UPLOAD_STORAGE=local — gravando em", getLocalUploadDir());
     } else {
       console.warn(
-        "[upload] BLOB_READ_WRITE_TOKEN ausente — usando public/uploads só em desenvolvimento."
+        "[upload] BLOB_READ_WRITE_TOKEN ausente — usando storage/uploads em desenvolvimento."
       );
     }
     return storeToLocalDisk(input);
@@ -118,15 +153,22 @@ export async function storeUploadedFile(input: StoreUploadInput): Promise<StoreU
 }
 
 export async function readLocalUploadFile(fileName: string): Promise<Buffer | null> {
-  const filePath = getLocalUploadFilePath(fileName);
-  const uploadDir = getLocalUploadDir();
-  if (!filePath.startsWith(uploadDir)) return null;
+  const safeName = path.basename(fileName);
+  if (!safeName || safeName === "." || safeName === "..") return null;
 
-  try {
-    return await fs.readFile(filePath);
-  } catch {
-    return null;
+  for (const dir of getLocalUploadSearchDirs()) {
+    const filePath = path.join(dir, safeName);
+    if (!isPathInsideDir(filePath, dir)) continue;
+    if (!existsSync(filePath)) continue;
+
+    try {
+      return await fs.readFile(filePath);
+    } catch {
+      // tenta próximo diretório
+    }
   }
+
+  return null;
 }
 
 export async function deleteStoredFile(url: string): Promise<void> {
@@ -139,13 +181,16 @@ export async function deleteStoredFile(url: string): Promise<void> {
     return;
   }
 
-  if (isLocalUploadUrl(url)) {
-    const fileName = path.basename(url);
-    const filePath = getLocalUploadFilePath(fileName);
+  if (!isLocalUploadUrl(url)) return;
+
+  const fileName = path.basename(url);
+  for (const dir of getLocalUploadSearchDirs()) {
+    const filePath = path.join(dir, fileName);
+    if (!isPathInsideDir(filePath, dir)) continue;
     try {
       await fs.unlink(filePath);
     } catch {
-      // arquivo pode já ter sido removido
+      // arquivo pode já ter sido removido neste dir
     }
   }
 }

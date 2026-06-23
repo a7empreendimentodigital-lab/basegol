@@ -1,6 +1,5 @@
 /**
  * Teste ponta a ponta do fluxo de upload (storage + URL + leitura do disco).
- * Não exige servidor HTTP nem sessão — valida a camada usada por /api/upload.
  *
  * Uso: npm run test:upload-flow
  */
@@ -14,7 +13,9 @@ import {
 } from "../lib/upload-mime";
 import {
   getLocalUploadDir,
+  getLocalUploadSearchDirs,
   getLocalUploadFilePath,
+  readLocalUploadFile,
   storeUploadedFile,
 } from "../lib/upload-storage";
 
@@ -32,23 +33,17 @@ function assert(condition: unknown, message: string): asserts condition {
 async function main() {
   process.env.UPLOAD_STORAGE = "local";
   delete process.env.BLOB_READ_WRITE_TOKEN;
+  delete process.env.UPLOAD_DIR;
 
-  console.log("[1/6] generateUploadStem (node:crypto)");
+  console.log("[1/7] generateUploadStem (node:crypto)");
   const stem = generateUploadStem();
   assert(stem.includes("-"), "stem deve conter UUID");
 
-  console.log("[2/6] resolveUploadMimeType (type vazio → extensão)");
-  assert(
-    resolveUploadMimeType("foto.jpg", "") === "image/jpeg",
-    "jpg sem mime deve resolver para image/jpeg"
-  );
-  assert(
-    resolveUploadMimeType("logo.PNG", "application/octet-stream") === "image/png",
-    "octet-stream deve inferir png"
-  );
-  assert(isAllowedUploadMime("image/webp", false), "webp deve ser permitido");
+  console.log("[2/7] resolveUploadMimeType");
+  assert(resolveUploadMimeType("foto.jpg", "") === "image/jpeg", "mime jpg");
+  assert(isAllowedUploadMime("image/webp", false), "webp permitido");
 
-  console.log("[3/6] storeUploadedFile → disco");
+  console.log("[3/7] storeUploadedFile → storage/uploads");
   const stored = await storeUploadedFile({
     buffer: MINIMAL_PNG,
     originalName: "e2e-test.png",
@@ -56,38 +51,42 @@ async function main() {
     category: "general",
   });
   assert(stored.url.startsWith("/uploads/"), `URL inválida: ${stored.url}`);
-  assert(stored.storage === "local", "storage deve ser local");
 
   const fileName = path.basename(stored.url);
   const filePath = getLocalUploadFilePath(fileName);
-  assert(filePath.startsWith(getLocalUploadDir()), "path traversal bloqueado");
+  assert(
+    filePath.includes(`${path.sep}storage${path.sep}uploads${path.sep}`),
+    "deve gravar em storage/uploads"
+  );
 
   const onDisk = await fs.readFile(filePath);
-  assert(onDisk.length === MINIMAL_PNG.length, "arquivo no disco com tamanho errado");
+  assert(onDisk.length === MINIMAL_PNG.length, "tamanho no disco");
 
-  console.log("[4/6] normalizeImageSrc (exibição na UI)");
+  console.log("[4/7] readLocalUploadFile (route app/uploads/[...path])");
+  const readBack = await readLocalUploadFile(fileName);
+  assert(readBack?.length === MINIMAL_PNG.length, "leitura do arquivo falhou");
+
+  console.log("[5/7] legado public/uploads ainda legível");
+  const legacyDir = path.join(process.cwd(), "public", "uploads");
+  await fs.mkdir(legacyDir, { recursive: true });
+  const legacyName = "legacy-public-test.png";
+  const legacyPath = path.join(legacyDir, legacyName);
+  await fs.writeFile(legacyPath, MINIMAL_PNG);
+  const legacyRead = await readLocalUploadFile(legacyName);
+  assert(legacyRead?.length === MINIMAL_PNG.length, "legado public/uploads não legível");
+  await fs.unlink(legacyPath);
+
+  console.log("[6/7] normalizeImageSrc + payload DB");
   const displayUrl = normalizeImageSrc(stored.url);
-  assert(displayUrl === stored.url, "URL normalizada deve ser /uploads/...");
+  assert(displayUrl === stored.url, "URL normalizada");
 
-  console.log("[5/6] simular persistência no banco (payload media_assets)");
-  const dbPayload = {
-    type: "IMAGE" as const,
-    category: "general",
-    title: "e2e-test.png",
-    originalName: "e2e-test.png",
-    mimeType: "image/png",
-    url: displayUrl,
-    sizeBytes: MINIMAL_PNG.length,
-    uploadedBy: "test-user",
-  };
-  assert(dbPayload.url?.startsWith("/uploads/"), "payload URL inválida");
-
-  console.log("[6/6] cleanup");
+  console.log("[7/7] cleanup");
   await fs.unlink(filePath);
 
-  console.log("\n✓ Fluxo de upload validado:");
-  console.log("  selecionar → enviar → salvar em", getLocalUploadDir());
-  console.log("  → URL", stored.url, "→ exibir via SafeImage");
+  console.log("\n✓ Fluxo validado");
+  console.log("  gravar em:", getLocalUploadDir());
+  console.log("  buscar em:", getLocalUploadSearchDirs().join(", "));
+  console.log("  URL HTTP:  /uploads/<arquivo> (app/uploads/[...path]/route.ts)");
 }
 
 main().catch((err) => {

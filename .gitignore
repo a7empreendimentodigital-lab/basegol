@@ -42,8 +42,10 @@ next-env.d.ts
 # prisma
 /prisma/*.db
 
-# uploads (mantém a pasta no git)
+# uploads (mantém as pastas no git)
 /public/uploads/*
 !/public/uploads/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
 public/assets/brasao/brasao.psd
 basegol.sql
