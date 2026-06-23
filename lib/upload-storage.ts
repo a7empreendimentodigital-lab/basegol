@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs/promises";
 import { put, del } from "@vercel/blob";
 import { generateUploadStem } from "@/lib/generate-id";
+import { contentTypeForExtension } from "@/lib/upload-mime";
 
 export type StoreUploadInput = {
   buffer: Buffer;
@@ -26,6 +27,20 @@ function buildFileName(originalName: string): string {
   return `${generateUploadStem()}${ext}`;
 }
 
+/** Diretório físico dos uploads locais (VPS / dev). */
+export function getLocalUploadDir(): string {
+  const configured = process.env.UPLOAD_DIR?.trim();
+  if (configured) {
+    return path.resolve(configured);
+  }
+  return path.join(process.cwd(), "public", "uploads");
+}
+
+export function getLocalUploadFilePath(fileName: string): string {
+  const safeName = path.basename(fileName);
+  return path.join(getLocalUploadDir(), safeName);
+}
+
 export function usesRemoteBlobStorage(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
 }
@@ -45,8 +60,13 @@ export function isRemoteBlobUrl(url: string): boolean {
   );
 }
 
-export function isLocalDevUploadUrl(url: string): boolean {
+export function isLocalUploadUrl(url: string): boolean {
   return url.startsWith("/uploads/");
+}
+
+/** @deprecated use isLocalUploadUrl */
+export function isLocalDevUploadUrl(url: string): boolean {
+  return isLocalUploadUrl(url);
 }
 
 async function storeToVercelBlob(input: StoreUploadInput): Promise<StoreUploadResult> {
@@ -56,7 +76,7 @@ async function storeToVercelBlob(input: StoreUploadInput): Promise<StoreUploadRe
 
   const blob = await put(pathname, input.buffer, {
     access: "public",
-    contentType: input.contentType,
+    contentType: input.contentType || contentTypeForExtension(input.originalName),
     addRandomSuffix: false,
   });
 
@@ -65,9 +85,10 @@ async function storeToVercelBlob(input: StoreUploadInput): Promise<StoreUploadRe
 
 async function storeToLocalDisk(input: StoreUploadInput): Promise<StoreUploadResult> {
   const fileName = buildFileName(input.originalName);
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = getLocalUploadDir();
   await fs.mkdir(uploadDir, { recursive: true });
-  await fs.writeFile(path.join(uploadDir, fileName), input.buffer);
+  const filePath = path.join(uploadDir, fileName);
+  await fs.writeFile(filePath, input.buffer);
   return { url: `/uploads/${fileName}`, storage: "local" };
 }
 
@@ -82,7 +103,7 @@ export async function storeUploadedFile(input: StoreUploadInput): Promise<StoreU
 
   if (usesLocalUploadStorage()) {
     if (process.env.NODE_ENV === "production") {
-      console.info("[upload] UPLOAD_STORAGE=local — gravando em public/uploads");
+      console.info("[upload] UPLOAD_STORAGE=local — gravando em", getLocalUploadDir());
     } else {
       console.warn(
         "[upload] BLOB_READ_WRITE_TOKEN ausente — usando public/uploads só em desenvolvimento."
@@ -96,6 +117,18 @@ export async function storeUploadedFile(input: StoreUploadInput): Promise<StoreU
   );
 }
 
+export async function readLocalUploadFile(fileName: string): Promise<Buffer | null> {
+  const filePath = getLocalUploadFilePath(fileName);
+  const uploadDir = getLocalUploadDir();
+  if (!filePath.startsWith(uploadDir)) return null;
+
+  try {
+    return await fs.readFile(filePath);
+  } catch {
+    return null;
+  }
+}
+
 export async function deleteStoredFile(url: string): Promise<void> {
   if (isRemoteBlobUrl(url)) {
     try {
@@ -106,8 +139,9 @@ export async function deleteStoredFile(url: string): Promise<void> {
     return;
   }
 
-  if (isLocalDevUploadUrl(url)) {
-    const filePath = path.join(process.cwd(), "public", url);
+  if (isLocalUploadUrl(url)) {
+    const fileName = path.basename(url);
+    const filePath = getLocalUploadFilePath(fileName);
     try {
       await fs.unlink(filePath);
     } catch {

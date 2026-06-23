@@ -2,13 +2,12 @@
 
 import { useCallback, useState } from "react";
 import { SafeImage } from "@/components/ui/SafeImage";
-import { normalizeImageSrc } from "@/lib/image-url";
 import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/toaster";
 import type { MediaCategory } from "@/lib/upload-config";
-import { parseApiResponse } from "@/lib/api-client";
+import { uploadFileToApi } from "@/lib/upload-client";
 
 type Props = {
   value?: string | null;
@@ -35,19 +34,8 @@ export function ImageUpload({
     async (file: File) => {
       setUploading(true);
       try {
-        const form = new FormData();
-        form.append("file", file);
-        form.append("category", category);
-        form.append("title", file.name);
-
-        const res = await fetch("/api/upload", { method: "POST", body: form });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error((err as { error?: string }).error || "Falha no upload");
-        }
-        const { url } = await parseApiResponse<{ url: string; assetId: string }>(res);
-        if (!url) throw new Error("URL do upload não retornada");
-        onChange(normalizeImageSrc(url));
+        const { url } = await uploadFileToApi(file, { category, title: file.name });
+        onChange(url);
         toast({ title: "Upload concluído", variant: "success" });
       } catch (e) {
         toast({

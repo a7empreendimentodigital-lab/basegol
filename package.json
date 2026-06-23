@@ -34,7 +34,7 @@
     "audit:fpf-clubs": "tsx scripts/audit-fpf-clubs.ts",
     "audit:championship-isolation": "tsx scripts/audit-championship-isolation.ts",
     "import:paulista-pack": "tsx scripts/run-paulista-pack-import.ts",
-    "db:studio": "prisma studio",
+    "test:upload-flow": "tsx scripts/test-upload-flow.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

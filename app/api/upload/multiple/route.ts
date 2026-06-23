@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/utils/api-response";
 import { normalizeImageSrc } from "@/lib/image-url";
+import { isAllowedUploadMime, resolveUploadMimeType } from "@/lib/upload-mime";
 import { storeUploadedFile } from "@/lib/upload-storage";
-import { UPLOAD_ALLOWED_IMAGE_TYPES, UPLOAD_MAX_BYTES } from "@/lib/upload-config";
+import { UPLOAD_MAX_BYTES } from "@/lib/upload-config";
 
 export const runtime = "nodejs";
 
@@ -26,15 +27,17 @@ export async function POST(req: Request) {
     const errors: string[] = [];
 
     for (const file of files) {
+      if (file.size === 0) {
+        errors.push(`${file.name}: arquivo vazio`);
+        continue;
+      }
       if (file.size > UPLOAD_MAX_BYTES) {
         errors.push(`${file.name}: arquivo muito grande`);
         continue;
       }
-      if (
-        !UPLOAD_ALLOWED_IMAGE_TYPES.includes(
-          file.type as (typeof UPLOAD_ALLOWED_IMAGE_TYPES)[number]
-        )
-      ) {
+
+      const mimeType = resolveUploadMimeType(file.name, file.type);
+      if (!isAllowedUploadMime(mimeType, false)) {
         errors.push(`${file.name}: tipo não permitido`);
         continue;
       }
@@ -44,7 +47,7 @@ export async function POST(req: Request) {
         const stored = await storeUploadedFile({
           buffer: bytes,
           originalName: file.name,
-          contentType: file.type,
+          contentType: mimeType,
           category,
         });
         const url = normalizeImageSrc(stored.url) ?? stored.url;
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
             category,
             title: file.name,
             originalName: file.name,
-            mimeType: file.type,
+            mimeType,
             url,
             sizeBytes: bytes.length,
             uploadedBy: session.user.id,

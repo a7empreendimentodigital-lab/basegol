@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileUp, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toaster";
-import { parseApiResponse } from "@/lib/api-client";
+import { uploadFileToApi } from "@/lib/upload-client";
 
 type Props = {
   value?: string | null;
@@ -20,22 +20,19 @@ export function FileUpload({ value, fileName, onChange, label = "Arquivo" }: Pro
   async function upload(file: File) {
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("allowDocuments", "true");
-      form.append("category", "general");
-      form.append("title", file.name);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error || "Falha no upload");
-      }
-      const { url } = await parseApiResponse<{ url: string }>(res);
-      if (!url) throw new Error("URL do upload não retornada");
+      const { url } = await uploadFileToApi(file, {
+        allowDocuments: true,
+        category: "general",
+        title: file.name,
+      });
       onChange(url, file.name);
       toast({ title: "Arquivo enviado", variant: "success" });
     } catch (e) {
-      toast({ title: "Erro no upload", description: e instanceof Error ? e.message : "", variant: "error" });
+      toast({
+        title: "Erro no upload",
+        description: e instanceof Error ? e.message : "",
+        variant: "error",
+      });
     } finally {
       setUploading(false);
     }

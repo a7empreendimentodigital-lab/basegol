@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/toaster";
-import { parseApiResponse } from "@/lib/api-client";
+import { uploadFileToApi } from "@/lib/upload-client";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -25,18 +25,10 @@ export function ProfileAvatarUpload({ name, imageUrl, onImageChange, disabled }:
     async (file: File) => {
       setUploading(true);
       try {
-        const form = new FormData();
-        form.append("file", file);
-        form.append("category", "avatar");
-        form.append("title", `avatar-${file.name}`);
-
-        const res = await fetch("/api/upload", { method: "POST", body: form });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error((err as { error?: string }).error || "Falha no upload");
-        }
-        const { url } = await parseApiResponse<{ url: string; assetId: string }>(res);
-        if (!url) throw new Error("URL do upload não retornada");
+        const { url } = await uploadFileToApi(file, {
+          category: "avatar",
+          title: `avatar-${file.name}`,
+        });
         onImageChange(url);
         toast({ title: "Foto enviada", description: "Salve o perfil para confirmar.", variant: "success" });
       } catch (e) {

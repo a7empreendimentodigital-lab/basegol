@@ -3,21 +3,11 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/utils/api-response";
 import { normalizeImageSrc } from "@/lib/image-url";
+import { isAllowedUploadMime, resolveUploadMimeType } from "@/lib/upload-mime";
 import { storeUploadedFile } from "@/lib/upload-storage";
-import {
-  UPLOAD_ALLOWED_DOCUMENT_TYPES,
-  UPLOAD_ALLOWED_IMAGE_TYPES,
-  UPLOAD_MAX_BYTES,
-} from "@/lib/upload-config";
+import { UPLOAD_MAX_BYTES } from "@/lib/upload-config";
 
 export const runtime = "nodejs";
-
-function isAllowedMime(mime: string, allowDocs: boolean) {
-  const allowed = allowDocs
-    ? [...UPLOAD_ALLOWED_IMAGE_TYPES, ...UPLOAD_ALLOWED_DOCUMENT_TYPES]
-    : [...UPLOAD_ALLOWED_IMAGE_TYPES];
-  return allowed.includes(mime as (typeof UPLOAD_ALLOWED_IMAGE_TYPES)[number]);
-}
 
 export async function POST(req: Request) {
   try {
@@ -32,13 +22,21 @@ export async function POST(req: Request) {
       return fail("Arquivo inválido", 400);
     }
 
+    if (file.size === 0) {
+      return fail("Arquivo vazio", 400);
+    }
+
     if (file.size > UPLOAD_MAX_BYTES) {
       return fail(`Arquivo muito grande. Máximo ${UPLOAD_MAX_BYTES / 1024 / 1024}MB`, 400);
     }
 
     const allowDocs = formData.get("allowDocuments") === "true";
-    if (!isAllowedMime(file.type, allowDocs)) {
-      return fail("Tipo de arquivo não permitido", 400);
+    const mimeType = resolveUploadMimeType(file.name, file.type);
+    if (!isAllowedUploadMime(mimeType, allowDocs)) {
+      return fail(
+        `Tipo de arquivo não permitido${mimeType ? ` (${mimeType})` : ""}. Use PNG, JPG, WEBP ou SVG.`,
+        400
+      );
     }
 
     const bytes = Buffer.from(await file.arrayBuffer());
@@ -48,7 +46,7 @@ export async function POST(req: Request) {
     const stored = await storeUploadedFile({
       buffer: bytes,
       originalName: file.name,
-      contentType: file.type,
+      contentType: mimeType,
       category,
     });
 
@@ -56,11 +54,11 @@ export async function POST(req: Request) {
 
     const asset = await prisma.mediaAsset.create({
       data: {
-        type: file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT",
+        type: mimeType.startsWith("image/") ? "IMAGE" : "DOCUMENT",
         category,
         title,
         originalName: file.name,
-        mimeType: file.type,
+        mimeType,
         url,
         sizeBytes: bytes.length,
         uploadedBy: session.user.id,
@@ -72,13 +70,13 @@ export async function POST(req: Request) {
       userId: session.user.id,
       category,
       url,
+      assetId: asset.id,
     });
 
     return ok({ url, assetId: asset.id });
   } catch (e) {
     console.error("[upload] error", e);
-    const message =
-      e instanceof Error ? e.message : "Falha no upload";
+    const message = e instanceof Error ? e.message : "Falha no upload";
     return fail(message, 500);
   }
 }
