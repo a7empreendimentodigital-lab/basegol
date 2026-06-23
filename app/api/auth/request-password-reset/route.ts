@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { requestPasswordResetSchema } from "@/utils/zod-schemas";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";

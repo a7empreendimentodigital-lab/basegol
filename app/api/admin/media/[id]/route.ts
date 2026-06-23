@@ -11,6 +11,8 @@ async function ensureAdmin() {
   }
 }
 
+export const runtime = "nodejs";
+
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await ensureAdmin();
